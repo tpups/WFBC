@@ -1,15 +1,60 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="sidebar">
-    <NavMenu />
-</div>
-
-<div class="main">
-    <div class="top-row px-4">
+<div class="drawer-container @DrawerCssClass">
+    <aside class="drawer">
+        <nav class="side-menu @SideMenuCssClass">
+            <NavMenu />
+        </nav>
+    </aside>
+    <div class="top-menu-bar">
+        <button class="nav-toggle" @onclick="ToggleDrawer">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <button class="nav-toggle" @onclick="@MinifyDrawer">
+            <span class="navbar-toggler-icon"></span>
+        </button>
         <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
     </div>
-
-    <div class="content px-4">
-        @Body
+    <div class="main">
+        <div class="content px-4">
+            @Body
+        </div>
     </div>
 </div>
+
+
+
+
+@code {
+    private bool closeDrawer = false;
+
+    private bool minifyDrawer = false;
+
+    private string DrawerCssClass = "drawer-full";
+
+    private string SideMenuCssClass = "slide-in";
+
+    private void ToggleDrawer()
+    {
+        closeDrawer = !closeDrawer;
+        DrawerCssClass = !closeDrawer ? "drawer-full" : "drawer-closed";
+        SideMenuCssClass = !closeDrawer ? "slide-in" : "slide-out";
+        minifyDrawer = false;
+    }
+    private void MinifyDrawer()
+    {
+        minifyDrawer = !minifyDrawer;
+        if (minifyDrawer)
+        {
+            DrawerCssClass = "drawer-mini";
+            SideMenuCssClass = "slide-out";
+        }
+        else
+        {
+            DrawerCssClass = "drawer-full";
+            SideMenuCssClass = "slide-in";
+            minifyDrawer = false;
+        }
+        closeDrawer = false;
+    }
+}
