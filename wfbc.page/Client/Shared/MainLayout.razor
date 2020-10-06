@@ -1,48 +1,99 @@
 ﻿@inherits LayoutComponentBase
+@using BlazorPro.BlazorSize
 
-<div class="drawer-container @DrawerCssClass">
-    <aside class="drawer">
-        <nav class="side-menu @SideMenuCssClass">
-            <NavMenu />
-        </nav>
-    </aside>
-    <div class="top-menu-bar">
-        <button class="nav-toggle" @onclick="ToggleDrawer">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <button class="nav-toggle" @onclick="@MinifyDrawer">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
-    </div>
-    <div class="main">
-        <div class="content px-4">
-            @Body
+<MediaQueryList>
+    @if (count == 0 && isMedium)
+    {
+        if (isXSmall)
+        {
+            MobileCssClass = "mobile-closed";
+            SideMenuCssClass = "slide-out";
+        }
+        else
+        {
+            MobileCssClass = "tablet-mini";
+            SideMenuCssClass = "slide-out";
+        }
+    }
+    <div class="drawer-container @DrawerCssClass @MobileCssClass">
+        <aside class="drawer">
+            <nav class="side-menu @SideMenuCssClass">
+                <NavMenu />
+            </nav>
+        </aside>
+        <div class="main-container">
+            <div class="menu-bar">
+                <button class="nav-toggle" @onclick="ToggleDrawer">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <button class="nav-toggle" @onclick="MinifyDrawer">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
+            </div>
+            <div class="main">
+                <div class="content px-4">
+                    @Body
+                </div>
+            </div>
         </div>
     </div>
-</div>
-
-
+    <MediaQuery Media="@Breakpoints.XSmallDown" @bind-Matches="isXSmall" />
+    <MediaQuery Media="@Breakpoints.MediumDown" @bind-Matches="isMedium" />
+</MediaQueryList>
 
 
 @code {
-    private bool closeDrawer = false;
+    // <576px portrait phones
+    private bool isXSmall = false;
+    // <992px landscape phones, tablets, small desktop windows
+    private bool isMedium = false;
 
+    private bool closeDrawer = false;
     private bool minifyDrawer = false;
 
     private string DrawerCssClass = "drawer-full";
-
     private string SideMenuCssClass = "slide-in";
+
+    private string MobileCssClass = "desktop";
+
+    private int count = 0;
 
     private void ToggleDrawer()
     {
+        if (count == 0 && isMedium)
+        {
+            if (!isXSmall)
+            {
+                MobileCssClass = "tablet";
+            }
+            else
+            {
+                closeDrawer = true;
+                MobileCssClass = "mobile";
+            }
+        }
         closeDrawer = !closeDrawer;
         DrawerCssClass = !closeDrawer ? "drawer-full" : "drawer-closed";
         SideMenuCssClass = !closeDrawer ? "slide-in" : "slide-out";
         minifyDrawer = false;
+        count++;
+        this.StateHasChanged();
     }
     private void MinifyDrawer()
     {
+        if (count == 0 && isMedium)
+        {
+            if (!isXSmall)
+            {
+                minifyDrawer = true;
+                MobileCssClass = "tablet";
+            }
+            else
+            {
+                MobileCssClass = "mobile";
+            }
+        }
         minifyDrawer = !minifyDrawer;
         if (minifyDrawer)
         {
@@ -56,5 +107,7 @@
             minifyDrawer = false;
         }
         closeDrawer = false;
+        count++;
+        this.StateHasChanged();
     }
 }

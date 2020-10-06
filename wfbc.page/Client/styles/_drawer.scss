@@ -10,18 +10,35 @@
     background-color: $wfbc-blue-2;
 }
 
-.drawer-container.drawer-full .drawer{
-    width: 256px;
+.main-container {
+    display: flex;
+    flex-direction: column;
+}
+
+    // will only have this class once on load
+.mobile-closed .drawer {
+    width: 0px !important;
+    // transition: width .4s ease-in-out;
+}
+
+    // will only have this class once on load
+.tablet-mini .drawer {
+    width: 128px !important;
+    // transition: width .4s ease-in-out;
+}
+
+.drawer-container.drawer-full:not(.mobile-closed):not(.tablet-mini) .drawer {
+    width: 256px !important;
     transition: width .4s ease-in-out;
 }
 
 .drawer-container.drawer-mini .drawer{
-    width: 128px;
+    width: 128px !important;
     transition: width .4s ease-in-out;
 }
 
 .drawer-container.drawer-closed .drawer{
-    width: 0px;
+    width: 0px !important;
     transition: width .4s ease-in-out;
 }
 
