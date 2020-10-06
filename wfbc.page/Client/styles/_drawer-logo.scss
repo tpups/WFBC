@@ -1,0 +1,70 @@
+
+.drawer-logo {
+    display: flex;
+    position: absolute;
+    width: inherit;
+}
+
+.logo-img {
+    height: 128px;
+}
+
+/* start the small logo out of view */
+.drawer-logo .drawer-logo-small {
+    position: absolute;
+    margin-bottom: 256px;
+    z-index: 1;
+    transform: translateY(-100%);
+    -webkit-transform: translateY(-100%);
+}
+
+.drawer-logo .drawer-logo-large {
+    position: absolute;
+    right: 0;
+}
+
+/* move small logo up if closing from mini menu */
+.drawer-closed .drawer .drawer-logo-small {
+    animation: slide-up 0.4s forwards;
+    -webkit-animation: slide-up 0.4s forwards;
+    transition-timing-function: ease-in-out;
+}
+
+/* move small logo down when full menu collapses */
+.drawer-mini .drawer .drawer-logo-small {
+    animation: slide-down 0.4s forwards;
+    -webkit-animation: slide-down 0.4s forwards;
+    transition-timing-function: ease-in-out;
+}
+
+/* move the small logo back up if the menu is expanded */
+.drawer-full .drawer .drawer-logo-small {
+    animation: slide-up 0.4s forwards;
+    -webkit-animation: slide-up 0.4s forwards;
+    transition-timing-function: ease-in-out;
+}
+
+/* make sure the small logo is in place for tablets */
+.tablet-mini .drawer .drawer-logo-small {
+    animation: slide-down 0.4s forwards;
+    -webkit-animation: slide-down 0.4s forwards;
+    transition-timing-function: ease-in-out;
+}
+
+@keyframes slide-down {
+    100% { transform: translateY(0%); }
+}
+
+@-webkit-keyframes slide-down {
+    100% { -webkit-transform: translateY(0%); }
+}
+    
+@keyframes slide-up {
+    0% { transform: translateY(0%); }
+    100% { transform: translateY(-100%); }
+}
+
+@-webkit-keyframes slide-up {
+    0% { -webkit-transform: translateY(0%); }
+    100% { -webkit-transform: translateY(-100%); }
+}

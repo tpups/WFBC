@@ -7,14 +7,20 @@
 }
 
 .drawer {
+    display: inline-block;
     background-color: $wfbc-blue-2;
     box-shadow: 5px 0px 8px $wfbc-black-1;
+    overflow: hidden;
+    z-index: 1;
+    flex: none;
 }
 
 .main-container {
     display: flex;
     flex-direction: column;
     width: inherit;
+    z-index: 2;
+    background-color: $wfbc-grey-1
 }
 
     // will only have this class once on load
@@ -46,6 +52,7 @@
 
 .side-menu {
     position: absolute;
+    margin-top: 128px;
     transform: translateX(-100%);
     -webkit-transform: translateX(-100%);
 }

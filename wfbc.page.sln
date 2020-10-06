@@ -3,11 +3,11 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wfbc.page.Server", "wfbc.page\Server\wfbc.page.Server.csproj", "{1C7A6763-6CD1-42CD-A3C1-E1073F816DE0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wfbc.page.Server", "wfbc.page\Server\wfbc.page.Server.csproj", "{1C7A6763-6CD1-42CD-A3C1-E1073F816DE0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wfbc.page.Client", "wfbc.page\Client\wfbc.page.Client.csproj", "{0E1AC450-BDEA-46C7-B86E-2DC9BFC7541B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wfbc.page.Client", "wfbc.page\Client\wfbc.page.Client.csproj", "{0E1AC450-BDEA-46C7-B86E-2DC9BFC7541B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "wfbc.page.Shared", "wfbc.page\Shared\wfbc.page.Shared.csproj", "{ECBE8E8F-1955-470A-BD2B-1EA689AC9A3F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "wfbc.page.Shared", "wfbc.page\Shared\wfbc.page.Shared.csproj", "{ECBE8E8F-1955-470A-BD2B-1EA689AC9A3F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
