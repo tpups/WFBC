@@ -8,11 +8,13 @@
 
 .drawer {
     background-color: $wfbc-blue-2;
+    box-shadow: 5px 0px 8px $wfbc-black-1;
 }
 
 .main-container {
     display: flex;
     flex-direction: column;
+    width: inherit;
 }
 
     // will only have this class once on load
