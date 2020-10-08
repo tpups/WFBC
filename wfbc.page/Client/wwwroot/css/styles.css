@@ -36,15 +36,7 @@
   background-color: #b9cdda;
 }
 
-.mobile-closed .drawer {
-  width: 0px !important;
-}
-
-.tablet-mini .drawer {
-  width: 128px !important;
-}
-
-.drawer-container.drawer-full:not(.mobile-closed):not(.tablet-mini) .drawer {
+.drawer-container.drawer-full .drawer {
   width: 256px !important;
   -webkit-transition: width .4s ease-in-out;
   transition: width .4s ease-in-out;

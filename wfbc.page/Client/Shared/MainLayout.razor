@@ -1,40 +1,32 @@
 ﻿@inherits LayoutComponentBase
 @using BlazorPro.BlazorSize
+@inject AppState AppState
+@implements IDisposable
 
 <MediaQueryList>
-    @* Kinda hacky but it works for now *@
-    @if (count == 0 && isMedium)
-    {
-        if (isXSmall)
-        {
-            MobileCssClass = "mobile-closed";
-            SideMenuCssClass = "slide-out";
-        }
-        else
-        {
-            MobileCssClass = "tablet-mini";
-            SideMenuCssClass = "slide-out";
-        }
-    }
-    <div class="drawer-container @DrawerCssClass @MobileCssClass">
+
+    <MediaQuery Media="@Breakpoints.XSmallDown">
+        <Matched>
+            <MobileDrawer />
+        </Matched>
+    </MediaQuery>
+    <MediaQuery Media="@Breakpoints.Between(Breakpoints.SmallUp, Breakpoints.MediumDown)">
+        <Matched>
+            <TabletDrawer />
+        </Matched>
+    </MediaQuery>
+
+    <div class="drawer-container @AppState.DrawerCssClass">
         <aside class="drawer">
             <div class="drawer-logo">
                 <DrawerLogo />
             </div>
-            <nav class="side-menu @SideMenuCssClass">
+            <nav class="side-menu @AppState.SideMenuCssClass">
                 <NavMenu />
             </nav>
         </aside>
         <div class="main-container">
-            <div class="menu-bar">
-                <button class="nav-toggle" @onclick="ToggleDrawer">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <button class="nav-toggle" @onclick="MinifyDrawer">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <a href="http://blazor.net" target="_blank" class="ml-md-auto">About</a>
-            </div>
+            <MenuBar />
             <div class="main">
                 <div class="content px-4">
                     @Body
@@ -42,76 +34,18 @@
             </div>
         </div>
     </div>
-    <MediaQuery Media="@Breakpoints.XSmallDown" @bind-Matches="isXSmall" />
-    <MediaQuery Media="@Breakpoints.MediumDown" @bind-Matches="isMedium" />
 </MediaQueryList>
 
-
 @code {
-    // <576px portrait phones
-    private bool isXSmall = false;
-    // <992px landscape phones, tablets, small desktop windows
-    private bool isMedium = false;
 
-    private bool closeDrawer = false;
-    private bool minifyDrawer = false;
-
-    private string DrawerCssClass = "drawer-full";
-    private string SideMenuCssClass = "slide-in";
-
-    private string MobileCssClass = "desktop";
-
-    private int count = 0;
-
-    private void ToggleDrawer()
+    protected override void OnInitialized()
     {
-        if (count == 0 && isMedium)
-        {
-            if (!isXSmall)
-            {
-                MobileCssClass = "tablet";
-            }
-            else
-            {
-                closeDrawer = true;
-                MobileCssClass = "mobile";
-            }
-        }
-        closeDrawer = !closeDrawer;
-        DrawerCssClass = !closeDrawer ? "drawer-full" : "drawer-closed";
-        SideMenuCssClass = !closeDrawer ? "slide-in" : "slide-out";
-        minifyDrawer = false;
-        count++;
-        this.StateHasChanged();
+        AppState.SetIsLarge(true);
+        AppState.OnChange += StateHasChanged;
     }
-    private void MinifyDrawer()
+
+    public void Dispose()
     {
-        if (count == 0 && isMedium)
-        {
-            if (!isXSmall)
-            {
-                minifyDrawer = true;
-                MobileCssClass = "tablet";
-            }
-            else
-            {
-                MobileCssClass = "mobile";
-            }
-        }
-        minifyDrawer = !minifyDrawer;
-        if (minifyDrawer)
-        {
-            DrawerCssClass = "drawer-mini";
-            SideMenuCssClass = "slide-out";
-        }
-        else
-        {
-            DrawerCssClass = "drawer-full";
-            SideMenuCssClass = "slide-in";
-            minifyDrawer = false;
-        }
-        closeDrawer = false;
-        count++;
-        this.StateHasChanged();
+        AppState.OnChange -= StateHasChanged;
     }
 }

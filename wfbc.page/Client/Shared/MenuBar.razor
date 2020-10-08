@@ -1,0 +1,26 @@
+﻿@inject AppState AppState 
+
+<div class="menu-bar">
+    <button class="nav-toggle" @onclick="ToggleDrawer">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+    <button class="nav-toggle" @onclick="MinifyDrawer">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+</div>
+
+@code {
+    protected override async Task OnInitializedAsync()
+    {
+
+    }
+
+    void ToggleDrawer()
+    {
+        AppState.SetCloseDrawer(toggle: true);
+    }
+    void MinifyDrawer()
+    {
+        AppState.SetMinifyDrawer(toggle: true);
+    }
+}

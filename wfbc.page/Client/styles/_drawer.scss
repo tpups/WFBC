@@ -23,19 +23,7 @@
     background-color: $wfbc-grey-1
 }
 
-    // will only have this class once on load
-.mobile-closed .drawer {
-    width: 0px !important;
-    // transition: width .4s ease-in-out;
-}
-
-    // will only have this class once on load
-.tablet-mini .drawer {
-    width: 128px !important;
-    // transition: width .4s ease-in-out;
-}
-
-.drawer-container.drawer-full:not(.mobile-closed):not(.tablet-mini) .drawer {
+.drawer-container.drawer-full .drawer {
     width: 256px !important;
     transition: width .4s ease-in-out;
 }

@@ -1,0 +1,17 @@
+﻿@inject AppState AppState 
+
+@* the only purpose here is to set state *@
+@* was not working in MainLayout - issue w/ infinite loops *@
+
+@code {
+    protected override void OnInitialized()
+    {
+        AppState.SetIsXSmall(true);
+        AppState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        AppState.OnChange -= StateHasChanged;
+    }
+}
