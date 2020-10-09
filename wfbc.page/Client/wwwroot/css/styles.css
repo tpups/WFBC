@@ -109,10 +109,111 @@
 }
 
 .menu-bar {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
   height: 48px;
   background-color: #fdfffc;
-  -webkit-box-shadow: 0px 5px 8px #02111b;
-          box-shadow: 0px 5px 8px #02111b;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+}
+
+/* SVG icons */
+.line {
+  fill: none;
+  -webkit-transition: stroke-dasharray 400ms, stroke-dashoffset 400ms;
+  transition: stroke-dasharray 400ms, stroke-dashoffset 400ms;
+  stroke: #000;
+  stroke-width: 5.5;
+  stroke-linecap: round;
+}
+
+.arrow {
+  cursor: pointer;
+}
+
+/* Pointing Left */
+.arrow .line-1 {
+  stroke-dasharray: 28 1000;
+  stroke-dashoffset: -3;
+  -webkit-transition: stroke-dashoffset 600ms, -webkit-transform 600ms;
+  transition: stroke-dashoffset 600ms, -webkit-transform 600ms;
+  transition: transform 600ms, stroke-dashoffset 600ms;
+  transition: transform 600ms, stroke-dashoffset 600ms, -webkit-transform 600ms;
+}
+
+.arrow .line-3 {
+  stroke-dasharray: 28 1000;
+  stroke-dashoffset: -3;
+  -webkit-transition: stroke-dashoffset 600ms, -webkit-transform 600ms;
+  transition: stroke-dashoffset 600ms, -webkit-transform 600ms;
+  transition: transform 600ms, stroke-dashoffset 600ms;
+  transition: transform 600ms, stroke-dashoffset 600ms, -webkit-transform 600ms;
+}
+
+/* Pointing Right */
+.arrow.minify .line-1 {
+  stroke-dashoffset: -258;
+}
+
+.arrow.minify .line-3 {
+  stroke-dashoffset: -258;
+}
+
+.ham {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-transition: -webkit-transform 600ms;
+  transition: -webkit-transform 600ms;
+  transition: transform 600ms;
+  transition: transform 600ms, -webkit-transform 600ms;
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.ham-rotate.active {
+  -webkit-transform: rotate(45deg);
+          transform: rotate(45deg);
+}
+
+.ham8 .top {
+  stroke-dasharray: 40 160;
+}
+
+.ham8 .middle {
+  stroke-dasharray: 40 142;
+  -webkit-transform-origin: 50%;
+          transform-origin: 50%;
+  -webkit-transition: -webkit-transform 600ms;
+  transition: -webkit-transform 600ms;
+  transition: transform 600ms;
+  transition: transform 600ms, -webkit-transform 600ms;
+}
+
+.ham8 .bottom {
+  stroke-dasharray: 40 85;
+  -webkit-transform-origin: 50%;
+          transform-origin: 50%;
+  -webkit-transition: stroke-dashoffset 600ms, -webkit-transform 600ms;
+  transition: stroke-dashoffset 600ms, -webkit-transform 600ms;
+  transition: transform 600ms, stroke-dashoffset 600ms;
+  transition: transform 600ms, stroke-dashoffset 600ms, -webkit-transform 600ms;
+}
+
+.ham8.active .top {
+  stroke-dashoffset: -64px;
+}
+
+.ham8.active .middle {
+  -webkit-transform: rotate(90deg);
+          transform: rotate(90deg);
+}
+
+.ham8.active .bottom {
+  stroke-dashoffset: -64px;
 }
 
 .drawer-logo {

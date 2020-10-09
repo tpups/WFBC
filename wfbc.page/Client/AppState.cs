@@ -19,6 +19,8 @@ namespace wfbc.page.Client
                 MinifyDrawer = false;
                 DrawerCssClass = "drawer-closed";
                 SideMenuCssClass = "slide-out";
+                DrawerActive = "";
+                Minified = "";
                 NotifyStateChanged();
             }
         }
@@ -35,6 +37,8 @@ namespace wfbc.page.Client
                 MinifyDrawer = true;
                 DrawerCssClass = "drawer-mini";
                 SideMenuCssClass = "slide-out";
+                DrawerActive = "active";
+                Minified = "minified";
                 NotifyStateChanged();
             }
         }
@@ -50,6 +54,8 @@ namespace wfbc.page.Client
                 MinifyDrawer = false;
                 DrawerCssClass = "drawer-full";
                 SideMenuCssClass = "slide-in";
+                DrawerActive = "active";
+                Minified = "";
                 NotifyStateChanged();
             }
         }
@@ -61,6 +67,8 @@ namespace wfbc.page.Client
             DrawerCssClass = CloseDrawer ? "drawer-closed" : "drawer-full";
             SideMenuCssClass = CloseDrawer ? "slide-out" : "slide-in";
             MinifyDrawer = false;
+            DrawerActive = CloseDrawer ? "" : "active";
+            Minified = "";
             NotifyStateChanged();
         }
         // drawer minified state
@@ -71,11 +79,15 @@ namespace wfbc.page.Client
             DrawerCssClass = MinifyDrawer ? "drawer-mini" : "drawer-full";
             SideMenuCssClass = MinifyDrawer ? "slide-out" : "slide-in";
             CloseDrawer = false;
+            DrawerActive = "active";
+            Minified = MinifyDrawer ? "minify" : "";
             NotifyStateChanged();
         }
         public string DrawerCssClass { get; private set; }
         public string SideMenuCssClass { get; private set; }
         public string MobileCssClass { get; private set; }
+        public string DrawerActive { get; private set; }
+        public string Minified { get; protected set; }
 
         public event Action OnChange;
 
