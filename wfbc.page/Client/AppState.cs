@@ -80,7 +80,7 @@ namespace wfbc.page.Client
             SideMenuCssClass = MinifyDrawer ? "slide-out" : "slide-in";
             CloseDrawer = false;
             DrawerActive = "active";
-            Minified = MinifyDrawer ? "minify" : "";
+            Minified = MinifyDrawer ? "minified" : "";
             NotifyStateChanged();
         }
         public string DrawerCssClass { get; private set; }
