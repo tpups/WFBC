@@ -113,19 +113,18 @@
   display: -ms-flexbox;
   display: flex;
   height: 48px;
-  background-color: #9db5b2;
+  background-color: #13293d;
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
-  border-bottom: 1.5px solid #13293d;
 }
 
 /* buttons */
 .drawer-control {
   border-radius: 14px;
-  border: 1.5px solid #07689f;
+  border: none;
   background-color: #ffc93c;
-  margin: 1px;
+  margin-left: 3px;
   color: #13293d;
 }
 
@@ -140,6 +139,30 @@
 .drawer-control:hover {
   background-color: #07689f;
   border-color: #ffc93c;
+}
+
+.top-menu-button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+}
+
+.top-menu-button .line {
+  stroke: none;
+  fill: #fdfffc;
+}
+
+.top-menu-button:hover .line {
+  fill: #ffc93c;
+}
+
+.top-menu-button:focus {
+  outline: none;
+}
+
+#slack-button {
+  margin-right: 65px;
 }
 
 /* SVG icons */

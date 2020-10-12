@@ -1,17 +1,17 @@
 .menu-bar {
     display: flex;
     height: 48px;
-    background-color: $wfbc-grey-2;
+    background-color: $wfbc-blue-2;
     // box-shadow: 0px 5px 8px $wfbc-black-1;
     align-items: center;
-    border-bottom: 1.5px solid $wfbc-blue-2;
+    // border-bottom: 1.5px solid $wfbc-blue-2;
 }
 /* buttons */
 .drawer-control {
     border-radius:14px;
-    border: 1.5px solid $wfbc-blue-1;
+    border: none;
     background-color: $wfbc-yellow-1;
-    margin: 1px;
+    margin-left: 3px;
     color: $wfbc-blue-2;
 }
 .drawer-control:focus {
@@ -23,6 +23,25 @@
 .drawer-control:hover {
     background-color: $wfbc-blue-1;
     border-color: $wfbc-yellow-1;
+}
+.top-menu-button {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+}
+.top-menu-button .line {
+    stroke: none;
+    fill: $wfbc-white-1;
+}
+.top-menu-button:hover .line {
+    fill: $wfbc-yellow-1;
+}
+.top-menu-button:focus {
+    outline: none;
+}
+#slack-button {
+    margin-right: 65px;
 }
 
 /* SVG icons */
