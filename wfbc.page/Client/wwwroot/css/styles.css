@@ -14,8 +14,6 @@
 .drawer {
   display: inline-block;
   background-color: #13293d;
-  -webkit-box-shadow: 5px 0px 8px #02111b;
-          box-shadow: 5px 0px 8px #02111b;
   overflow: hidden;
   z-index: 1;
   -webkit-box-flex: 0;
@@ -34,6 +32,22 @@
   width: inherit;
   z-index: 2;
   background-color: #fdfffc;
+}
+
+/* Mobile layout moves drawer below menu bar */
+.mobile .drawer {
+  top: 48px;
+  position: relative;
+  height: inherit;
+}
+
+.mobile .main-container {
+  display: contents;
+}
+
+.mobile .menu-bar {
+  position: absolute;
+  width: inherit;
 }
 
 .drawer-container.drawer-full .drawer {

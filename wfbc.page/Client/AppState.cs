@@ -19,6 +19,7 @@ namespace wfbc.page.Client
                 MinifyDrawer = false;
                 DrawerCssClass = "drawer-closed";
                 SideMenuCssClass = "slide-out";
+                MobileCssClass = "mobile";
                 DrawerActive = "";
                 Minified = "";
                 NotifyStateChanged();

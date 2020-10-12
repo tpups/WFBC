@@ -9,7 +9,6 @@
 .drawer {
     display: inline-block;
     background-color: $wfbc-blue-2;
-    box-shadow: 5px 0px 8px $wfbc-black-1;
     overflow: hidden;
     z-index: 1;
     flex: none;
@@ -21,6 +20,19 @@
     width: inherit;
     z-index: 2;
     background-color: $wfbc-white-1;
+}
+/* Mobile layout moves drawer below menu bar */
+.mobile .drawer {
+    top: 48px;
+    position: relative;
+    height: inherit;
+}
+.mobile .main-container {
+    display: contents;
+}
+.mobile .menu-bar {
+    position: absolute;
+    width: inherit;
 }
 
 .drawer-container.drawer-full .drawer {
