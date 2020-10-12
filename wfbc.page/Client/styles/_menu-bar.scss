@@ -1,9 +1,28 @@
 .menu-bar {
     display: flex;
     height: 48px;
-    background-color: $wfbc-white-1;
+    background-color: $wfbc-grey-2;
     // box-shadow: 0px 5px 8px $wfbc-black-1;
     align-items: center;
+    border-bottom: 1.5px solid $wfbc-blue-2;
+}
+/* buttons */
+.drawer-control {
+    border-radius:14px;
+    border: 1.5px solid $wfbc-blue-1;
+    background-color: $wfbc-yellow-1;
+    margin: 1px;
+    color: $wfbc-blue-2;
+}
+.drawer-control:focus {
+    outline: none;
+}
+.drawer-control .line {
+    stroke: $wfbc-blue-2;
+}
+.drawer-control:hover {
+    background-color: $wfbc-blue-1;
+    border-color: $wfbc-yellow-1;
 }
 
 /* SVG icons */
@@ -16,6 +35,9 @@
 }
 .arrow {
     cursor: pointer;
+}
+.toggler-icon {
+    color: $wfbc-blue-2;
 }
 /* Pointing Left */
 .arrow .line-1 {

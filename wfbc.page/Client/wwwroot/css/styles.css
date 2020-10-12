@@ -33,7 +33,7 @@
           flex-direction: column;
   width: inherit;
   z-index: 2;
-  background-color: #b9cdda;
+  background-color: #fdfffc;
 }
 
 .drawer-container.drawer-full .drawer {
@@ -113,10 +113,33 @@
   display: -ms-flexbox;
   display: flex;
   height: 48px;
-  background-color: #fdfffc;
+  background-color: #9db5b2;
   -webkit-box-align: center;
       -ms-flex-align: center;
           align-items: center;
+  border-bottom: 1.5px solid #13293d;
+}
+
+/* buttons */
+.drawer-control {
+  border-radius: 14px;
+  border: 1.5px solid #07689f;
+  background-color: #ffc93c;
+  margin: 1px;
+  color: #13293d;
+}
+
+.drawer-control:focus {
+  outline: none;
+}
+
+.drawer-control .line {
+  stroke: #13293d;
+}
+
+.drawer-control:hover {
+  background-color: #07689f;
+  border-color: #ffc93c;
 }
 
 /* SVG icons */
@@ -131,6 +154,10 @@
 
 .arrow {
   cursor: pointer;
+}
+
+.toggler-icon {
+  color: #13293d;
 }
 
 /* Pointing Left */
