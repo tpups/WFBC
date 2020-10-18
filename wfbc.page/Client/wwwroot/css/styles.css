@@ -1,3 +1,7 @@
+body {
+  font-family: Commissioner;
+}
+
 .drawer-container {
   position: relative;
   display: -webkit-box;
@@ -22,16 +26,15 @@
 }
 
 .main-container {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -webkit-box-direction: normal;
-      -ms-flex-direction: column;
-          flex-direction: column;
   width: inherit;
   z-index: 2;
   background-color: #fdfffc;
+}
+
+.main {
+  position: absolute;
+  top: 48px;
+  bottom: 0;
 }
 
 /* Mobile layout moves drawer below menu bar */
@@ -50,8 +53,18 @@
   width: inherit;
 }
 
+.mobile .main {
+  width: 100% !important;
+}
+
 .drawer-container.drawer-full .drawer {
   width: 256px !important;
+  -webkit-transition: width .4s ease-in-out;
+  transition: width .4s ease-in-out;
+}
+
+.drawer-container.drawer-full .main {
+  width: calc(100% - 256px);
   -webkit-transition: width .4s ease-in-out;
   transition: width .4s ease-in-out;
 }
@@ -62,8 +75,20 @@
   transition: width .4s ease-in-out;
 }
 
+.drawer-container.drawer-mini .main {
+  width: calc(100% - 128px);
+  -webkit-transition: width .4s ease-in-out;
+  transition: width .4s ease-in-out;
+}
+
 .drawer-container.drawer-closed .drawer {
   width: 0px !important;
+  -webkit-transition: width .4s ease-in-out;
+  transition: width .4s ease-in-out;
+}
+
+.drawer-container.drawer-closed .main {
+  width: 100%;
   -webkit-transition: width .4s ease-in-out;
   transition: width .4s ease-in-out;
 }
@@ -177,6 +202,10 @@
 
 #slack-button {
   margin-right: 65px;
+}
+
+#rotowire-button {
+  margin-right: 135px;
 }
 
 /* SVG icons */
@@ -406,29 +435,29 @@
 .inner.tl {
   top: 0;
   left: 0;
-  border-top: 2px solid #531430;
-  border-left: 4px solid #531430;
+  border-top: 2px solid #07689f;
+  border-left: 4px solid #07689f;
 }
 
 .inner.tr {
   top: 0;
   right: 0;
-  border-top: 2px solid #e04960;
-  border-right: 4px solid #e04960;
+  border-top: 2px solid #02111b;
+  border-right: 4px solid #02111b;
 }
 
 .inner.br {
   bottom: 0;
   right: 0;
-  border-bottom: 2px solid #531430;
-  border-right: 4px solid #531430;
+  border-bottom: 2px solid #07689f;
+  border-right: 4px solid #07689f;
 }
 
 .inner.bl {
   bottom: 0;
   left: 0;
-  border-bottom: 2px solid #e04960;
-  border-left: 4px solid #e04960;
+  border-bottom: 2px solid #02111b;
+  border-left: 4px solid #02111b;
 }
 
 @-webkit-keyframes spin {
@@ -451,5 +480,249 @@
     -webkit-transform: rotate(360deg);
             transform: rotate(360deg);
   }
+}
+
+.drop-menu {
+  display: none;
+  position: absolute;
+  right: 0;
+  top: 48px;
+  width: 200px;
+  z-index: 1;
+}
+
+.drop-item {
+  height: 48px;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  opacity: 0;
+  -webkit-transform-origin: top center;
+          transform-origin: top center;
+}
+
+.drop-item:nth-child(1) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: -150ms;
+          animation-delay: -150ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-item:nth-child(2) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: 0ms;
+          animation-delay: 0ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-item:nth-child(3) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: 150ms;
+          animation-delay: 150ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-item:nth-child(4) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: 300ms;
+          animation-delay: 300ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-item a {
+  margin: 0;
+}
+
+.drop-menu--drop {
+  list-style: none;
+  -webkit-perspective: 1000px;
+          perspective: 1000px;
+}
+
+.drop-menu--drop .drop-item {
+  -webkit-transform-origin: top center;
+          transform-origin: top center;
+}
+
+.drop-menu--drop .drop-item:nth-child(1) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: -150ms;
+          animation-delay: -150ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-menu--drop .drop-item:nth-child(2) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: 0ms;
+          animation-delay: 0ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-menu--drop .drop-item:nth-child(3) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: 150ms;
+          animation-delay: 150ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-menu--drop .drop-item:nth-child(4) {
+  -webkit-animation-name: topToBottom;
+          animation-name: topToBottom;
+  -webkit-animation-duration: 400ms;
+          animation-duration: 400ms;
+  -webkit-animation-delay: 300ms;
+          animation-delay: 300ms;
+  -webkit-animation-timing-function: ease-in-out;
+          animation-timing-function: ease-in-out;
+  -webkit-animation-fill-mode: forwards;
+          animation-fill-mode: forwards;
+}
+
+.drop-menu.manager-menu-open {
+  display: block;
+}
+
+.drop-menu.manager-menu-open + #manager-button {
+  color: black;
+}
+
+.drop-menu--item-1 {
+  background: #ffc93c;
+}
+
+.drop-menu--item-2 {
+  background: #02111b;
+}
+
+.drop-menu--item-3 {
+  background: #07689f;
+}
+
+@-webkit-keyframes topToBottom {
+  0% {
+    opacity: 0;
+    -webkit-transform: rotateX(-90deg);
+            transform: rotateX(-90deg);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: rotateX(0deg);
+            transform: rotateX(0deg);
+  }
+}
+
+@keyframes topToBottom {
+  0% {
+    opacity: 0;
+    -webkit-transform: rotateX(-90deg);
+            transform: rotateX(-90deg);
+  }
+  100% {
+    opacity: 1;
+    -webkit-transform: rotateX(0deg);
+            transform: rotateX(0deg);
+  }
+}
+
+@-webkit-keyframes bottomToTop {
+  0% {
+    opacity: 1;
+    -webkit-transform: rotateX(0deg);
+            transform: rotateX(0deg);
+  }
+  100% {
+    opacity: 0;
+    -webkit-transform: rotateX(-90deg);
+            transform: rotateX(-90deg);
+  }
+}
+
+@keyframes bottomToTop {
+  0% {
+    opacity: 1;
+    -webkit-transform: rotateX(0deg);
+            transform: rotateX(0deg);
+  }
+  100% {
+    opacity: 0;
+    -webkit-transform: rotateX(-90deg);
+            transform: rotateX(-90deg);
+  }
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: contents;
+  border-bottom: 1px dotted black;
+  cursor: help;
+}
+
+.tooltip-wrapper span {
+  visibility: hidden;
+  position: absolute;
+  right: 225px;
+  width: 135px;
+  background-color: #363636;
+  color: #fdfffc;
+  text-align: center;
+  padding: 5px 0;
+  border-radius: 6px;
+  z-index: 1;
+}
+
+.tooltip-wrapper:hover span {
+  visibility: visible;
+}
+
+.mobile .tooltip-wrapper span {
+  display: none !important;
 }
 /*# sourceMappingURL=styles.css.map */

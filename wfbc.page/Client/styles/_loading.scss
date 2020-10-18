@@ -28,26 +28,26 @@
     &.tl {
       top: 0;
       left: 0;
-      border-top: 2px solid #531430;
-      border-left: 4px solid #531430;
+      border-top: 2px solid $wfbc-blue-1;
+      border-left: 4px solid $wfbc-blue-1;
     }
     &.tr {
       top: 0;
       right: 0;
-      border-top: 2px solid #e04960;
-      border-right: 4px solid #e04960;
+      border-top: 2px solid $wfbc-black-1;
+      border-right: 4px solid $wfbc-black-1;
     }
     &.br {
       bottom: 0;
       right: 0;
-      border-bottom: 2px solid #531430;
-      border-right: 4px solid #531430;
+      border-bottom: 2px solid $wfbc-blue-1;
+      border-right: 4px solid $wfbc-blue-1;
     }
     &.bl {
       bottom: 0;
       left: 0;
-      border-bottom: 2px solid #e04960;
-      border-left: 4px solid #e04960;
+      border-bottom: 2px solid $wfbc-black-1;
+      border-left: 4px solid $wfbc-black-1;
     }
   }
   

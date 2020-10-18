@@ -1,0 +1,27 @@
+.tooltip-wrapper {
+    position: relative;
+    display: contents;
+    border-bottom: 1px dotted black;
+    cursor: help;
+
+    span {
+        visibility: hidden;
+        position: absolute;
+        right: 225px;
+        width: 135px;
+        background-color: #363636;
+        color: $wfbc-white-1;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+        z-index: 1;
+    }
+}
+
+.tooltip-wrapper:hover span {
+    visibility: visible;
+}
+
+.mobile .tooltip-wrapper span {
+    display: none !important;
+}

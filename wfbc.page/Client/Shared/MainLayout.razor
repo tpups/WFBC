@@ -27,8 +27,8 @@
         </aside>
         <div class="main-container">
             <MenuBar />
-            <div class="main">
-                <div class="content px-4">
+            <div class="main" @onclick="@CloseManagerMenu">
+                <div class="content px-4"> 
                     @Body
                 </div>
             </div>
@@ -37,6 +37,11 @@
 </MediaQueryList>
 
 @code {
+
+    public void CloseManagerMenu()
+    {
+        AppState.SetOpenManagerMenu(close: true);
+    }
 
     protected override void OnInitialized()
     {

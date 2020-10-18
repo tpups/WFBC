@@ -1,0 +1,80 @@
+.drop-menu {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 48px;
+    width: 200px;
+    z-index: 1;
+}
+.drop-item {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform-origin: top center;
+    @for $i from 1 through 4 {
+      &:nth-child(#{$i}) {
+        animation-name: topToBottom;
+        animation-duration: 400ms;
+        animation-delay: (150ms * $i) - 300;
+        animation-timing-function: ease-in-out;
+        animation-fill-mode: forwards;
+      }
+    }
+    a {
+        margin: 0;
+    }
+}
+.drop-menu--drop {
+    list-style: none;
+    perspective: 1000px;
+    .drop-item {
+        transform-origin: top center;
+        @for $i from 1 through 4 {
+          &:nth-child(#{$i}) {
+            animation-name: topToBottom;
+            animation-duration: 400ms;
+            animation-delay: (150ms * $i) - 300;
+            animation-timing-function: ease-in-out;
+            animation-fill-mode: forwards;
+          }
+        }
+    }
+}
+.drop-menu.manager-menu-open {
+    display: block;
+}
+.drop-menu.manager-menu-open + #manager-button {
+    color: black;
+}
+.drop-menu--item-1 {
+    background: $wfbc-yellow-1;
+}
+.drop-menu--item-2 {
+    background: $wfbc-black-1;
+}
+.drop-menu--item-3 {
+    background: $wfbc-blue-1;
+}
+
+@keyframes topToBottom {
+    0% {
+      opacity: 0;
+      transform: rotateX(-90deg);
+    }
+    100% {
+      opacity: 1;
+      transform: rotateX(0deg);
+    }
+}
+@keyframes bottomToTop {
+    0% {
+        opacity: 1;
+        transform: rotateX(0deg);
+    }
+    100% {
+        opacity: 0;
+        transform: rotateX(-90deg);
+    }
+}

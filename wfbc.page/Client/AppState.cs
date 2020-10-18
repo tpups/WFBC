@@ -60,7 +60,16 @@ namespace wfbc.page.Client
                 NotifyStateChanged();
             }
         }
-        // drawer open/closed state
+        // Manager Menu
+        public bool OpenManagerMenu { get; private set; }
+        public void SetOpenManagerMenu(bool toggle = false, bool close = false)
+        {
+            OpenManagerMenu = toggle ? !OpenManagerMenu : false;
+            OpenManagerMenu = close ? false : OpenManagerMenu;
+            ManagerMenuCssClass = OpenManagerMenu ? "manager-menu-open" : "manager-menu-closed";
+            NotifyStateChanged();
+        }
+        // Drawer open/closed state
         public bool CloseDrawer { get; private set; }
         public void SetCloseDrawer(bool closed = false, bool toggle = false)
         {
@@ -72,7 +81,7 @@ namespace wfbc.page.Client
             Minified = "";
             NotifyStateChanged();
         }
-        // drawer minified state
+        // Drawer minified state
         public bool MinifyDrawer { get; private set; }
         public void SetMinifyDrawer(bool minify = false, bool toggle = false)
         {
@@ -87,6 +96,7 @@ namespace wfbc.page.Client
         public string DrawerCssClass { get; private set; }
         public string SideMenuCssClass { get; private set; }
         public string MobileCssClass { get; private set; }
+        public string ManagerMenuCssClass { get; private set; }
         public string DrawerActive { get; private set; }
         public string Minified { get; protected set; }
 
