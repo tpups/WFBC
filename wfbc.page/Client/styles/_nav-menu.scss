@@ -1,0 +1,40 @@
+.nav-menu-item {
+    height: 48px;
+    width: 120px;
+    margin: 5px;
+}
+
+.nav-menu {
+    position: absolute;
+    top: 128px;
+    left: 0;
+}
+
+.right-column-item {
+    margin-left: 3px;
+    height: 36px;
+    font-size: 14px;
+}
+
+.drawer {
+    ul {
+        list-style: none;
+        padding-left: 0px;
+        margin-top: -2px;
+    }
+    a {
+        color: $wfbc-white-1;
+        display: flex;
+        position: relative;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+    }
+    a:hover {
+        color: $wfbc-blue-2;
+        text-decoration: none;
+        background-color: $wfbc-yellow-1;
+    }
+}

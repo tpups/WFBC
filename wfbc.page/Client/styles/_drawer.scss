@@ -75,20 +75,21 @@
 .side-menu {
     position: absolute;
     margin-top: 128px;
-    transform: translateX(-100%);
-    -webkit-transform: translateX(-100%);
+    margin-left: 128px;
+    transform: translateX(-200%);
+    -webkit-transform: translateX(-200%);
 }
 
 .side-menu.slide-in {
-    animation: slide-in 0.4s forwards;
-    -webkit-animation: slide-in 0.4s forwards;
-    transition-timing-function: ease-in-out;
+    animation: slide-in 0.5s forwards;
+    -webkit-animation: slide-in 0.5s forwards;
+    transition-timing-function: ease-in;
 }
 
 .side-menu.slide-out {
-    animation: slide-out 0.4s forwards;
-    -webkit-animation: slide-out 0.4s forwards;
-    transition-timing-function: ease-in-out;
+    animation: slide-out 0.3s forwards;
+    -webkit-animation: slide-out 0.3s forwards;
+    transition-timing-function: ease;
 }
     
 @keyframes slide-in {
@@ -101,10 +102,10 @@
     
 @keyframes slide-out {
     0% { transform: translateX(0%); }
-    100% { transform: translateX(-100%); }
+    100% { transform: translateX(-200%); }
 }
 
 @-webkit-keyframes slide-out {
     0% { -webkit-transform: translateX(0%); }
-    100% { -webkit-transform: translateX(-100%); }
+    100% { -webkit-transform: translateX(-200%); }
 }

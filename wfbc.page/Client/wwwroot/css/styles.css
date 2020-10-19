@@ -96,22 +96,23 @@ body {
 .side-menu {
   position: absolute;
   margin-top: 128px;
-  transform: translateX(-100%);
-  -webkit-transform: translateX(-100%);
+  margin-left: 128px;
+  transform: translateX(-200%);
+  -webkit-transform: translateX(-200%);
 }
 
 .side-menu.slide-in {
-  animation: slide-in 0.4s forwards;
-  -webkit-animation: slide-in 0.4s forwards;
-  -webkit-transition-timing-function: ease-in-out;
-          transition-timing-function: ease-in-out;
+  animation: slide-in 0.5s forwards;
+  -webkit-animation: slide-in 0.5s forwards;
+  -webkit-transition-timing-function: ease-in;
+          transition-timing-function: ease-in;
 }
 
 .side-menu.slide-out {
-  animation: slide-out 0.4s forwards;
-  -webkit-animation: slide-out 0.4s forwards;
-  -webkit-transition-timing-function: ease-in-out;
-          transition-timing-function: ease-in-out;
+  animation: slide-out 0.3s forwards;
+  -webkit-animation: slide-out 0.3s forwards;
+  -webkit-transition-timing-function: ease;
+          transition-timing-function: ease;
 }
 
 @keyframes slide-in {
@@ -133,8 +134,8 @@ body {
             transform: translateX(0%);
   }
   100% {
-    -webkit-transform: translateX(-100%);
-            transform: translateX(-100%);
+    -webkit-transform: translateX(-200%);
+            transform: translateX(-200%);
   }
 }
 
@@ -143,7 +144,7 @@ body {
     -webkit-transform: translateX(0%);
   }
   100% {
-    -webkit-transform: translateX(-100%);
+    -webkit-transform: translateX(-200%);
   }
 }
 
@@ -160,7 +161,6 @@ body {
 
 /* buttons */
 .drawer-control {
-  border-radius: 14px;
   border: none;
   background-color: #ffc93c;
   margin-left: 3px;
@@ -493,6 +493,7 @@ body {
 
 .drop-item {
   height: 48px;
+  border-left: 2px solid #fdfffc;
   display: -webkit-box;
   display: -ms-flexbox;
   display: flex;
@@ -560,7 +561,26 @@ body {
 }
 
 .drop-item a {
-  margin: 0;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+  color: #fdfffc;
+}
+
+.drop-item a:hover {
+  color: #13293d;
+  background-color: #ffc93c;
+  text-decoration: none;
 }
 
 .drop-menu--drop {
@@ -635,15 +655,16 @@ body {
 }
 
 .drop-menu--item-1 {
-  background: #ffc93c;
+  background: #13293d;
 }
 
 .drop-menu--item-2 {
-  background: #02111b;
+  background: #13293d;
 }
 
 .drop-menu--item-3 {
-  background: #07689f;
+  background: #13293d;
+  border-bottom: 2px solid #fdfffc;
 }
 
 @-webkit-keyframes topToBottom {
@@ -724,5 +745,52 @@ body {
 
 .mobile .tooltip-wrapper span {
   display: none !important;
+}
+
+.nav-menu-item {
+  height: 48px;
+  width: 120px;
+  margin: 5px;
+}
+
+.nav-menu {
+  position: absolute;
+  top: 128px;
+  left: 0;
+}
+
+.right-column-item {
+  margin-left: 3px;
+  height: 36px;
+  font-size: 14px;
+}
+
+.drawer ul {
+  list-style: none;
+  padding-left: 0px;
+  margin-top: -2px;
+}
+
+.drawer a {
+  color: #fdfffc;
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  position: relative;
+  -webkit-box-align: center;
+      -ms-flex-align: center;
+          align-items: center;
+  -webkit-box-pack: center;
+      -ms-flex-pack: center;
+          justify-content: center;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.drawer a:hover {
+  color: #13293d;
+  text-decoration: none;
+  background-color: #ffc93c;
 }
 /*# sourceMappingURL=styles.css.map */
