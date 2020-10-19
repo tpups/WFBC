@@ -9,7 +9,7 @@
 /* buttons */
 .drawer-control {
     border: none;
-    background-color: $wfbc-yellow-1;
+    background: none;
     margin-left: 3px;
     color: $wfbc-blue-2;
 }
@@ -17,11 +17,12 @@
     outline: none;
 }
 .drawer-control .line {
-    stroke: $wfbc-blue-2;
+    stroke: $wfbc-white-1;
 }
-.drawer-control:hover {
-    background-color: $wfbc-blue-1;
-    border-color: $wfbc-yellow-1;
+.drawer-control:hover .line {
+    //background-color: $wfbc-yellow-1;
+    //border-color: $wfbc-yellow-1;
+    stroke: $wfbc-yellow-1;
 }
 .top-menu-button {
     position: absolute;
@@ -32,6 +33,9 @@
 .top-menu-button .line {
     stroke: none;
     fill: $wfbc-white-1;
+}
+#slack-button .line {
+    stroke: $wfbc-blue-2 !important;
 }
 .top-menu-button:hover .line {
     fill: $wfbc-yellow-1;

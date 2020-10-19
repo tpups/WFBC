@@ -162,7 +162,7 @@ body {
 /* buttons */
 .drawer-control {
   border: none;
-  background-color: #ffc93c;
+  background: none;
   margin-left: 3px;
   color: #13293d;
 }
@@ -172,12 +172,11 @@ body {
 }
 
 .drawer-control .line {
-  stroke: #13293d;
+  stroke: #fdfffc;
 }
 
-.drawer-control:hover {
-  background-color: #07689f;
-  border-color: #ffc93c;
+.drawer-control:hover .line {
+  stroke: #ffc93c;
 }
 
 .top-menu-button {
@@ -190,6 +189,10 @@ body {
 .top-menu-button .line {
   stroke: none;
   fill: #fdfffc;
+}
+
+#slack-button .line {
+  stroke: #13293d !important;
 }
 
 .top-menu-button:hover .line {
