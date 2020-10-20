@@ -25,9 +25,10 @@
                 <ul>
                     <li class="nav-menu-item left-column-item"><a href="#">Home</a></li>
                     <li class="nav-menu-item left-column-item"><a href="#">Standings</a></li>
-                    <li class="nav-menu-item left-column-item"><a href="#">Draft Picks</a></li>
+                    <li class="nav-menu-item left-column-item"><a href="/draftpicks">Draft Picks</a></li>
                     <li class="nav-menu-item left-column-item"><a href="#">Rulebook</a></li>
                     <li class="nav-menu-item left-column-item"><a href="#">Trade</a></li>
+                    <li class="nav-menu-item left-column-item"><a href="#">Lineup Moves</a></li>
                 </ul>
             </nav>
             <nav class="side-menu @AppState.SideMenuCssClass">
@@ -37,7 +38,7 @@
         <div class="main-container">
             <MenuBar />
             <div class="main" @onclick="@CloseManagerMenu">
-                <div class="content px-4"> 
+                <div class="content"> 
                     @Body
                 </div>
             </div>

@@ -1,5 +1,9 @@
 body {
-  font-family: Commissioner;
+  font-family: Commissioner, Amatic SC;
+}
+
+.bold-600 {
+  font-weight: 600;
 }
 
 .drawer-container {
@@ -19,7 +23,7 @@ body {
   display: inline-block;
   background-color: #13293d;
   overflow: hidden;
-  z-index: 1;
+  z-index: 2;
   -webkit-box-flex: 0;
       -ms-flex: none;
           flex: none;
@@ -403,6 +407,11 @@ body {
   }
 }
 
+.main {
+  padding: 10px;
+  overflow: auto;
+}
+
 .loader-bg {
   background: radial-gradient(circle farthest-corner at center, #0d0814 0%, #120e29 100%);
   height: 100%;
@@ -491,7 +500,7 @@ body {
   right: 0;
   top: 48px;
   width: 200px;
-  z-index: 1;
+  z-index: 2;
 }
 
 .drop-item {
@@ -795,5 +804,86 @@ body {
   color: #13293d;
   text-decoration: none;
   background-color: #ffc93c;
+}
+
+.table-container {
+  display: -webkit-box;
+  display: -ms-flexbox;
+  display: flex;
+  min-width: 350px;
+  max-width: 700px;
+}
+
+table {
+  display: -ms-grid;
+  display: grid;
+  border-collapse: collapse;
+  empty-cells: show;
+  font-family: Amatic SC, 'Times New Roman', Times, serif;
+  min-width: 100%;
+  -ms-grid-columns: (minmax(90px, 1fr))[7];
+      grid-template-columns: repeat(7, minmax(90px, 1fr));
+}
+
+table .strike {
+  position: relative;
+  display: inline-block;
+}
+
+table .strike::before {
+  content: '';
+  border-bottom: 2px solid #bf211e;
+  width: 100%;
+  position: absolute;
+  right: 0;
+  top: 50%;
+}
+
+thead,
+tbody,
+tr {
+  display: contents;
+}
+
+th,
+td {
+  padding: 0px;
+  padding-left: 10px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+
+th {
+  position: -webkit-sticky;
+  position: sticky;
+  top: 0;
+  background: #02111b;
+  text-align: left;
+  font-weight: normal;
+  font-size: 1.6rem;
+  color: #fdfffc;
+  z-index: 1;
+}
+
+th:last-child {
+  border: 0;
+}
+
+td {
+  color: #02111b;
+  background: #fdfffc;
+  font-size: 1.5rem;
+  padding-left: 15px;
+}
+
+tr:nth-child(odd) td {
+  background: #b9cdda;
+  font-size: 1.8rem;
+}
+
+tr:first-child(odd) td {
+  font-weight: 600;
 }
 /*# sourceMappingURL=styles.css.map */
