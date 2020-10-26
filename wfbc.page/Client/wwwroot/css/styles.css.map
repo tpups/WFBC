@@ -12,7 +12,8 @@
         "../../styles/_drop-menu.scss",
         "../../styles/_tooltip.scss",
         "../../styles/_nav-menu.scss",
-        "../../styles/_table.scss"
+        "../../styles/_table.scss",
+        "../../styles/_tabs.scss"
     ],
     "names": [],
     "file": "styles.css"

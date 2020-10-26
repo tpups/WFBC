@@ -1,5 +1,21 @@
-﻿<h3>Commish</h3>
+﻿@page "/commish"
+@inherits CommishDataModel
 
-@code {
+<h3>Commish</h3>
+
+<button>Managers</button>
+<button>Draft Picks</button>
+<button>Trades</button>
+
+<a href="/manager/add" class="btn btn-primary" role="button">Add Manager</a>
+<a href="/manager/delete" class="btn btn-primary" role="button">Delete Manager</a>
+<a href="/manager/edit" class="btn btn-primary" role="button">Edit Manager</a>
+
+@if (manList == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
 
 }
