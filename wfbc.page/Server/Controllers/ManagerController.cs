@@ -10,40 +10,35 @@ using wfbc.page.Server.Interface;
 
 namespace wfbc.page.Server.Controllers
 {
+    [ApiController]
     [Route("api/[controller]")]
-    public class WfbcController : Controller
+    public class ManagerController : ControllerBase
     {
-        private readonly IWfbc wfbc;
-        public WfbcController(IWfbc _wfbc)
+        private readonly IManager _manager;
+        public ManagerController(IManager manager)
         {
-            wfbc = _wfbc;
+            _manager = manager;
         }
 
         [HttpGet]
-        public IEnumerable<Manager> Get()
+        public List<Manager> Get()
         {
-            return wfbc.GetAllManagers();
+            return _manager.GetAllManagers();
         }
         [HttpPost]
         public void Post([FromBody] Manager manager)
         {
-            wfbc.AddManager(manager);
+            _manager.AddManager(manager);
         }
         [HttpPut]
         public void Put([FromBody]Manager manager)
         {
-            wfbc.UpdateManager(manager);
+            _manager.UpdateManager(manager);
         }
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public void Delete(string id)
         {
-            wfbc.DeleteManager(id);
-        }
-        [HttpGet]
-        public Standings StandingsByDate(string date)
-        {
-            DateTime _date = DateTime.Parse(date);
-            return wfbc.GetStandingsByDate(_date);
+            _manager.DeleteManager(id);
         }
     }
 }

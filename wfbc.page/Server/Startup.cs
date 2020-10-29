@@ -5,7 +5,11 @@ using Microsoft.AspNetCore.ResponseCompression;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System.Linq;
+using wfbc.page.Server.Interface;
+using wfbc.page.Server.DataAccess;
+using wfbc.page.Shared.Models;
 
 namespace wfbc.page.Server
 {
@@ -22,9 +26,14 @@ namespace wfbc.page.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
-
-            services.AddControllersWithViews();
-            services.AddRazorPages();
+            services.AddMvc();
+            services.AddTransient<IManager, ManagerDataAccessLayer>();
+            services.AddSingleton(options => options.GetRequiredService<IOptions<WfbcDBContext>>().Value);
+            services.AddResponseCompression(opts =>
+            {
+                opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+                    new[] { "application/octet-stream" });
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

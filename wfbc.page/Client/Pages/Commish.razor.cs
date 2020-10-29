@@ -13,16 +13,19 @@ namespace wfbc.page.Client.Pages
     {
         [Inject]
         public HttpClient Http { get; set; }
-        protected List<Manager> manList = new List<Manager>();
+        protected List<Manager> manList = new List<Manager>(); 
         protected Manager man = new Manager();
-
         protected override async Task OnInitializedAsync()
         {
-            await GetManagers();
+            await GetAllManagers();
         }
-        protected async Task GetManagers()
+        protected async Task AddManager()
         {
-            manList = await Http.GetFromJsonAsync<List<Manager>>("api/Manager");
+            await Http.PostAsJsonAsync("api/manager", man);
+        }
+        protected async Task GetAllManagers()
+        {
+            manList = await Http.GetFromJsonAsync<List<Manager>>("api/manager");
         }
         protected void DeleteConfirm(string ID)
         {
@@ -30,8 +33,8 @@ namespace wfbc.page.Client.Pages
         }
         protected async Task DeleteManager(string manID)
         {
-            await Http.DeleteAsync("api/Manager/" + manID);
-            await GetManagers();
+            await Http.DeleteAsync("api/wfbc/managers" + manID);
+            await GetAllManagers();
         }
     }
 }

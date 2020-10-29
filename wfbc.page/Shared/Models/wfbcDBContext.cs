@@ -36,7 +36,7 @@ namespace wfbc.page.Shared.Models
         {
             get
             {
-                return _mongoDatabase.GetCollection<Manager>("managers");
+                 return _mongoDatabase.GetCollection<Manager>("managers");
             }
         }
         public IMongoCollection<Standings> Standings
