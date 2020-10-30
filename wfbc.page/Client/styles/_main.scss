@@ -1,4 +1,16 @@
 .main {
-    padding: 10px;
     overflow: auto;
+    position: absolute;
+    top: 48px;
+    bottom: 0;
+}
+
+.main-container {
+    width: inherit;
+    z-index: 2;
+    background-color: $wfbc-white-1;
+}
+
+.content {
+    padding: 10px;
 }

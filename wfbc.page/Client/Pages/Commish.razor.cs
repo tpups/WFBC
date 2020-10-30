@@ -33,7 +33,7 @@ namespace wfbc.page.Client.Pages
         }
         protected async Task DeleteManager(string manID)
         {
-            await Http.DeleteAsync("api/wfbc/managers" + manID);
+            await Http.DeleteAsync("api/manager/" + manID);
             await GetAllManagers();
         }
     }

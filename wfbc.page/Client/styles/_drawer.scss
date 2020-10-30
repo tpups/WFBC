@@ -14,17 +14,6 @@
     flex: none;
 }
 
-.main-container {
-    width: inherit;
-    z-index: 2;
-    background-color: $wfbc-white-1;
-}
-
-.main {
-    position: absolute;
-    top: 48px;
-    bottom: 0;
-}
 /* Mobile layout moves drawer below menu bar */
 .mobile .drawer {
     top: 48px;

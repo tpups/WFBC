@@ -35,7 +35,7 @@ namespace wfbc.page.Server.Controllers
         {
             _manager.UpdateManager(manager);
         }
-        [HttpDelete]
+        [HttpDelete("{id}")]
         public void Delete(string id)
         {
             _manager.DeleteManager(id);

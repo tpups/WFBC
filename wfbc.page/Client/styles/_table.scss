@@ -1,3 +1,11 @@
+table {
+  display: grid;
+  border-collapse: collapse;
+  empty-cells: show;
+  font-family: Amatic SC, 'Times New Roman', Times, serif;
+  min-width: 100%;
+}
+
 .table-container {
     display: flex;
     min-width: 350px;
@@ -44,27 +52,34 @@ td {
   padding-left: 15px;
 }
 
+// Delete Managers Modal
+.delete-manager-modal {
+  grid-template-columns: repeat(4, minmax(90px, 1fr));
+}
+
+// Managers Table
+.manager-table {
+  table {
+    grid-template-columns: repeat(5, minmax(90px, 1fr));
+  }
+}
+
 // Draft Picks Table
 .draft-picks-table {
-  table {
-    display: grid;
-    border-collapse: collapse;
-    empty-cells: show;
-    font-family: Amatic SC, 'Times New Roman', Times, serif;
-    min-width: 100%;
+  table{
     grid-template-columns: repeat(7, minmax(90px, 1fr));
-
+    
     .strike {
-        position: relative;
-        display: inline-block;
+      position: relative;
+      display: inline-block;
     }
     .strike::before {
-        content: '';
-        border-bottom: 2px solid $wfbc-red-1;
-        width: 100%;
-        position: absolute;
-        right: 0;
-        top: 50%;
+      content: '';
+      border-bottom: 2px solid $wfbc-red-1;
+      width: 100%;
+      position: absolute;
+      right: 0;
+      top: 50%;
     }
   }
   tr:nth-child(odd) td {
