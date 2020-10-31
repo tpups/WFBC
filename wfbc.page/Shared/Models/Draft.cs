@@ -11,10 +11,11 @@ namespace wfbc.page.Shared.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string Id { get; set; }
-        public List<Manager> Managers { get; set; }
+        public List<string> Managers { get; set; }
+        public List<string> Picks { get; set; }
         public string Year { get; set; }
         public string Type { get; set; }
         public DateTime Date { get; set; }
-        public int Teams { get; set; }
+        public int Rounds { get; set; }
     }
 }

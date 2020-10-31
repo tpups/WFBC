@@ -28,6 +28,9 @@ namespace wfbc.page.Server
         {
             services.AddMvc();
             services.AddTransient<IManager, ManagerDataAccessLayer>();
+            services.AddTransient<IDraft, DraftDataAccessLayer>();
+            services.AddTransient<IPick, PickDataAccessLayer>();
+            services.AddTransient<IStandings, StandingsDataAccessLayer>();
             services.AddSingleton(options => options.GetRequiredService<IOptions<WfbcDBContext>>().Value);
             services.AddResponseCompression(opts =>
             {

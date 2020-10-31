@@ -1,35 +1,10 @@
 ﻿@page "/commish"
-@inherits CommishDataModel
+@inherits CommishModel
 
 <h3>Commish</h3>
+<a class="button" role="button" href="/commish/create_draft" aria-label="create draft link">Create Draft</a>
+<a class="button" role="button" href="/commish/add_manager" aria-label="add manager link">Add Manager</a>
 
-@*<EditForm Model="@man" OnValidSubmit="AddManager">
-    <DataAnnotationsValidator />
-    <div class="form-group row">
-        <label class="control-label col-md-12">Name</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.Name" />
-        </div>
-        <ValidationMessage For="@(() => man.Name)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Team Name</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.TeamName" />
-        </div>
-        <ValidationMessage For="@(() => man.TeamName)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Email</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.Email" />
-        </div>
-        <ValidationMessage For="@(() => man.Email)" />
-    </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Save</button>
-    </div>
-</EditForm>*@
 
 <div class="table-container manager-table">
     <table>
@@ -38,7 +13,6 @@
                 <th>Name</th>
                 <th>Team</th>
                 <th>Email</th>
-                <th>Team Id</th>
                 <th>Options</th>
             </tr>
         </thead>
@@ -49,8 +23,8 @@
                     <td>@man.Name</td>
                     <td>@man.TeamName</td>
                     <td>@man.Email</td>
-                    <td>team ID</td>
                     <td>
+                        <a class="button" role="button" href="/commish/edit_manager/@man.Id" aria-label="edit manager link">Edit</a>
                         <button type="button" aria-label="open modal" @onclick='() => OpenModal("delete", man.Id)'>Delete</button>
                     </td>
                 </tr>
@@ -78,7 +52,7 @@
                 <td>@man.Email</td>
             </tr>
         </table>
-        <button class="button" @onclick="async () => await DeleteManager(man.Id)">Delete</button>
+        <button class="button" @onclick="async () => await Delete(man.Id)">Delete</button>
     </div>
 </div>
 
@@ -100,5 +74,10 @@
             modal_state = "";
             modal_overlay_state = "";
         }
+    }
+    public async Task Delete(string id)
+    {
+        await DeleteManager(id);
+        CloseModal();
     }
 }

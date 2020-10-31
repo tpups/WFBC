@@ -1,0 +1,37 @@
+﻿@page "/commish/create_draft"
+@page "/commish/edit_draft/{draftId}"
+@inherits AddEditDraftModel
+
+<h3>@Title Draft</h3>
+
+<EditForm Model="@draft" OnValidSubmit="SaveDraft">
+    <DataAnnotationsValidator />
+    <div class="form-group row">
+        <label class="control-label col-md-12">Year</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="draft.Year" />
+        </div>
+        <ValidationMessage For="@(() => draft.Year)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Type</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="draft.Type" />
+        </div>
+        <ValidationMessage For="@(() => draft.Type)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Rounds</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="draft.Rounds" />
+        </div>
+        <ValidationMessage For="@(() => draft.Rounds)" />
+    </div>
+    <div class="form-group">
+        <button type="submit" class="btn btn-primary">Create</button>
+    </div>
+</EditForm>
+
+@code {
+
+}

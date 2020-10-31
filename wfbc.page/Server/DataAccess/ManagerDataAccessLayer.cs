@@ -10,10 +10,10 @@ namespace wfbc.page.Server.DataAccess
 {
     public class ManagerDataAccessLayer : IManager
     {
-        private WfbcDBContext db;
-        public ManagerDataAccessLayer(WfbcDBContext _db)
+        private WfbcDBContext _db;
+        public ManagerDataAccessLayer(WfbcDBContext db)
         {
-            db = _db;
+            _db = db;
         }
 
         // Get all managers
@@ -21,7 +21,20 @@ namespace wfbc.page.Server.DataAccess
         {
             try
             {
-                return db.Managers.Find(_ => true).ToList();
+                return _db.Managers.Find(_ => true).ToList();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        // Get one manger
+        public Manager GetManager(string id)
+        {
+            try
+            {
+                FilterDefinition<Manager> managerData = Builders<Manager>.Filter.Eq("Id", id);
+                return _db.Managers.Find(managerData).FirstOrDefault();
             }
             catch
             {
@@ -33,7 +46,7 @@ namespace wfbc.page.Server.DataAccess
         {
             try
             {
-                db.Managers.InsertOne(manager);
+                _db.Managers.InsertOne(manager);
             }
             catch
             {
@@ -45,7 +58,7 @@ namespace wfbc.page.Server.DataAccess
         {
             try
             {
-                db.Managers.ReplaceOne(filter: m => m.Id == manager.Id, replacement: manager);
+                _db.Managers.ReplaceOne(filter: m => m.Id == manager.Id, replacement: manager);
             }
             catch
             {
@@ -58,7 +71,7 @@ namespace wfbc.page.Server.DataAccess
             try
             {
                 FilterDefinition<Manager> managerData = Builders<Manager>.Filter.Eq("Id", id);
-                db.Managers.DeleteOne(managerData);
+                _db.Managers.DeleteOne(managerData);
             }
             catch
             {

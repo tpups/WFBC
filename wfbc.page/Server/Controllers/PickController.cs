@@ -14,11 +14,25 @@ namespace wfbc.page.Server.Controllers
     [Route("api/[controller]")]
     public class PickController : ControllerBase
     {
-        private readonly IPick wfbc;
-        public PickController(IPick _wfbc)
+        private readonly IPick _pick;
+        public PickController(IPick pick)
         {
-            wfbc = _wfbc;
+            _pick = pick;
         }
-
+        [HttpGet]
+        public List<Pick> GetPicks(List<string> picks)
+        {
+            return _pick.GetPicks(picks);
+        }
+        [HttpGet("{id}")]
+        public Pick Get(string id)
+        {
+            return _pick.GetPick(id);
+        }
+        [HttpPost]
+        public void Post([FromBody] List<Pick> picks)
+        {
+            _pick.AddPicks(picks);
+        }
     }
 }

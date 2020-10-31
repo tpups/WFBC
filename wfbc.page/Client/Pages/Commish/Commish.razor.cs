@@ -9,20 +9,19 @@ using System.Net.Http.Json;
 
 namespace wfbc.page.Client.Pages
 {
-    public class CommishDataModel : ComponentBase
+    public class CommishModel : ComponentBase
     {
         [Inject]
         public HttpClient Http { get; set; }
+        [Inject]
+        public NavigationManager UrlNavigationManager { get; set; }
         protected List<Manager> manList = new List<Manager>(); 
         protected Manager man = new Manager();
         protected override async Task OnInitializedAsync()
         {
             await GetAllManagers();
         }
-        protected async Task AddManager()
-        {
-            await Http.PostAsJsonAsync("api/manager", man);
-        }
+
         protected async Task GetAllManagers()
         {
             manList = await Http.GetFromJsonAsync<List<Manager>>("api/manager");

@@ -12,38 +12,37 @@ namespace wfbc.page.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ManagerController : ControllerBase
+    public class DraftController : ControllerBase
     {
-        private readonly IManager _manager;
-        public ManagerController(IManager manager)
+        private readonly IDraft _draft;
+        public DraftController(IDraft draft)
         {
-            _manager = manager;
+            _draft = draft;
         }
-
         [HttpGet]
-        public List<Manager> Get()
+        public List<Draft> Get()
         {
-            return _manager.GetAllManagers();
+            return _draft.GetAllDrafts();
         }
         [HttpGet("{id}")]
-        public Manager Get(string id)
+        public Draft Get(string id)
         {
-            return _manager.GetManager(id);
+            return _draft.GetDraft(id);
         }
         [HttpPost]
-        public void Post([FromBody] Manager manager)
+        public void Post([FromBody]Draft draft)
         {
-            _manager.AddManager(manager);
+            _draft.AddDraft(draft);
         }
         [HttpPut]
-        public void Put([FromBody] Manager manager)
+        public void Put([FromBody]Draft draft)
         {
-            _manager.UpdateManager(manager);
+            _draft.UpdateDraft(draft);
         }
-        [HttpDelete("{id}")]
+        [HttpDelete]
         public void Delete(string id)
         {
-            _manager.DeleteManager(id);
+            _draft.DeleteDraft(id);
         }
     }
 }

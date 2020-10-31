@@ -8,20 +8,45 @@ using MongoDB.Driver;
 
 namespace wfbc.page.Server.DataAccess
 {
-    public class wfbcDataAccessLayer : IPick
+    public class PickDataAccessLayer : IPick
     {
-        private WfbcDBContext db;
-        public wfbcDataAccessLayer(WfbcDBContext _db)
+        private WfbcDBContext _db;
+        public PickDataAccessLayer(WfbcDBContext db)
         {
-            db = _db;
+            _db = db;
         }
 
+        public List<Pick> GetPicks(List<string> picks)
+        {
+            try
+            {
+                var picksData = new FilterDefinitionBuilder<Pick>();
+                var picksFilter = picksData.In(p => p.Id, picks);
+                return _db.Picks.Find(picksFilter).ToList();
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        public Pick GetPick(string id)
+        {
+            try
+            {
+                FilterDefinition<Pick> pickData = Builders<Pick>.Filter.Eq("Id", id);
+                return _db.Picks.Find(pickData).FirstOrDefault();
+            }
+            catch
+            {
+                throw;
+            }
+        }
         // Add a draft pick
         public void AddPick(Pick pick)
         {
             try
             {
-                db.Picks.InsertOne(pick);
+                _db.Picks.InsertOne(pick);
             }
             catch
             {
@@ -33,7 +58,7 @@ namespace wfbc.page.Server.DataAccess
         {
             try
             {
-                db.Picks.InsertMany(picks);
+                _db.Picks.InsertMany(picks);
             }
             catch
             {
@@ -45,7 +70,7 @@ namespace wfbc.page.Server.DataAccess
         {
             try
             {
-                db.Picks.ReplaceOne(filter: p => p.Id == pick.Id, replacement: pick);
+                _db.Picks.ReplaceOne(filter: p => p.Id == pick.Id, replacement: pick);
             }
             catch
             {
