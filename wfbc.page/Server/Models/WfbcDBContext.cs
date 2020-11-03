@@ -2,19 +2,19 @@
 using System.Collections.Generic;
 using System.Text;
 using MongoDB.Driver;
+using wfbc.page.Shared.Models;
+using MongoDB.Driver.Core.Connections;
+using Microsoft.Extensions.Configuration;
 
-namespace wfbc.page.Shared.Models
+namespace wfbc.page.Server.Models
 {
     public class WfbcDBContext 
     {
         private readonly IMongoDatabase _mongoDatabase;
-
-        public WfbcDBContext()
+        private readonly MongoClient client;
+        public WfbcDBContext(IDatabaseSettings settings)
         {
-
-            var client = new MongoClient("mongodb+srv://admin:%2A7a3TLJ3aI%23t@cluster0.nfj4j.mongodb.net/<dbname>?retryWrites=true&w=majority");
-            //var database = client.GetDatabase("test");
-            //var client = new MongoClient("mongodb://localhost:27017");
+            client = new MongoClient(settings.ConnectionString);
             _mongoDatabase = client.GetDatabase("wfbc");
         }
 

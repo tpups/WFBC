@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using wfbc.page.Shared.Models;
+using wfbc.page.Server.Models;
 using wfbc.page.Server.Interface;
 using MongoDB.Driver;
 

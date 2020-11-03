@@ -9,7 +9,10 @@ using Microsoft.Extensions.Options;
 using System.Linq;
 using wfbc.page.Server.Interface;
 using wfbc.page.Server.DataAccess;
-using wfbc.page.Shared.Models;
+using wfbc.page.Server.Models;
+using Microsoft.EntityFrameworkCore.Storage;
+using System.Data;
+using MongoDB.Driver.Core.Configuration;
 
 namespace wfbc.page.Server
 {
@@ -26,12 +29,14 @@ namespace wfbc.page.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
+            services.AddSingleton<IDatabaseSettings>(x => x.GetRequiredService<IOptions<DatabaseSettings>>().Value);
             services.AddMvc();
             services.AddTransient<IManager, ManagerDataAccessLayer>();
             services.AddTransient<IDraft, DraftDataAccessLayer>();
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
-            services.AddSingleton(options => options.GetRequiredService<IOptions<WfbcDBContext>>().Value);
+            services.AddSingleton<WfbcDBContext>();
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
