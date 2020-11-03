@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace wfbc.page.Server.Models
+﻿namespace wfbc.page.Server.Models
 {
     public interface IDatabaseSettings
     {
