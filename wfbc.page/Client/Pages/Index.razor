@@ -1,5 +1,16 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 
 <h1>the World Fantasy Baseball Classic</h1>
 
 Est. 2011
+
+<AuthorizeView>
+    <Authorized>
+        Hello, @context.User.Identity.Name
+    </Authorized>
+    <NotAuthorized>
+        Not signed in
+    </NotAuthorized>
+</AuthorizeView>

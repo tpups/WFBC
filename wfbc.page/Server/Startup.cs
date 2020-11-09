@@ -10,9 +10,11 @@ using System.Linq;
 using wfbc.page.Server.Interface;
 using wfbc.page.Server.DataAccess;
 using wfbc.page.Server.Models;
+using wfbc.page.Shared.Models;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 using MongoDB.Driver.Core.Configuration;
+using Okta.AspNetCore;
 
 namespace wfbc.page.Server
 {
@@ -29,6 +31,21 @@ namespace wfbc.page.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = OktaDefaults.ApiAuthenticationScheme;
+                options.DefaultChallengeScheme = OktaDefaults.ApiAuthenticationScheme;
+                options.DefaultSignInScheme = OktaDefaults.ApiAuthenticationScheme;
+            })
+            .AddOktaWebApi(new OktaWebApiOptions()
+            {
+                OktaDomain = Configuration["Okta:OktaDomain"],
+            });
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy(Policies.IsCommish, Policies.IsCommishPolicy());
+                options.AddPolicy(Policies.IsManager, Policies.IsManagerPolicy());
+            });
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
             services.AddSingleton<IDatabaseSettings>(x => x.GetRequiredService<IOptions<DatabaseSettings>>().Value);
             services.AddMvc();
@@ -64,6 +81,9 @@ namespace wfbc.page.Server
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseAuthentication();
+            app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>
             {

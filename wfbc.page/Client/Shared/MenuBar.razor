@@ -1,4 +1,8 @@
-﻿@inject AppState AppState 
+﻿@using Microsoft.AspNetCore.Components.Authorization
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject AppState AppState
+@inject NavigationManager Navigation
+@inject SignOutSessionStateManager SignOutManager
 
 <div class="menu-bar">
     <button class="drawer-control" @onclick="ToggleDrawer" aria-label="Drawer Toggle">
@@ -83,19 +87,27 @@
     </Tooltip>
     <div class="drop-menu @AppState.ManagerMenuCssClass">
         <ul class="drop-menu--drop manager-menu">
-            <li class="drop-item drop-menu--item-1"><a href="#">Profile</a></li>
-            <li class="drop-item drop-menu--item-2"><a href="#">Notifications</a></li>
-            <li class="drop-item drop-menu--item-3"><a href="#">Sign Out</a></li>
+            <AuthorizeView>
+                <Authorized>
+                    <li class="drop-item drop-menu--item-1"><a href="#">Profile</a></li>
+                    <li class="drop-item drop-menu--item-2"><a href="#">Notifications</a></li>
+                    <li class="drop-item drop-menu--item-3"><button class="button" @onclick="BeginSignOut">Sign Out</button></li>
+                </Authorized>
+                <NotAuthorized>
+                    <li class="drop-item drop-menu--item-1"><a href="authentication/login">Sign In</a></li>
+                </NotAuthorized>
+            </AuthorizeView>
+
         </ul>
     </div>
 </div>
 
 @code {
-    protected override async Task OnInitializedAsync()
+    private async Task BeginSignOut(MouseEventArgs args)
     {
-
+        await SignOutManager.SetSignOutState();
+        Navigation.NavigateTo("authentication/logout");
     }
-
     void ToggleDrawer()
     {
         AppState.SetCloseDrawer(toggle: true);

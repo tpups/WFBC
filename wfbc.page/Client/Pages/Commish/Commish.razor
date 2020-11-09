@@ -1,4 +1,5 @@
 ﻿@page "/commish"
+@attribute [Authorize(Policy = Policies.IsCommish)]
 @inherits CommishModel
 
 <h3>Commish</h3>

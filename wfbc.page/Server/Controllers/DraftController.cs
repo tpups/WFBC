@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using wfbc.page.Server.DataAccess;
 using wfbc.page.Shared.Models;
 using wfbc.page.Server.Interface;
+using Microsoft.AspNetCore.Authorization;
 
 namespace wfbc.page.Server.Controllers
 {
@@ -30,16 +31,19 @@ namespace wfbc.page.Server.Controllers
             return _draft.GetDraft(id);
         }
         [HttpPost]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Post([FromBody]Draft draft)
         {
             _draft.AddDraft(draft);
         }
         [HttpPut]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Put([FromBody]Draft draft)
         {
             _draft.UpdateDraft(draft);
         }
         [HttpDelete]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Delete(string id)
         {
             _draft.DeleteDraft(id);

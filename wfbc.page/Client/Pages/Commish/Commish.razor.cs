@@ -6,6 +6,7 @@ using wfbc.page.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Net.Http.Json;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 
 namespace wfbc.page.Client.Pages
 {
@@ -13,6 +14,8 @@ namespace wfbc.page.Client.Pages
     {
         [Inject]
         public HttpClient Http { get; set; }
+        [Inject]
+        public PublicClient PublicClient { get; set; }
         [Inject]
         public NavigationManager UrlNavigationManager { get; set; }
         protected List<Manager> manList = new List<Manager>(); 
@@ -24,7 +27,7 @@ namespace wfbc.page.Client.Pages
 
         protected async Task GetAllManagers()
         {
-            manList = await Http.GetFromJsonAsync<List<Manager>>("api/manager");
+            manList = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager");
         }
         protected void DeleteConfirm(string ID)
         {
@@ -32,8 +35,19 @@ namespace wfbc.page.Client.Pages
         }
         protected async Task DeleteManager(string manID)
         {
-            await Http.DeleteAsync("api/manager/" + manID);
-            await GetAllManagers();
+            try
+            {
+                await Http.DeleteAsync("api/manager/" + manID);
+                await GetAllManagers();
+            }
+            catch (AccessTokenNotAvailableException e)
+            {
+                e.Redirect();
+            }
+            catch
+            {
+
+            }
         }
     }
 }

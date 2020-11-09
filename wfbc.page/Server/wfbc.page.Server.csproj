@@ -7,6 +7,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Components.WebAssembly.Server" Version="3.2.1" />
     <PackageReference Include="MongoDB.Driver" Version="2.11.3" />
+    <PackageReference Include="Okta.AspNetCore" Version="3.4.0" />
   </ItemGroup>
 
   <ItemGroup>
