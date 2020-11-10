@@ -23,8 +23,8 @@ namespace wfbc.page.Client
             {
                 builder.Configuration.Bind("Okta", options.ProviderOptions);
                 options.ProviderOptions.ResponseType = "code";
-                options.ProviderOptions.DefaultScopes.Add("email");
-            });
+                options.UserOptions.RoleClaim = "role";
+            }).AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
             builder.Services.AddAuthorizationCore(options =>
             {
                 options.AddPolicy(Policies.IsCommish, Policies.IsCommishPolicy());

@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using Microsoft.AspNetCore.Components.Authorization
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using System.Security.Claims
 
 <h1>the World Fantasy Baseball Classic</h1>
 
@@ -9,6 +10,18 @@ Est. 2011
 <AuthorizeView>
     <Authorized>
         Hello, @context.User.Identity.Name
+        <ul>
+            @foreach (var claim in @context.User.Claims)
+            {
+                <li>@claim.Type: @claim.Value</li>
+            }
+            Is Commish??? @context.User.IsInRole("Commish")
+            Is Manager??? @context.User.IsInRole("Manager")
+            @if (@context.User.HasClaim(ClaimTypes.Role, "Commish"))
+            {
+                <p>You're the Commish!!!!</p>
+            }
+        </ul>
     </Authorized>
     <NotAuthorized>
         Not signed in
