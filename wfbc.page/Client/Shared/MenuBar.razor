@@ -18,23 +18,17 @@
     </button>
     <Tooltip Text="Rotowire League">
         <button id="rotowire-button" class="top-menu-button">
-            <svg viewBox="0 0 512 512" width="35">
-                <RotowireLink />
-            </svg>
+            <RotowireLink />
         </button>
     </Tooltip>
     <Tooltip Text="Slack Channel">
         <button id="slack-button" class="top-menu-button">
-            <svg viewBox="0 0 100 100" width="42">
-                <SlackLink />
-            </svg>
+              <SlackLink />
         </button>
     </Tooltip>
     <Tooltip Text="Manager Menu">
         <button id="manager-button" class="top-menu-button @AppState.ManagerMenuCssClass" @onclick="ToggleManagerMenu" aria-label="Manager Menu Toggle">
-            <svg viewBox="0 0 512 512" width="35">
-                <ManagerMenu />
-            </svg>
+             <ManagerMenu />
         </button>
     </Tooltip>
     <div class="drop-menu @AppState.ManagerMenuCssClass">
