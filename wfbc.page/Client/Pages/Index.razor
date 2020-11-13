@@ -16,7 +16,7 @@ Est. 2011
                 <li>@claim.Type: @claim.Value</li>
             }
             Is Commish??? @context.User.IsInRole("Commish")
-            Is Manager??? @context.User.IsInRole("Manager")
+            Is Manager??? @context.User.IsInRole("Managers")
             @if (@context.User.HasClaim(ClaimTypes.Role, "Commish"))
             {
                 <p>You're the Commish!!!!</p>

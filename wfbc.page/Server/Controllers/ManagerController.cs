@@ -4,9 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using wfbc.page.Server.DataAccess;
 using wfbc.page.Shared.Models;
 using wfbc.page.Server.Interface;
+using Okta.AspNetCore;
 
 namespace wfbc.page.Server.Controllers
 {
@@ -40,6 +42,7 @@ namespace wfbc.page.Server.Controllers
         {
             _manager.UpdateManager(manager);
         }
+        [Authorize(Policy = Policies.IsCommish)]
         [HttpDelete("{id}")]
         public void Delete(string id)
         {

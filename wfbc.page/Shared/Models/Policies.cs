@@ -17,7 +17,7 @@ namespace wfbc.page.Shared.Models
         public static AuthorizationPolicy IsManagerPolicy()
         {
             return new AuthorizationPolicyBuilder().RequireAuthenticatedUser()
-                                                   .RequireRole("Manager")
+                                                   .RequireRole("Managers")
                                                    .Build();
         }
     }

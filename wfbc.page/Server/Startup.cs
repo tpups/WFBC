@@ -51,7 +51,7 @@ namespace wfbc.page.Server
             services.AddMvc();
             services.AddTransient<IManager, ManagerDataAccessLayer>();
             services.AddTransient<IDraft, DraftDataAccessLayer>();
-            services.AddTransient<IPick, PickDataAccessLayer>();
+            services.AddTransient<IPick, PickDataAccessLayer>(); 
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
             services.AddSingleton<WfbcDBContext>();
             services.AddResponseCompression(opts =>
