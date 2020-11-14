@@ -14,8 +14,7 @@ namespace wfbc.page.Client
         {
         }
 
-        public override async ValueTask<ClaimsPrincipal> CreateUserAsync(
-            RemoteUserAccount account, RemoteAuthenticationUserOptions options)
+        public override async ValueTask<ClaimsPrincipal> CreateUserAsync(RemoteUserAccount account, RemoteAuthenticationUserOptions options)
         {
             var user = await base.CreateUserAsync(account, options);
             if (!user.Identity.IsAuthenticated)
