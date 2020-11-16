@@ -342,4 +342,7 @@ ASALocalRun/
 
 # BeatPulse healthcheck temp database
 healthchecksdb
+
+# Josh added
 /sass-workspace.code-workspace
+wfbc.page/Server/appsettings.json
