@@ -1,6 +1,6 @@
 ﻿using System.Net.Http;
 
-namespace wfbc.page.Client
+namespace WFBC.Client
 {
     public class PublicClient
     {

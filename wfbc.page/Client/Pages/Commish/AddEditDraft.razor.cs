@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using wfbc.page.Shared.Models;
+using WFBC.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Net.Http.Json;
 
-namespace wfbc.page.Client.Pages.Commish
+namespace WFBC.Client.Pages.Commish
 {
     public class AddEditDraftModel : CommishModel
     {

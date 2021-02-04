@@ -2,11 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using wfbc.page.Shared.Models;
+using WFBC.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 
-namespace wfbc.page.Client.Pages
+namespace WFBC.Client.Pages
 {
     public class DraftPicksDataModel : ComponentBase
     {

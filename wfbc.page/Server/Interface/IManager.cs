@@ -1,7 +1,7 @@
-﻿using wfbc.page.Shared.Models;
+﻿using WFBC.Shared.Models;
 using System.Collections.Generic;
 
-namespace wfbc.page.Server.Interface
+namespace WFBC.Server.Interface
 {
     public interface IManager
     {

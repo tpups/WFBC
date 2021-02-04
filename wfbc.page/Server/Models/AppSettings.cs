@@ -1,4 +1,4 @@
-﻿namespace wfbc.page.Server.Models
+﻿namespace WFBC.Server.Models
 {
     public interface IDatabaseSettings
     {

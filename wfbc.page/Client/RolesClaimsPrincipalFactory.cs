@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 
 
-namespace wfbc.page.Client
+namespace WFBC.Client
 {
     public class RolesClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
     {

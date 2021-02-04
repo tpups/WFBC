@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using wfbc.page.Shared.Models;
+using WFBC.Shared.Models;
 
-namespace wfbc.page.Client
+namespace WFBC.Client
 {
     public class Program
     {

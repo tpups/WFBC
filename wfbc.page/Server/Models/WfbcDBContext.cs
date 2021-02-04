@@ -1,7 +1,7 @@
 ﻿using MongoDB.Driver;
-using wfbc.page.Shared.Models;
+using WFBC.Shared.Models;
 
-namespace wfbc.page.Server.Models
+namespace WFBC.Server.Models
 {
     public class WfbcDBContext 
     {

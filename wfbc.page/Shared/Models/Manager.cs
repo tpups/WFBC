@@ -2,7 +2,7 @@
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
 
-namespace wfbc.page.Shared.Models
+namespace WFBC.Shared.Models
 {
     public class Manager
     {

@@ -4,12 +4,12 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using wfbc.page.Server.DataAccess;
-using wfbc.page.Shared.Models;
-using wfbc.page.Server.Interface;
+using WFBC.Server.DataAccess;
+using WFBC.Shared.Models;
+using WFBC.Server.Interface;
 using Microsoft.AspNetCore.Authorization;
 
-namespace wfbc.page.Server.Controllers
+namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

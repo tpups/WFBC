@@ -8,4 +8,4 @@ WORKDIR /app
 # Copy the publish application to the workdir in image  
 COPY /publish/webapi ./  
   
-ENTRYPOINT ["./wfbc.page.Server"]  
+ENTRYPOINT ["./WFBC.Server"]  

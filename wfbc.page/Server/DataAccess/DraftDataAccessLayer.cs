@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using wfbc.page.Shared.Models;
-using wfbc.page.Server.Models;
-using wfbc.page.Server.Interface;
+using WFBC.Shared.Models;
+using WFBC.Server.Models;
+using WFBC.Server.Interface;
 using MongoDB.Driver;
 
-namespace wfbc.page.Server.DataAccess
+namespace WFBC.Server.DataAccess
 {
     public class DraftDataAccessLayer : IDraft
     {

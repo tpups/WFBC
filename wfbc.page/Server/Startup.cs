@@ -9,11 +9,11 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
-using wfbc.page.Server.Interface;
-using wfbc.page.Server.DataAccess;
-using wfbc.page.Server.Models;
-using wfbc.page.Shared.Models;
-using wfbc.page.Shared;
+using WFBC.Server.Interface;
+using WFBC.Server.DataAccess;
+using WFBC.Server.Models;
+using WFBC.Shared.Models;
+using WFBC.Shared;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 using MongoDB.Driver.Core.Configuration;
@@ -21,7 +21,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Okta.AspNetCore;
 using System.Security.Claims;
 
-namespace wfbc.page.Server
+namespace WFBC.Server
 {
     public class Startup
     {

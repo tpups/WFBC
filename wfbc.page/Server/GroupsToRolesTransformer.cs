@@ -10,9 +10,9 @@ using Microsoft.AspNetCore.Authentication;
 using Okta.AspNetCore;
 using Okta.Sdk;
 using Okta.Sdk.Configuration;
-using wfbc.page.Server.Models;
+using WFBC.Server.Models;
 
-namespace wfbc.page.Server
+namespace WFBC.Server
 {
     public class GroupsToRolesTransformer : IClaimsTransformation
     {

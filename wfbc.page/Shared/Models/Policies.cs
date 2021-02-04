@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 
-namespace wfbc.page.Shared.Models
+namespace WFBC.Shared.Models
 {
     public static class Policies
     {

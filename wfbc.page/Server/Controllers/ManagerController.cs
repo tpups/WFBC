@@ -5,12 +5,12 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
-using wfbc.page.Server.DataAccess;
-using wfbc.page.Shared.Models;
-using wfbc.page.Server.Interface;
+using WFBC.Server.DataAccess;
+using WFBC.Shared.Models;
+using WFBC.Server.Interface;
 using Okta.AspNetCore;
 
-namespace wfbc.page.Server.Controllers
+namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]

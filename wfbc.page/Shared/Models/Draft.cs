@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
-namespace wfbc.page.Shared.Models
+namespace WFBC.Shared.Models
 {
     public class Draft
     {

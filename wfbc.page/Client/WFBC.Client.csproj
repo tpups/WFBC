@@ -20,7 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Shared\wfbc.page.Shared.csproj" />
+    <ProjectReference Include="..\Shared\WFBC.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>
