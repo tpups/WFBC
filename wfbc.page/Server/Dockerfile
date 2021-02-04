@@ -7,9 +7,9 @@ EXPOSE 443
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
 WORKDIR /src
-COPY ["WFBC/Server/WFBC.Server.csproj", "WFBC/Server/"]
-COPY ["WFBC/Client/WFBC.Client.csproj", "WFBC/Client/"]
-COPY ["WFBC/Shared/WFBC.Shared.csproj", "WFBC/Shared/"]
+COPY ["wfbc.page/Server/WFBC.Server.csproj", "WFBC/Server/"]
+COPY ["wfbc.page/Client/WFBC.Client.csproj", "WFBC/Client/"]
+COPY ["wfbc.page/Shared/WFBC.Shared.csproj", "WFBC/Shared/"]
 RUN dotnet restore "WFBC/Server/WFBC.Server.csproj"
 COPY . .
 WORKDIR "/src/WFBC/Server"
