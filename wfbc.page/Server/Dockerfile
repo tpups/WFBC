@@ -1,18 +1,21 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.1-buster-slim AS base
+#Depending on the operating system of the host machines(s) that will build or run the containers, the image specified in the FROM statement may need to be changed.
+#For more information, please see https://aka.ms/containercompat
+
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1-buster AS build
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build
 WORKDIR /src
-COPY ["wfbc.page/Server/WFBC.Server.csproj", "WFBC/Server/"]
-COPY ["wfbc.page/Client/WFBC.Client.csproj", "WFBC/Client/"]
-COPY ["wfbc.page/Shared/WFBC.Shared.csproj", "WFBC/Shared/"]
-RUN dotnet restore "WFBC/Server/WFBC.Server.csproj"
+COPY ["wfbc.page/Server/WFBC.Server.csproj", "wfbc.page/Server/"]
+COPY ["wfbc.page/Client/WFBC.Client.csproj", "wfbc.page/Client/"]
+COPY ["wfbc.page/Shared/WFBC.Shared.csproj", "wfbc.page/Shared/"]
+RUN dotnet restore "wfbc.page/Server/WFBC.Server.csproj"
 COPY . .
-WORKDIR "/src/WFBC/Server"
+WORKDIR "/src/wfbc.page/Server"
 RUN dotnet build "WFBC.Server.csproj" -c Release -o /app/build
 
 FROM build AS publish
