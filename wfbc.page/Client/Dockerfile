@@ -16,10 +16,8 @@ RUN dotnet build "WFBC.Client.csproj" -c Release -o /app/build
 
 FROM build AS publish
 RUN dotnet publish "WFBC.Client.csproj" -c Release -o /app/publish
-
+ 
 FROM nginx:alpine AS final
-# this is the server block for wfbc website
-# settings files stored on server 
-WORKDIR /var/www/wfbc.page/html
+WORKDIR /usr/share/nginx/html
 COPY --from=publish /app/publish/WFBC.Client/dist .
 COPY nginx.conf /etc/nginx/nginx.conf
