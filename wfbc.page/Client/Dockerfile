@@ -19,5 +19,5 @@ RUN dotnet publish "WFBC.Client.csproj" -c Release -o /app/publish
  
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
-COPY --from=publish /app/publish/WFBC.Client/dist .
+COPY --from=publish /app/publish/WFBC.Client/wwwroot .
 COPY nginx.conf /etc/nginx/nginx.conf
