@@ -11,7 +11,7 @@ COPY ["wfbc.page/Client/WFBC.Client.csproj", "wfbc.page/Client/"]
 COPY ["wfbc.page/Shared/WFBC.Shared.csproj", "wfbc.page/Shared/"]
 RUN dotnet restore "wfbc.page/Client/WFBC.Client.csproj"
 COPY . .
-WORKDIR "/src/wfbc.page/Client"
+WORKDIR /src/wfbc.page/Client
 RUN dotnet build "WFBC.Client.csproj" -c Release -o /app/build
 
 FROM build AS publish
@@ -20,4 +20,6 @@ RUN dotnet publish "WFBC.Client.csproj" -c Release -o /app/publish
 FROM nginx:alpine AS final
 WORKDIR /usr/share/nginx/html
 COPY --from=publish app/publish/wwwroot .
-COPY wfbc.page/Client/nginx.conf /etc/nginx/nginx.conf
+# server block location: /var/www/wfbc.page
+# I think this would need to be a wfbc.page config file and copied to /etc/nginx/sites-available
+# COPY wfbc.page/Client/nginx.conf /var/www/wfbc.page/nginx.conf
