@@ -18,7 +18,8 @@ FROM build AS publish
 RUN dotnet publish "WFBC.Client.csproj" -c Release -o /app/publish
  
 FROM nginx:alpine AS final
-WORKDIR /usr/share/nginx/html
+# copy to server block
+WORKDIR /var/www/wfbc.page/html
 COPY --from=publish app/publish/wwwroot .
 # server block location: /var/www/wfbc.page
 # I think this would need to be a wfbc.page config file and copied to /etc/nginx/sites-available
