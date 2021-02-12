@@ -10,7 +10,7 @@ namespace WFBC.Server.Models
         public WfbcDBContext(IDatabaseSettings settings)
         {
             client = new MongoClient(settings.ConnectionString);
-            _mongoDatabase = client.GetDatabase("wfbc");
+            _mongoDatabase = client.GetDatabase(settings.DatabaseName);
         }
 
         public IMongoCollection<Draft> Drafts
