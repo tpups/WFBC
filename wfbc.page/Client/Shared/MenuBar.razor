@@ -40,7 +40,7 @@
                     <li class="drop-item drop-menu--item-3"><a href="#" @onclick="BeginSignOut">Sign Out</a></li>
                 </Authorized>
                 <NotAuthorized>
-                    <li class="drop-item drop-menu--item-1"><a href="authentication/login-callback">Sign In</a></li>
+                    <li class="drop-item drop-menu--item-1"><a href="authentication/login">Sign In</a></li>
                 </NotAuthorized>
             </AuthorizeView>
         </ul>
@@ -51,7 +51,7 @@
     private async Task BeginSignOut(MouseEventArgs args)
     {
         await SignOutManager.SetSignOutState();
-        Navigation.NavigateTo("authentication/logout-callback");
+        Navigation.NavigateTo("authentication/logout");
     }
     void ToggleDrawer()
     {
