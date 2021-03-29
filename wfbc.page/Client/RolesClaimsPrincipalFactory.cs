@@ -17,39 +17,34 @@ namespace WFBC.Client
         public override async ValueTask<ClaimsPrincipal> CreateUserAsync(RemoteUserAccount account, RemoteAuthenticationUserOptions options)
         {
             var user = await base.CreateUserAsync(account, options);
-            if (!user.Identity.IsAuthenticated)
+            if (user.Identity.IsAuthenticated)
             {
-                return user;
-            }
-
-            var identity = (ClaimsIdentity)user.Identity;
-            var roleClaims = identity.FindAll(claim => claim.Type == "groups");
-            if (roleClaims == null || !roleClaims.Any())
-            {
-                return user;
-            }
-
-            foreach (var existingClaim in roleClaims)
-            {
-                identity.RemoveClaim(existingClaim);
-            }
-
-            var rolesElem = account.AdditionalProperties["groups"];
-            if (!(rolesElem is JsonElement roles))
-            {
-                return user;
-            }
-
-            if (roles.ValueKind == JsonValueKind.Array)
-            {
-                foreach (var role in roles.EnumerateArray())
+                var identity = (ClaimsIdentity)user.Identity;
+                var roleClaims = identity.FindAll(identity.RoleClaimType);
+                if (roleClaims != null && roleClaims.Any())
                 {
-                    identity.AddClaim(new Claim(options.RoleClaim, role.GetString()));
+                    foreach (var existingClaim in roleClaims)
+                    {
+                        identity.RemoveClaim(existingClaim);
+                    }
+
+                    var rolesElem = account.AdditionalProperties[identity.RoleClaimType];
+                    if (rolesElem is JsonElement roles)
+                    {
+                        if (roles.ValueKind == JsonValueKind.Array)
+                        {
+                            foreach (var role in roles.EnumerateArray())
+                            {
+                                identity.AddClaim(new Claim(options.RoleClaim, role.GetString()));
+                            }
+
+                        }
+                        else
+                        {
+                            identity.AddClaim(new Claim(options.RoleClaim, roles.GetString()));
+                        }
+                    }
                 }
-            }
-            else
-            {
-                identity.AddClaim(new Claim(options.RoleClaim, roles.GetString()));
             }
 
             return user;
