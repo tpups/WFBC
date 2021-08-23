@@ -9,6 +9,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WFBC.Shared.Models;
+using BlazorPro.BlazorSize;
 
 namespace WFBC.Client
 {
@@ -42,6 +43,8 @@ namespace WFBC.Client
             builder.Services.AddSingleton<AppState>();
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
+
+            builder.Services.AddMediaQueryService();
 
             await builder.Build().RunAsync();
         }
