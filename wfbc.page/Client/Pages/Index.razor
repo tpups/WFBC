@@ -34,9 +34,14 @@
             {
                 <p>You manage alright</p>
             }
+            <br />
         </ul>
     </Authorized>
     <NotAuthorized>
         Not signed in
     </NotAuthorized>
+</AuthorizeView>
+<AuthorizeView Policy="@Policies.IsCommish">
+    Alright, alright, alright
+    Commish detected
 </AuthorizeView>
