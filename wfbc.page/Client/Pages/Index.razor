@@ -24,11 +24,15 @@
             {
                 <li>@claim.Type: @claim.Value</li>
             }
-            Is Commish??? @context.User.IsInRole("Commish")
-            Is Manager??? @context.User.IsInRole("Managers")
+            Is Authenticated??? @context.User.Identity.IsAuthenticated
+            <br />
             @if (@context.User.HasClaim(ClaimTypes.Role, "Commish"))
             {
                 <p>You're the Commish!!!!</p>
+            }
+            @if (context.User.HasClaim(ClaimTypes.Role, "Managers"))
+            {
+                <p>You manage alright</p>
             }
         </ul>
     </Authorized>
