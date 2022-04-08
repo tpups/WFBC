@@ -778,6 +778,10 @@ body {
   z-index: 1;
 }
 
+.drawer .active {
+  background-color: #07689f;
+}
+
 .drawer a:hover {
   color: #13293d;
   text-decoration: none;
