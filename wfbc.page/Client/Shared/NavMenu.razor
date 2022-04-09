@@ -5,21 +5,21 @@
         switch (NavMenuSection)
         {
             case "rulebook":
-                <li class="nav-menu-item right-column-item"><NavLink href="/rulebook/2022">2022 Rulebook</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/rulebook/2021">2021 Rulebook</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2022">2022 Rulebook</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2021">2021 Rulebook</NavLink></li>
                 break;
             case "results":
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2021">2021 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2020">2020 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2019">2019 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2018">2018 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2017">2017 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2016">2016 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2015">2015 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2014">2014 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2013">2013 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2012">2012 Results</NavLink></li>
-                <li class="nav-menu-item right-column-item"><NavLink href="/results/2011">2011 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2021">2021 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2020">2020 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2019">2019 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2018">2018 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2017">2017 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2016">2016 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2015">2015 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2014">2014 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2013">2013 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2012">2012 Results</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2011">2011 Results</NavLink></li>
                 break;
             case "home":
                 break;
@@ -32,4 +32,12 @@
 @code {
     [CascadingParameter(Name = "nav-menu-section")]
     protected string? NavMenuSection { get; set; }
+
+    private void CloseOnMobile()
+    {
+        if (AppState.IsXSmall)
+        {
+            AppState.SetCloseDrawer(false, true);
+        }
+    }
 }
