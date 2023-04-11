@@ -7,42 +7,43 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using System.Configuration;
 using Microsoft.AspNetCore.Authentication;
+using Okta;
 using Okta.AspNetCore;
 using Okta.Sdk;
-using Okta.Sdk.Configuration;
+//using Okta.Sdk.Configuration;
 using WFBC.Server.Models;
 
 namespace WFBC.Server
 {
-    public class GroupsToRolesTransformer : IClaimsTransformation
-    {
-        private OktaClient client;
+    //public class GroupsToRolesTransformer : IClaimsTransformation
+    //{
+    //    private OktaClient client;
 
-        public GroupsToRolesTransformer(IOktaSettings settings)
-        {
-            client = new OktaClient(new OktaClientConfiguration
-            {
-                OktaDomain = settings.OktaDomain,
-                Token = settings.Token
-            });
-        }
+    //    public GroupsToRolesTransformer(IOktaSettings settings)
+    //    {
+    //        client = new OktaClient(new OktaClientConfiguration
+    //        {
+    //            OktaDomain = settings.OktaDomain,
+    //            Token = settings.Token
+    //        });
+    //    }
 
-        public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal IPrincipal)
-        {
-            var idClaim = IPrincipal.FindFirst(x => x.Type == ClaimTypes.NameIdentifier);
-            if (idClaim != null)
-            {
-                var user = await client.Users.GetUserAsync(idClaim.Value);
-                if (user != null)
-                {
-                    var groups = user.Groups.ToEnumerable();
-                    foreach (var group in groups)
-                    {
-                        ((ClaimsIdentity)IPrincipal.Identity).AddClaim(new Claim(ClaimTypes.Role, group.Profile.Name));
-                    }
-                }
-            }
-            return IPrincipal;
-        }
-    }
+    //    public async Task<ClaimsPrincipal> TransformAsync(ClaimsPrincipal IPrincipal)
+    //    {
+    //        var idClaim = IPrincipal.FindFirst(x => x.Type == ClaimTypes.NameIdentifier);
+    //        if (idClaim != null)
+    //        {
+    //            var user = await client.Users.GetUserAsync(idClaim.Value);
+    //            if (user != null)
+    //            {
+    //                var groups = user.Groups.ToEnumerable();
+    //                foreach (var group in groups)
+    //                {
+    //                    ((ClaimsIdentity)IPrincipal.Identity).AddClaim(new Claim(ClaimTypes.Role, group.Profile.Name));
+    //                }
+    //            }
+    //        }
+    //        return IPrincipal;
+    //    }
+    //}
 }

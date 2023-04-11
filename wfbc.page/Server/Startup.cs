@@ -60,7 +60,7 @@ namespace WFBC.Server
             services.AddTransient<IDraft, DraftDataAccessLayer>();
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
-            services.AddTransient<IClaimsTransformation, GroupsToRolesTransformer>();
+            //services.AddTransient<IClaimsTransformation, GroupsToRolesTransformer>();
             services.AddSingleton<WfbcDBContext>();
             services.AddResponseCompression(opts =>
             {
