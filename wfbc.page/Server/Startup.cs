@@ -17,9 +17,11 @@ using WFBC.Shared;
 using Microsoft.EntityFrameworkCore.Storage;
 using System.Data;
 using MongoDB.Driver.Core.Configuration;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Okta.AspNetCore;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc.Authorization;
 using System.Security.Claims;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace WFBC.Server
 {
@@ -38,19 +40,20 @@ namespace WFBC.Server
         {
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = OktaDefaults.ApiAuthenticationScheme;
-                options.DefaultChallengeScheme = OktaDefaults.ApiAuthenticationScheme;
-                options.DefaultSignInScheme = OktaDefaults.ApiAuthenticationScheme;
-            })
-            .AddOktaWebApi(new OktaWebApiOptions()
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+
+            }).AddJwtBearer(options =>
             {
-                OktaDomain = Configuration["OktaSettings:OktaDomain"]
+                options.Authority = Configuration["OktaSettings:Authority"];
+                options.Audience = Configuration["OktaSettings:Audience"];
             });
+
             services.AddAuthorization(options =>
             {
                 options.AddPolicy(Policies.IsCommish, Policies.IsCommishPolicy());
                 options.AddPolicy(Policies.IsManager, Policies.IsManagerPolicy());
             });
+            services.AddControllers();
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
             services.AddSingleton<IDatabaseSettings>(x => x.GetRequiredService<IOptions<DatabaseSettings>>().Value);
             services.Configure<OktaSettings>(Configuration.GetSection(nameof(OktaSettings)));
@@ -60,7 +63,6 @@ namespace WFBC.Server
             services.AddTransient<IDraft, DraftDataAccessLayer>();
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
-            //services.AddTransient<IClaimsTransformation, GroupsToRolesTransformer>();
             services.AddSingleton<WfbcDBContext>();
             services.AddResponseCompression(opts =>
             {

@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 namespace WFBC.Client
 {
     // This is required because multiple roles arrive in json string array format ["",""]
-    // The demonstration will work with any user besides "abi" without this as Abi has multiple roles. 
     public class RolesClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
     {
         public RolesClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor) { }
