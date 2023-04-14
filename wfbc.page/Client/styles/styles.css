@@ -395,23 +395,6 @@ body {
   }
 }
 
-.main {
-  overflow: auto;
-  position: absolute;
-  top: 48px;
-  bottom: 0;
-}
-
-.main-container {
-  width: inherit;
-  z-index: 2;
-  background-color: #fdfffc;
-}
-
-.content {
-  padding: 10px;
-}
-
 .lds-hourglass {
   position: absolute;
   width: 75px;
@@ -788,100 +771,6 @@ body {
   background-color: #ffc93c;
 }
 
-table {
-  display: -ms-grid;
-  display: grid;
-  border-collapse: collapse;
-  empty-cells: show;
-  font-family: Amatic SC, 'Times New Roman', Times, serif;
-  min-width: 100%;
-}
-
-.table-container {
-  display: -webkit-box;
-  display: -ms-flexbox;
-  display: flex;
-  min-width: 350px;
-  max-width: 700px;
-}
-
-thead,
-tbody,
-tr {
-  display: contents;
-}
-
-th,
-td {
-  padding: 0px;
-  padding-left: 10px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  line-height: 1.15;
-}
-
-th {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  background: #02111b;
-  text-align: left;
-  font-weight: normal;
-  font-size: 1.6rem;
-  color: #fdfffc;
-  z-index: 1;
-}
-
-th:last-child {
-  border: 0;
-}
-
-td {
-  color: #02111b;
-  background: #fdfffc;
-  font-size: 1.5rem;
-  padding-left: 15px;
-}
-
-.delete-manager-modal {
-  -ms-grid-columns: (minmax(90px, 1fr))[4];
-      grid-template-columns: repeat(4, minmax(90px, 1fr));
-}
-
-.manager-table table {
-  -ms-grid-columns: (minmax(100px, 1fr))[4];
-      grid-template-columns: repeat(4, minmax(100px, 1fr));
-}
-
-.draft-picks-table table {
-  -ms-grid-columns: (minmax(90px, 1fr))[7];
-      grid-template-columns: repeat(7, minmax(90px, 1fr));
-}
-
-.draft-picks-table table .strike {
-  position: relative;
-  display: inline-block;
-}
-
-.draft-picks-table table .strike::before {
-  content: '';
-  border-bottom: 2px solid #bf211e;
-  width: 100%;
-  position: absolute;
-  right: 0;
-  top: 50%;
-}
-
-.draft-picks-table tr:nth-child(odd) td {
-  background: #b9cdda;
-  font-size: 1.8rem;
-}
-
-.draft-picks-table tr:first-child(odd) td {
-  font-weight: 600;
-}
-
 .tabs {
   list-style: none;
 }
@@ -936,73 +825,5 @@ td {
 
 #box-one:target, #box-two:target, #box-three:target {
   z-index: 1;
-}
-
-.modal {
-  /* This way it could be display flex or grid or whatever also. */
-  display: block;
-  /* Probably need media queries here */
-  width: 600px;
-  max-width: 100%;
-  height: 400px;
-  max-height: 100%;
-  position: fixed;
-  z-index: 100;
-  left: 50%;
-  top: 50%;
-  /* Use this for centering if unknown width/height */
-  -webkit-transform: translate(-50%, -50%);
-          transform: translate(-50%, -50%);
-  /* If known, negative margins are probably better (less chance of blurry text). */
-  /* margin: -200px 0 0 -200px; */
-  background: white;
-  -webkit-box-shadow: 0 0 60px 10px rgba(0, 0, 0, 0.9);
-          box-shadow: 0 0 60px 10px rgba(0, 0, 0, 0.9);
-}
-
-.modal .close-button {
-  position: absolute;
-  /* don't need to go crazy with z-index here, just sits over .modal-guts */
-  z-index: 1;
-  top: 10px;
-  /* needs to look OK with or without scrollbar */
-  right: 20px;
-  border: 0;
-  background: black;
-  color: white;
-  padding: 5px 10px;
-  font-size: 1.3rem;
-}
-
-.closed-modal {
-  display: none;
-}
-
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 50;
-  background: rgba(0, 0, 0, 0.6);
-}
-
-.modal-stuffs {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  overflow: auto;
-  padding: 20px 50px 20px 20px;
-}
-
-.button {
-  border: 0;
-  background: black;
-  color: white;
-  padding: 5px 10px;
-  font-size: 1.3rem;
 }
 /*# sourceMappingURL=styles.css.map */

@@ -37,9 +37,6 @@ namespace WFBC.Client
             {
                 builder.Configuration.Bind("Okta", options.ProviderOptions);
                 options.ProviderOptions.ResponseType = "code";
-                //todo what is token scope
-                options.ProviderOptions.DefaultScopes.Add("wfbc:commish");
-                options.ProviderOptions.DefaultScopes.Add("wfbc:manager");
                 options.UserOptions.RoleClaim = "role";
             }).AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
 

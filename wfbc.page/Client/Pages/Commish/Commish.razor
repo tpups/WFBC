@@ -4,81 +4,8 @@
 
 <h3>Commish</h3>
 <a class="button" role="button" href="/commish/create_draft" aria-label="create draft link">Create Draft</a>
-<a class="button" role="button" href="/commish/add_manager" aria-label="add manager link">Add Manager</a>
-
-
-<div class="table-container manager-table">
-    <table>
-        <thead>
-            <tr>
-                <th>Name</th>
-                <th>Team</th>
-                <th>Email</th>
-                <th>Options</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var man in manList)
-            {
-                <tr>
-                    <td>@man.Name</td>
-                    <td>@man.TeamName</td>
-                    <td>@man.Email</td>
-                    <td>
-                        <a class="button" role="button" href="/commish/edit_manager/@man.Id" aria-label="edit manager link">Edit</a>
-                        <button type="button" aria-label="open modal" @onclick='() => OpenModal("delete", man.Id)'>Delete</button>
-                    </td>
-                </tr>
-            }
-        </tbody>
-    </table>
-</div>
-
-<div class="modal-overlay @modal_overlay_state" id="modal-overlay"></div>
-<div class="modal @modal_state" id="delete-manager-modal">
-    <button class="close-button" id="close-button" @onclick="CloseModal">Close</button>
-    <div class="modal-stuffs delete-manager-modal">
-        <h4>Confirm Delete</h4>
-        <table class="table">
-            <tr>
-                <td>Name</td>
-                <td>@man.Name</td>
-            </tr>
-            <tr>
-                <td>Id</td>
-                <td>@man.Id</td>
-            </tr>
-            <tr>
-                <td>Email</td>
-                <td>@man.Email</td>
-            </tr>
-        </table>
-        <button class="button" @onclick="async () => await Delete(man.Id)">Delete</button>
-    </div>
-</div>
-
+<a class="button" role="button" href="/commish/managers" aria-label="manage managers">Managers</a>
 
 @code {
-    private string modal_state = "closed-modal";
-    private string modal_overlay_state = "closed-modal";
 
-    public void CloseModal()
-    {
-        modal_state = "closed-modal";
-        modal_overlay_state = "closed-modal";
-    }
-    public void OpenModal(string modalType, string manId)
-    {
-        if (modalType == "delete")
-        {
-            DeleteConfirm(manId);
-            modal_state = "";
-            modal_overlay_state = "";
-        }
-    }
-    public async Task Delete(string id)
-    {
-        await DeleteManager(id);
-        CloseModal();
-    }
 }

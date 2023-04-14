@@ -10,14 +10,15 @@ namespace WFBC.Shared.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
         [Required]
-        public string Name { get; set; }
-        public string TeamName { get; set; }
+        public string? Name { get; set; }
+        public string? TeamName { get; set; }
         [Required]
         [EmailAddress]
-        public string Email { get; set; }
+        public string? Email { get; set; }
         [Required]
-        public string Status { get; set; }
+        public string? Status { get; set; }
         [Required]
-        public string Access { get; set; }
+        public string? Access { get; set; }
+        public Dictionary<string, object>? RotowireTeamIds { get; set; }
     }
 }

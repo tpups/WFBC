@@ -7,9 +7,9 @@ using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Net.Http.Json;
 
-namespace WFBC.Client.Pages
+namespace WFBC.Client.Pages.Commish
 {
-    public class AddEditManagerModel : CommishModel
+    public class AddEditManagerModel : ManagersModel
     {
         protected string Title = "Add";
         [Parameter]
