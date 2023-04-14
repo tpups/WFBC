@@ -37,7 +37,10 @@
     }
     a:hover {
         color: $wfbc-blue-2;
-        text-decoration: none;
+        text-decoration: none; 
         background-color: $wfbc-yellow-1;
+    }
+    .external-link-svg, .stack-svg {
+        margin-left: 5px;
     }
 }

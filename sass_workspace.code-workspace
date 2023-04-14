@@ -4,5 +4,16 @@
 			"path": "wfbc.page\\Client\\styles"
 		}
 	],
-	"settings": {}
+	"settings": {
+		"liveSassCompile.settings.formats": [
+
+
+			{
+				"format": "expanded",
+				"extensionName": ".css",
+				"savePath": "/../wwwroot/css",
+				"savePathReplacementPairs": null
+			}
+		]
+	}
 }
