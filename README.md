@@ -1,8 +1,10 @@
 # WFBC
-## .NET 5.0 Server + API
+* .NET 7.0 Server + API
 
-## Blazor Web Assembly Client
+* Blazor Web Assembly Client
 
-### Github > DockerHub > DigitalOcean Ubuntu Droplet
+* Github > DockerHub > DigitalOcean Ubuntu Droplet
 
-#### SSO IDP == Okta
+* SSO IDP == Okta
+
+* See wiki for detailed info
