@@ -42,10 +42,10 @@
                 </CascadingValue>
             </nav>
         </aside>
-        <div class="main-container w-full z-2">
+        <div class="main-container w-[inherit] z-10 bg-wfbc-white-1">
             <MenuBar />
             <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseManagerMenu">
-                <div class="flex flex-col md:flex-row">
+                <div class="flex flex-col lg:flex-row px-1 items-center">
                     @Body
                 </div>
             </main>

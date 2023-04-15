@@ -3,39 +3,40 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using System.Security.Claims
 
-<h1 class="test">the World Fantasy Baseball Classic</h1>
-<p>Est. 2011</p>
-<br />
-<h3>2023 Pre-Season Draft: TBD</h3>
-<h3>Votes on rule changes due February 13 by 7PM.</h3>
-<br />
+<Trophy />
 
-<AuthorizeView>
-    <Authorized>
-        Hello, @context.User.Identity.Name
-        <ul>
-            @foreach (var claim in @context.User.Claims)
-            {
-                <li>@claim.Type: @claim.Value</li>
-            }
-            Is Authenticated??? @context.User.Identity.IsAuthenticated
-            <br />
-            @if (@context.User.HasClaim(ClaimTypes.Role, "Commish"))
-            {
-                <p>You're the Commish!!!!</p>
-            }
-            @if (context.User.HasClaim(ClaimTypes.Role, "Managers"))
-            {
-                <p>You manage alright</p>
-            }
-            <br />
-        </ul>
-    </Authorized>
-    <NotAuthorized>
-        Not signed in
-    </NotAuthorized>
-</AuthorizeView>
-<AuthorizeView Policy="@Policies.IsCommish">
-    Alright, alright, alright
-    Commish detected
-</AuthorizeView>
+<div class="flex flex-col my-6 lg:mx-6 w-full md:w-5/6 lg:w-2/3 xl:w-7/12">
+
+    
+
+    <AuthorizeView>
+        <Authorized>
+            Hello, @context.User.Identity.Name
+            <ul>
+                @foreach (var claim in @context.User.Claims)
+                {
+                    <li>@claim.Type: @claim.Value</li>
+                }
+                Is Authenticated??? @context.User.Identity.IsAuthenticated
+                <br />
+                @if (@context.User.HasClaim(ClaimTypes.Role, "Commish"))
+                {
+                    <p>You're the Commish!!!!</p>
+                }
+                @if (context.User.HasClaim(ClaimTypes.Role, "Managers"))
+                {
+                    <p>You manage alright</p>
+                }
+                <br />
+            </ul>
+        </Authorized>
+        <NotAuthorized>
+
+        </NotAuthorized>
+    </AuthorizeView>
+    <AuthorizeView Policy="@Policies.IsCommish">
+        Alright, alright, alright
+        Commish detected
+    </AuthorizeView>
+
+</div>
