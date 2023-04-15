@@ -3,8 +3,8 @@
 @using WFBC.Client.Shared.SVG
 @inject AppState AppState
 @inject NavigationManager Navigation
-@inject SignOutSessionStateManager SignOutManager
-
+@*@inject Microsoft.AspNetCore.Components.WebAssembly.Authentication.NavigationManagerExtensions.NavigateToLogout SignOutManager;*@
+@*@inject SignOutSessionStateManager SignOutManager*@
 <div class="menu-bar">
     <button class="drawer-control" @onclick="ToggleDrawer" aria-label="Drawer Toggle">
         <svg class="ham ham-rotate ham8 @AppState.DrawerActive toggler-icon" viewBox="0 0 100 100" width="42">
@@ -16,14 +16,14 @@
             <MinifyDrawer />
         </svg>
     </button>
-    <Tooltip Text="Rotowire League">
-        <a id="rotowire-button" class="top-menu-button" href="https://www.rotowire.com/mlbcommish21/league.php?leagueID=56" target="_blank">
+    <Tooltip Text="Rotowire League" External=true>
+        <a id="rotowire-button" class="top-menu-button" href="https://www.rotowire.com/mlbcommish23/league.php?leagueID=13" target="_blank">
             <RotowireLink />
         </a>
     </Tooltip>
-    <Tooltip Text="Slack Channel">
+    <Tooltip Text="Slack Channel" External=true>
         <a id="slack-button" class="top-menu-button" href="https://wfbc.slack.com" target="_blank">
-              <SlackLink />
+            <SlackLink />
         </a>
     </Tooltip>
     <Tooltip Text="Manager Menu">
@@ -48,10 +48,11 @@
 </div>
 
 @code {
-    private async Task BeginSignOut(MouseEventArgs args)
+    private void BeginSignOut()
     {
-        await SignOutManager.SetSignOutState();
-        Navigation.NavigateTo("authentication/logout");
+        //await SignOutManager.SetSignOutState();
+        //Navigation.NavigateTo("authentication/logout");
+        Microsoft.AspNetCore.Components.WebAssembly.Authentication.NavigationManagerExtensions.NavigateToLogout(Navigation, "authentication/logout");
     }
     void ToggleDrawer()
     {

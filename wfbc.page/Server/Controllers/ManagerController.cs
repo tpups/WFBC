@@ -8,12 +8,13 @@ using Microsoft.AspNetCore.Authorization;
 using WFBC.Server.DataAccess;
 using WFBC.Shared.Models;
 using WFBC.Server.Interface;
-using Okta.AspNetCore;
+
 
 namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Policy = Policies.IsCommish)]
     public class ManagerController : ControllerBase
     {
         private readonly IManager _manager;
@@ -23,11 +24,13 @@ namespace WFBC.Server.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public List<Manager> Get()
         {
             return _manager.GetAllManagers();
         }
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public Manager Get(string id)
         {
             return _manager.GetManager(id);
@@ -42,7 +45,6 @@ namespace WFBC.Server.Controllers
         {
             _manager.UpdateManager(manager);
         }
-        [Authorize(Policy = Policies.IsCommish)]
         [HttpDelete("{id}")]
         public void Delete(string id)
         {

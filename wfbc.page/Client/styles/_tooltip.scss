@@ -8,13 +8,19 @@
         visibility: hidden;
         position: absolute;
         right: 225px;
-        width: 135px;
+        width: 160px;
         background-color: #363636;
         color: $wfbc-white-1;
         text-align: center;
         padding: 5px 0;
         border-radius: 6px;
         z-index: 1;
+    }
+
+    .external-link-svg {
+        display: inline;
+        vertical-align: initial;
+        margin-left: 5px;
     }
 }
 

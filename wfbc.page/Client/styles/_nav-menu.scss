@@ -32,9 +32,15 @@
         height: 100%;
         z-index: 1;
     }
+    .active {
+        background-color: $wfbc-blue-1;
+    }
     a:hover {
         color: $wfbc-blue-2;
-        text-decoration: none;
+        text-decoration: none; 
         background-color: $wfbc-yellow-1;
+    }
+    .external-link-svg, .stack-svg {
+        margin-left: 5px;
     }
 }

@@ -1,52 +1,63 @@
-﻿using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
-using System.Linq;
-using System.Security.Claims;
+﻿using System.Linq;
 using System.Text.Json;
+using System.Security.Claims;
 using System.Threading.Tasks;
-
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 
 namespace WFBC.Client
 {
+    // This is required because multiple roles arrive in json string array format ["",""]
     public class RolesClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
     {
-        public RolesClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor)
-        {
-        }
+        public RolesClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor) { }
 
-        public override async ValueTask<ClaimsPrincipal> CreateUserAsync(RemoteUserAccount account, RemoteAuthenticationUserOptions options)
+        public override async ValueTask<ClaimsPrincipal> CreateUserAsync(
+         RemoteUserAccount account,
+         RemoteAuthenticationUserOptions options)
         {
-            var user = await base.CreateUserAsync(account, options);
+            ClaimsPrincipal user = await base.CreateUserAsync(account, options);
+
             if (user.Identity.IsAuthenticated)
             {
                 var identity = (ClaimsIdentity)user.Identity;
-                var roleClaims = identity.FindAll(identity.RoleClaimType);
+                Claim[] roleClaims = identity.FindAll(identity.RoleClaimType).ToArray();
+                var userClaims = user.Claims;
+
                 if (roleClaims != null && roleClaims.Any())
                 {
-                    foreach (var existingClaim in roleClaims)
+                    foreach (Claim existingClaim in roleClaims)
                     {
                         identity.RemoveClaim(existingClaim);
                     }
-
-                    var rolesElem = account.AdditionalProperties[identity.RoleClaimType];
-                    if (rolesElem is JsonElement roles)
+                }
+                try
+                {
+                    if (userClaims != null && userClaims.Any())
                     {
-                        if (roles.ValueKind == JsonValueKind.Array)
+                        foreach (Claim userClaim in userClaims)
                         {
-                            foreach (var role in roles.EnumerateArray())
+                            if (userClaim.Type == "groups" && userClaim.Value != null)
                             {
-                                identity.AddClaim(new Claim(options.RoleClaim, role.GetString()));
+                                string groups = userClaim.Value;
+                                if (!string.IsNullOrEmpty(groups))
+                                {
+                                    string[] userGroups = JsonSerializer.Deserialize<string[]>(userClaim.Value);
+                                    foreach (string userGroup in userGroups)
+                                    {
+                                        identity.AddClaim(claim: new Claim(ClaimTypes.Role.ToString(), userGroup));
+                                    }
+                                }
                             }
-
-                        }
-                        else
-                        {
-                            identity.AddClaim(new Claim(options.RoleClaim, roles.GetString()));
                         }
                     }
                 }
-            }
+                catch
+                {
 
+                }
+
+            }
             return user;
         }
     }

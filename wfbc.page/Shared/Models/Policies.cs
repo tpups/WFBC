@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace WFBC.Shared.Models
 {
@@ -10,14 +11,14 @@ namespace WFBC.Shared.Models
         public static AuthorizationPolicy IsCommishPolicy()
         {
             return new AuthorizationPolicyBuilder().RequireAuthenticatedUser()
-                                                   .RequireRole("Commish")
+                                                   .RequireClaim(ClaimTypes.Role.ToString(), "Commish")
                                                    .Build();
         }
 
         public static AuthorizationPolicy IsManagerPolicy()
         {
             return new AuthorizationPolicyBuilder().RequireAuthenticatedUser()
-                                                   .RequireRole("Managers")
+                                                   .RequireClaim(ClaimTypes.Role.ToString(), "Managers")
                                                    .Build();
         }
     }

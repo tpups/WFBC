@@ -1,0 +1,92 @@
+﻿@page "/commish/managers"
+@attribute [Authorize(Policy = Policies.IsCommish)]
+@inherits ManagersModel
+
+<div class="flex flex-col m-3 lg:m-6">
+    <h3>Managers</h3>
+
+    <a class="button" role="button" href="/commish/add_manager" aria-label="add manager link">Add Manager</a>
+
+    <div class="border rounded-xl shadow-sm p-6 dark:bg-gray-800 dark:border-gray-700">
+        <div class="flex flex-col">
+            <div class="-m-1.5 overflow-x-auto">
+                <div class="p-1.5 min-w-full inline-block align-middle">
+                    <div class="overflow-hidden">
+                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead>
+                                <tr>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Team</th>
+                                    <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Email</th>
+                                    <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Options</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                @foreach (var man in manList)
+                                {
+                                    <tr>
+                                        <td>@man.Name</td>
+                                        <td>@man.TeamName</td>
+                                        <td>@man.Email</td>
+                                        <td>
+                                            <a class="text-blue-500 hover:text-blue-700" href="/commish/edit_manager/@man.Id" aria-label="edit manager link">Edit</a>
+                                            <a class="text-blue-500 hover:text-blue-700" href="#" aria-label="open modal" @onclick='() => OpenModal("delete", man.Id)'>Delete</a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@*<div class="modal-overlay @modal_overlay_state" id="modal-overlay"></div>
+<div class="modal @modal_state" id="delete-manager-modal">
+    <button class="close-button" id="close-button" @onclick="CloseModal">Close</button>
+    <div class="modal-stuffs delete-manager-modal">
+        <h4>Confirm Delete</h4>
+        <table class="table">
+            <tr>
+                <td>Name</td>
+                <td>@man.Name</td>
+            </tr>
+            <tr>
+                <td>Id</td>
+                <td>@man.Id</td>
+            </tr>
+            <tr>
+                <td>Email</td>
+                <td>@man.Email</td>
+            </tr>
+        </table>
+        <button class="button" @onclick="async () => await Delete(man.Id)">Delete</button>
+    </div>
+</div>*@
+
+@code {
+    private string modal_state = "closed-modal";
+    private string modal_overlay_state = "closed-modal";
+
+    public void CloseModal()
+    {
+        modal_state = "closed-modal";
+        modal_overlay_state = "closed-modal";
+    }
+    public void OpenModal(string modalType, string manId)
+    {
+        if (modalType == "delete")
+        {
+            DeleteConfirm(manId);
+            modal_state = "";
+            modal_overlay_state = "";
+        }
+    }
+    public async Task Delete(string id)
+    {
+        await DeleteManager(id);
+        CloseModal();
+    }
+}

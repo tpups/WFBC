@@ -1,7 +1,9 @@
 ﻿@inherits LayoutComponentBase
 @using BlazorPro.BlazorSize
 @using WFBC.Shared.Models
+@using WFBC.Client.Shared.SVG
 @inject AppState AppState
+@inject NavigationManager Navigation
 @implements IDisposable
 
 <MediaQueryList>
@@ -24,33 +26,44 @@
             </div>
             <nav class="nav-menu">
                 <ul>
-                    <li class="nav-menu-item left-column-item"><a href="#">Home</a></li>
-                    <li class="nav-menu-item left-column-item"><a href="#">Standings</a></li>
-                    <li class="nav-menu-item left-column-item"><a href="/draftpicks">Draft Picks</a></li>
-                    <li class="nav-menu-item left-column-item"><a href="/rulebook/2021">Rulebook</a></li>
-                    <li class="nav-menu-item left-column-item"><a href="#">Trade</a></li>
-                    <li class="nav-menu-item left-column-item"><a href="#">Lineup Moves</a></li>
+                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "home" ? "active" : "") href="#" @onclick="() => ChangeNavSection(home)">Home</NavLink></li>
+                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "results" ? "active" : "") href="/results/2022" @onclick="() => ChangeNavSection(results)">Results <Stack /></NavLink></li>
+                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "rulebook" ? "active" : "") href="/rulebook/2023" @onclick="() => ChangeNavSection(rulebook)">Rulebook <Stack /></NavLink></li>
+                    <li class="nav-menu-item left-column-item"><NavLink href="https://docs.google.com/spreadsheets/d/1aclQnwGfbWnC7pEORc8wiXJ-xcyD9WpINyF-26l0EUg/edit?usp=sharing" target="_blank">Drafts <ExternalLink /></NavLink></li>
+                    <li class="nav-menu-item left-column-item"><NavLink href="https://docs.google.com/spreadsheets/d/1t4w4Mo9HRRAXgy2rzVWhFrWJi1qSTLW3oXPj9VbWUyA/edit?usp=sharing" target="_blank">Picks <ExternalLink /></NavLink></li>
                     <AuthorizeView Policy="@Policies.IsCommish">
-                        <li class="nav-menu-item left-column-item"><a href="/commish">Commish</a></li>
+                        <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "commish" ? "active" : "") href="/commish" @onclick="() => ChangeNavSection(commish)">Commish</NavLink></li>
                     </AuthorizeView>
                 </ul>
             </nav>
             <nav class="side-menu @AppState.SideMenuCssClass">
-                <NavMenu />
+                <CascadingValue Value="navSection" Name="nav-menu-section">
+                    <NavMenu />
+                </CascadingValue>
             </nav>
         </aside>
-        <div class="main-container">
+        <div class="main-container w-[inherit] z-10 bg-wfbc-white-1">
             <MenuBar />
-            <div class="main" @onclick="@CloseManagerMenu">
-                <div class="content"> 
+            <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseManagerMenu">
+                <div class="flex flex-col lg:flex-row px-1 items-center">
                     @Body
                 </div>
-            </div>
+            </main>
         </div>
     </div>
 </MediaQueryList>
 
 @code {
+    private string navSection = "home";
+    private string home = "home";
+    private string results = "results";
+    private string rulebook = "rulebook";
+    private string commish = "commish";
+    private void ChangeNavSection(string section)
+    {
+        navSection = section;
+        StateHasChanged();
+    }
 
     public void CloseManagerMenu()
     {
