@@ -564,6 +564,10 @@ video {
   grid-column-end: 4;
 }
 
+.col-end-5 {
+  grid-column-end: 5;
+}
+
 .-m-1 {
   margin: -0.25rem;
 }
@@ -874,6 +878,11 @@ video {
 .text-wfbc-yellow-1 {
   --tw-text-opacity: 1;
   color: rgb(255 201 60 / var(--tw-text-opacity));
+}
+
+.text-wfbc-red-1 {
+  --tw-text-opacity: 1;
+  color: rgb(191 33 30 / var(--tw-text-opacity));
 }
 
 .shadow-sm {
