@@ -46,7 +46,9 @@
             <MenuBar />
             <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseManagerMenu">
                 <div class="flex flex-col lg:flex-row px-1 items-center">
-                    @Body
+                    <CascadingValue Value="this">
+                        @Body
+                    </CascadingValue>
                 </div>
             </main>
         </div>
@@ -59,7 +61,7 @@
     private string results = "results";
     private string rulebook = "rulebook";
     private string commish = "commish";
-    private void ChangeNavSection(string section)
+    public void ChangeNavSection(string section)
     {
         navSection = section;
         StateHasChanged();
