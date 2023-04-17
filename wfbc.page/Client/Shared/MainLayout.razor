@@ -44,7 +44,7 @@
         </aside>
         <div class="main-container w-[inherit] z-10 bg-wfbc-white-1">
             <MenuBar />
-            <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseManagerMenu">
+            <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseMenus">
                 <div class="flex flex-col lg:flex-row px-1 items-center">
                     <CascadingValue Value="this">
                         @Body
@@ -67,9 +67,14 @@
         StateHasChanged();
     }
 
-    public void CloseManagerMenu()
+    public void CloseMenus()
     {
         AppState.SetOpenManagerMenu(close: true);
+
+        if (AppState.IsXSmall)
+        {
+            AppState.SetCloseDrawer(true);
+        }
     }
 
     protected override void OnInitialized()
