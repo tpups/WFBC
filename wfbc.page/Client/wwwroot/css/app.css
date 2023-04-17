@@ -742,6 +742,11 @@ video {
   background-color: rgb(255 235 153 / var(--tw-bg-opacity));
 }
 
+.bg-wfbc-blue-2 {
+  --tw-bg-opacity: 1;
+  background-color: rgb(19 41 61 / var(--tw-bg-opacity));
+}
+
 .p-1 {
   padding: 0.25rem;
 }
@@ -875,6 +880,11 @@ video {
   --tw-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   --tw-shadow-colored: 0 1px 2px 0 var(--tw-shadow-color);
   box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+.hover\:bg-wfbc-blue-1:hover {
+  --tw-bg-opacity: 1;
+  background-color: rgb(7 104 159 / var(--tw-bg-opacity));
 }
 
 @media (min-width: 768px) {
