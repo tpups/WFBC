@@ -40,12 +40,15 @@ namespace WFBC.Server
         {
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-
-            }).AddJwtBearer(options =>
+                options.DefaultAuthenticateScheme = OktaDefaults.ApiAuthenticationScheme;
+                options.DefaultChallengeScheme = OktaDefaults.ApiAuthenticationScheme;
+                options.DefaultSignInScheme = OktaDefaults.ApiAuthenticationScheme;
+            })
+            .AddOktaWebApi(new OktaWebApiOptions()
             {
-                options.Authority = Configuration["OktaSettings:Authority"];
-                options.Audience = Configuration["OktaSettings:Audience"];
+                OktaDomain = Configuration["Okta:OktaDomain"],
+                AuthorizationServerId = Configuration["Okta:AuthorizationServerId"],
+                Audience = Configuration["Okta:Audience"]
             });
 
             services.AddAuthorization(options =>
@@ -59,6 +62,7 @@ namespace WFBC.Server
             services.Configure<OktaSettings>(Configuration.GetSection(nameof(OktaSettings)));
             services.AddSingleton<IOktaSettings>(x => x.GetRequiredService<IOptions<OktaSettings>>().Value);
             services.AddMvc();
+            services.AddTransient<ITeam, TeamDataAccessLayer>();
             services.AddTransient<IManager, ManagerDataAccessLayer>();
             services.AddTransient<IDraft, DraftDataAccessLayer>();
             services.AddTransient<IPick, PickDataAccessLayer>();

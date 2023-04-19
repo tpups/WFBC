@@ -11,14 +11,14 @@ namespace WFBC.Shared.Models
         public static AuthorizationPolicy IsCommishPolicy()
         {
             return new AuthorizationPolicyBuilder().RequireAuthenticatedUser()
-                                                   .RequireClaim(ClaimTypes.Role.ToString(), "Commish")
+                                                   .RequireClaim("Commish", "Commish")
                                                    .Build();
         }
 
         public static AuthorizationPolicy IsManagerPolicy()
         {
             return new AuthorizationPolicyBuilder().RequireAuthenticatedUser()
-                                                   .RequireClaim(ClaimTypes.Role.ToString(), "Managers")
+                                                   .RequireClaim("Managers", "Managers")
                                                    .Build();
         }
     }

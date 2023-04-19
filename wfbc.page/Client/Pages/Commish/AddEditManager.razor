@@ -7,11 +7,18 @@
 <EditForm Model="@man" OnValidSubmit="SaveManager">
     <DataAnnotationsValidator />
     <div class="form-group row">
-        <label class="control-label col-md-12">Name</label>
+        <label class="control-label col-md-12">First Name</label>
         <div class="col-md-4">
-            <input class="form-control" @bind="man.Name" />
+            <input class="form-control" @bind="man.FirstName" />
         </div>
-        <ValidationMessage For="@(() => man.Name)" />
+        <ValidationMessage For="@(() => man.FirstName)" />
+    </div>
+    <div class="form-group row">
+        <label class="control-label col-md-12">Last Name</label>
+        <div class="col-md-4">
+            <input class="form-control" @bind="man.LastName" />
+        </div>
+        <ValidationMessage For="@(() => man.LastName)" />
     </div>
     <div class="form-group row">
         <label class="control-label col-md-12">Team Name</label>

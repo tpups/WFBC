@@ -45,7 +45,7 @@ namespace WFBC.Client
                                     string[] userGroups = JsonSerializer.Deserialize<string[]>(userClaim.Value);
                                     foreach (string userGroup in userGroups)
                                     {
-                                        identity.AddClaim(claim: new Claim(ClaimTypes.Role.ToString(), userGroup));
+                                        identity.AddClaim(claim: new Claim(userGroup, userGroup));
                                     }
                                 }
                             }

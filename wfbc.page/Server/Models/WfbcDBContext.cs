@@ -34,6 +34,13 @@ namespace WFBC.Server.Models
                  return _mongoDatabase.GetCollection<Manager>("managers");
             }
         }
+        public IMongoCollection<Team> Teams
+        {
+            get
+            {
+                return _mongoDatabase.GetCollection<Team>("teams");
+            }
+        }
         public IMongoCollection<Standings> Standings
         {
             get

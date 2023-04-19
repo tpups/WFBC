@@ -14,41 +14,41 @@ namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
-    public class ManagerController : ControllerBase
+    [Authorize(Policy = Policies.IsCommish)]
+    public class TeamController : ControllerBase
     {
-        private readonly IManager _manager;
-        public ManagerController(IManager manager)
+        private readonly ITeam _team;
+        public TeamController(ITeam team)
         {
-            _manager = manager;
+            _team = team;
         }
 
         [HttpGet]
         [AllowAnonymous]
-        public List<Manager> Get()
+        public List<Team> Get()
         {
-            return _manager.GetAllManagers();
+            return _team.GetAllTeams();
         }
         [HttpGet("{id}")]
         [AllowAnonymous]
-        public Manager Get(string id)
+        public Team Get(string id)
         {
-            return _manager.GetManager(id);
+            return _team.GetTeam(id);
         }
         [HttpPost]
-        public void Post([FromBody] Manager manager)
+        public void Post([FromBody] Team team)
         {
-            _manager.AddManager(manager);
+            _team.AddTeam(team);
         }
         [HttpPut]
-        public void Put([FromBody] Manager manager)
+        public void Put([FromBody] Team team)
         {
-            _manager.UpdateManager(manager);
+            _team.UpdateTeam(team);
         }
         [HttpDelete("{id}")]
         public void Delete(string id)
         {
-            _manager.DeleteManager(id);
+            _team.DeleteTeam(id);
         }
     }
 }

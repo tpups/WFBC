@@ -19,7 +19,7 @@ namespace WFBC.Client.Pages.Commish
             if (!string.IsNullOrEmpty(manId))
             {
                 Title = "Edit";
-                man = await Http.GetFromJsonAsync<Manager>("/api/manager/" + manId);
+                man = await Http.Client.GetFromJsonAsync<Manager>("/api/manager/" + manId);
                 //man = manList.FirstOrDefault(x => x.Id == manId);
             }
             else
@@ -31,11 +31,11 @@ namespace WFBC.Client.Pages.Commish
         {
             if (man.Id != null)
             {
-                await Http.PutAsJsonAsync("/api/manager/", man);
+                await Http.Client.PutAsJsonAsync("/api/manager/", man);
             }
             else
             {
-                await Http.PostAsJsonAsync("/api/manager/", man);
+                await Http.Client.PostAsJsonAsync("/api/manager/", man);
             }
             ToCommish();
         }

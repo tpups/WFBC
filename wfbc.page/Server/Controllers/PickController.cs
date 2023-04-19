@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using WFBC.Server.DataAccess;
 using WFBC.Shared.Models;
 using WFBC.Server.Interface;
+using Amazon.Auth.AccessControlPolicy;
+using Microsoft.AspNetCore.Authorization;
 
 namespace WFBC.Server.Controllers
 {
@@ -30,6 +32,7 @@ namespace WFBC.Server.Controllers
             return _pick.GetPick(id);
         }
         [HttpPost]
+        [Authorize]
         public void Post([FromBody] List<Pick> picks)
         {
             _pick.AddPicks(picks);

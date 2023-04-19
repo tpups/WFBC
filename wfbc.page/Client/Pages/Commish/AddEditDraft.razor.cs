@@ -15,47 +15,47 @@ namespace WFBC.Client.Pages.Commish
         [Parameter]
         public string draftId { get; set; }
         protected Draft draft = new Draft();
+        protected List<Pick> picks =new List<Pick>();
         protected override async Task OnParametersSetAsync()
         {
             if (!String.IsNullOrEmpty(draftId))
             {
                 Title = "Edit";
-                draft = await Http.GetFromJsonAsync<Draft>("/api/draft" + draftId);
+                draft = await Http.Client.GetFromJsonAsync<Draft>("/api/draft" + draftId);
             }
             else
             {
                 draft = new Draft();
+                picks = new List<Pick>();
             }
         }
         protected async Task SaveDraft()
         {
             if (draft.Id != null)
             {
-                await Http.PutAsJsonAsync("/api/draft", draft);
+                await Http.Client.PutAsJsonAsync("/api/draft", draft);
             }
             else if (draft.Rounds != 0)
             {
-                draft.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
-                draft.Picks = new List<string>();
+                //draft.Picks = new List<string>();
                 List<Manager> managers = manList.FindAll(m => m.Status == "active");
-                List<Pick> picks = new List<Pick>();
+                draft.Picks = new List<string>();
                 for (int i = 0; i < draft.Rounds; i++)
                 {
                     foreach (var manager in managers)
                     {
                         Pick pick = new Pick
                         {
-                            Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
                             Round = i + 1,
-                            ManagerId = manager.Id,
+                            TeamId = manager.TeamId,
                             DraftId = draft.Id,
                         };
                         picks.Add(pick);
                         draft.Picks.Add(pick.Id);
                     }
                 }
-                await Http.PostAsJsonAsync("/api/pick/", picks);
-                await Http.PostAsJsonAsync("/api/draft/", draft);
+                //await Http.Client.PostAsJsonAsync("/api/pick/", picks);
+                await Http.Client.PostAsJsonAsync("/api/draft/", draft);
             }
             ToCommish();
         }

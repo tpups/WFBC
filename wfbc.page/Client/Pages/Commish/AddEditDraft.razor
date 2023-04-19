@@ -2,34 +2,30 @@
 @page "/commish/edit_draft/{draftId}"
 @inherits AddEditDraftModel
 
-<h3>@Title Draft</h3>
-
-<EditForm Model="@draft" OnValidSubmit="SaveDraft">
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/12" Model="@draft" OnValidSubmit="SaveDraft">
     <DataAnnotationsValidator />
-    <div class="form-group row">
-        <label class="control-label col-md-12">Year</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="draft.Year" />
-        </div>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Year</span>
+        <input @bind="draft.Year"
+               type="text"
+               class="mt-1 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => draft.Year)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Type</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="draft.Type" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Type</span>
+        <input @bind="draft.Type"
+               type="text"
+               class="mt-1 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => draft.Type)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Rounds</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="draft.Rounds" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Rounds</span>
+        <input @bind="draft.Rounds"
+               type="text"
+               class="mt-1 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => draft.Rounds)" />
-    </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Create</button>
-    </div>
+    </label>
+    <button type="submit" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-wfbc-white-1">Create Draft</button>
 </EditForm>
 
 @code {
