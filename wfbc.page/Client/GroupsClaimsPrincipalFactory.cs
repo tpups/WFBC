@@ -8,9 +8,9 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 namespace WFBC.Client
 {
     // This is required because multiple roles arrive in json string array format ["",""]
-    public class RolesClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
+    public class GroupsClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
     {
-        public RolesClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor) { }
+        public GroupsClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor) { }
 
         public override async ValueTask<ClaimsPrincipal> CreateUserAsync(
          RemoteUserAccount account,

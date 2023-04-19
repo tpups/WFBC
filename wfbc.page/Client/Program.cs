@@ -38,7 +38,7 @@ namespace WFBC.Client
                 builder.Configuration.Bind("Okta", options.ProviderOptions);
                 options.ProviderOptions.ResponseType = "code";
                 options.UserOptions.RoleClaim = "role";
-            }).AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
+            }).AddAccountClaimsPrincipalFactory<GroupsClaimsPrincipalFactory>();
 
             builder.Services.AddAuthorizationCore(options =>
             {
