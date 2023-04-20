@@ -32,7 +32,7 @@ namespace WFBC.Server.Controllers
             return _pick.GetPick(id);
         }
         [HttpPost]
-        [Authorize]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Post([FromBody] List<Pick> picks)
         {
             _pick.AddPicks(picks);

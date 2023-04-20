@@ -1,0 +1,21 @@
+﻿@using WFBC.Client.Shared.Components.Buttons;
+@inject AppState AppState
+
+<div id="@ModalId" tabindex="-1" class="@Hidden fixed top-0 left-0 right-0 z-50 pt-24 md:pl-40 lg:pl-96 p-4 overflow-x-hidden overflow-y-auto md:inset-0 h-[calc(100%-1rem)] max-h-full">
+    <div class="relative w-full max-w-md max-h-full">
+        <div class="relative bg-wfbc-grey-1 rounded-lg shadow dark:bg-gray-700">
+            <CloseModalButton CloseModal="@CloseModal" />
+            <div class="p-8 pt-12 text-center">
+                @ChildContent
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@code {
+    [Parameter] public RenderFragment ChildContent { get; set; }
+    [Parameter] public string ModalId { get; set; }
+    [Parameter] public string Hidden { get; set; }
+    [Parameter] public Action CloseModal { get; set; }
+}

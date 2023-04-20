@@ -16,8 +16,8 @@ namespace WFBC.Client
             {
                 IsXSmall = true;
                 IsMedium = false;
-                CloseDrawer = true;
-                MinifyDrawer = false;
+                DrawerClosed = true;
+                DrawerMinified = false;
                 DrawerCssClass = "drawer-closed";
                 SideMenuCssClass = "slide-out";
                 MobileCssClass = "mobile";
@@ -35,8 +35,8 @@ namespace WFBC.Client
                 IsMedium = true;
                 IsXSmall = false;
                 IsLarge = false;
-                CloseDrawer = false;
-                MinifyDrawer = true;
+                DrawerClosed = false;
+                DrawerMinified = true;
                 DrawerCssClass = "drawer-mini";
                 SideMenuCssClass = "slide-out";
                 DrawerActive = "active";
@@ -52,8 +52,8 @@ namespace WFBC.Client
                 IsLarge = true;
                 IsMedium = false;
                 IsXSmall = false;
-                CloseDrawer = false;
-                MinifyDrawer = false;
+                DrawerClosed = false;
+                DrawerMinified = false;
                 DrawerCssClass = "drawer-full";
                 SideMenuCssClass = "slide-in";
                 DrawerActive = "active";
@@ -71,27 +71,27 @@ namespace WFBC.Client
             NotifyStateChanged();
         }
         // Drawer open/closed state
-        public bool CloseDrawer { get; private set; }
-        public void SetCloseDrawer(bool closed = false, bool toggle = false)
+        public bool DrawerClosed { get; private set; }
+        public void SetDrawerClosed(bool closed = false, bool toggle = false)
         {
-            CloseDrawer = toggle ? !CloseDrawer : closed;
-            DrawerCssClass = CloseDrawer ? "drawer-closed" : "drawer-full";
-            SideMenuCssClass = CloseDrawer ? "slide-out" : "slide-in";
-            MinifyDrawer = false;
-            DrawerActive = CloseDrawer ? "" : "active";
+            DrawerClosed = toggle ? !DrawerClosed : closed;
+            DrawerCssClass = DrawerClosed ? "drawer-closed" : "drawer-full";
+            SideMenuCssClass = DrawerClosed ? "slide-out" : "slide-in";
+            DrawerMinified = false;
+            DrawerActive = DrawerClosed ? "" : "active";
             Minified = "";
             NotifyStateChanged();
         }
         // Drawer minified state
-        public bool MinifyDrawer { get; private set; }
-        public void SetMinifyDrawer(bool minify = false, bool toggle = false)
+        public bool DrawerMinified { get; private set; }
+        public void SetDrawerMinified(bool minify = false, bool toggle = false)
         {
-            MinifyDrawer = toggle ? !MinifyDrawer : minify;
-            DrawerCssClass = MinifyDrawer ? "drawer-mini" : "drawer-full";
-            SideMenuCssClass = MinifyDrawer ? "slide-out" : "slide-in";
-            CloseDrawer = false;
+            DrawerMinified = toggle ? !DrawerMinified : minify;
+            DrawerCssClass = DrawerMinified ? "drawer-mini" : "drawer-full";
+            SideMenuCssClass = DrawerMinified ? "slide-out" : "slide-in";
+            DrawerClosed = false;
             DrawerActive = "active";
-            Minified = MinifyDrawer ? "minified" : "";
+            Minified = DrawerMinified ? "minified" : "";
             NotifyStateChanged();
         }
         public string DrawerCssClass { get; private set; }

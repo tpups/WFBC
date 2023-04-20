@@ -59,7 +59,12 @@ namespace WFBC.Server.DataAccess
         {
             try
             {
-                _db.Picks.InsertMany(picks);
+                var listWrites = new List<WriteModel<Pick>>();
+                foreach (var pick in picks)
+                {
+                    listWrites.Add(new InsertOneModel<Pick>(pick));
+                }
+                _db.Picks.BulkWriteAsync(listWrites);
             }
             catch
             {

@@ -19,7 +19,7 @@ namespace WFBC.Client.Pages.Commish
         {
             try
             {
-                await Http.Client.DeleteAsync("api/manager/" + manID);
+                await AuthorizedClient.Client.DeleteAsync("api/manager/" + manID);
                 await GetAllManagers();
             }
             catch (AccessTokenNotAvailableException e)

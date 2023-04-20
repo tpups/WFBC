@@ -21,7 +21,7 @@ namespace WFBC.Client.Pages.Commish
             if (!String.IsNullOrEmpty(draftId))
             {
                 Title = "Edit";
-                draft = await Http.Client.GetFromJsonAsync<Draft>("/api/draft" + draftId);
+                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft" + draftId);
             }
             else
             {
@@ -33,13 +33,13 @@ namespace WFBC.Client.Pages.Commish
         {
             if (draft.Id != null)
             {
-                await Http.Client.PutAsJsonAsync("/api/draft", draft);
+                await AuthorizedClient.Client.PutAsJsonAsync("/api/draft", draft);
             }
             else if (draft.Rounds != 0)
             {
                 //draft.Picks = new List<string>();
                 List<Manager> managers = manList.FindAll(m => m.Status == "active");
-                draft.Picks = new List<string>();
+                List<string> pickIds = new List<string>();
                 for (int i = 0; i < draft.Rounds; i++)
                 {
                     foreach (var manager in managers)
@@ -54,8 +54,8 @@ namespace WFBC.Client.Pages.Commish
                         draft.Picks.Add(pick.Id);
                     }
                 }
-                //await Http.Client.PostAsJsonAsync("/api/pick/", picks);
-                await Http.Client.PostAsJsonAsync("/api/draft/", draft);
+                await AuthorizedClient.Client.PostAsJsonAsync("/api/pick/", picks);
+                await AuthorizedClient.Client.PostAsJsonAsync("/api/draft/", draft);
             }
             ToCommish();
         }

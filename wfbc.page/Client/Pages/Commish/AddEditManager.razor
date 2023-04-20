@@ -2,55 +2,53 @@
 @page "/commish/edit_manager/{manId}"
 @inherits AddEditManagerModel
 
-<h3>@Title Manager</h3>
 
-<EditForm Model="@man" OnValidSubmit="SaveManager">
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@man" OnValidSubmit="SaveManager">
     <DataAnnotationsValidator />
-    <div class="form-group row">
-        <label class="control-label col-md-12">First Name</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.FirstName" />
-        </div>
+    <label class="block">
+        <span class="text-wfbc-blue-2">First Name</span>
+        <input @bind="man.FirstName"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => man.FirstName)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Last Name</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.LastName" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Last Name</span>
+        <input @bind="man.LastName"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => man.LastName)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Team Name</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.TeamName" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Team Name</span>
+        <input @bind="man.TeamName"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => man.TeamName)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Email</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.Email" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Email</span>
+        <input @bind="man.Email"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => man.Email)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Status</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.Status" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Status</span>
+        <input @bind="man.Status"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => man.Status)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Access</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="man.Access" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Access</span>
+        <input @bind="man.Access"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => man.Access)" />
-    </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Save</button>
-    </div>
+    </label>
+    <a @onclick="SaveManager" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-center text-wfbc-white-1">Save</a>
+    <a href="/commish/managers" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-center text-wfbc-white-1">Cancel</a>
 </EditForm>
 
 @code {

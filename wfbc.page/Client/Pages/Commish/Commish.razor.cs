@@ -14,7 +14,7 @@ namespace WFBC.Client.Pages.Commish
     public class CommishModel : ComponentBase
     {
         [Inject]
-        public AuthorizedClient Http { get; set; }
+        public AuthorizedClient AuthorizedClient { get; set; }
         [Inject]
         public PublicClient PublicClient { get; set; }
         [Inject]

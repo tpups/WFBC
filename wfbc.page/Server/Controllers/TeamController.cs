@@ -14,7 +14,6 @@ namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize(Policy = Policies.IsCommish)]
     public class TeamController : ControllerBase
     {
         private readonly ITeam _team;
@@ -24,28 +23,29 @@ namespace WFBC.Server.Controllers
         }
 
         [HttpGet]
-        [AllowAnonymous]
         public List<Team> Get()
         {
             return _team.GetAllTeams();
         }
         [HttpGet("{id}")]
-        [AllowAnonymous]
         public Team Get(string id)
         {
             return _team.GetTeam(id);
         }
         [HttpPost]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Post([FromBody] Team team)
         {
             _team.AddTeam(team);
         }
         [HttpPut]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Put([FromBody] Team team)
         {
             _team.UpdateTeam(team);
         }
         [HttpDelete("{id}")]
+        [Authorize(Policy = Policies.IsCommish)]
         public void Delete(string id)
         {
             _team.DeleteTeam(id);
