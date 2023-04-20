@@ -1,32 +1,43 @@
-﻿<NavLink @onclick="Click" class=@($"{Background} {TextColor} {Hover} {MaxWidth} mx-2 px-4 py-2 text-center rounded-full") role="@Role" href="@Href" aria-label="@AriaLabel">
-    @Text
+﻿<NavLink @onclick="() => OnClickFunction.InvokeAsync(FunctionParameter)" class=@($"{Background} {MarginPadding} {TextColor} {Hover} {MaxWidth} {Rounded} {Border} text-center") role="@Role" href="@Href" aria-label="@AriaLabel" type="button" tabindex="0">
+    @ButtonText
 </NavLink>
 
 
 @code {
     [Parameter] public RenderFragment ChildContent { get; set; }
-    [Parameter] public Action OnClick { get; set; }
+    [Parameter] public EventCallback<string> OnClickFunction { get; set; }
+    [Parameter] public string FunctionParameter { get; set; }
+    [Parameter] public bool PreventDefault { get; set; }
+    [Parameter] public string PreventDefaultFunction { get; set; }
 
-    [Parameter] public string Text { get; set; }
+    [Parameter] public string ButtonText { get; set; }
     [Parameter] public string Role { get; set; }
     [Parameter] public string Href { get; set; }
     [Parameter] public string AriaLabel { get; set; }
 
     //tailwind classes
+    [Parameter] public string MarginPadding { get; set; }
     [Parameter] public string Background { get; set; }
     [Parameter] public string Hover { get; set; }
     [Parameter] public string TextColor { get; set; }
     [Parameter] public string MaxWidth { get; set;  }
+    [Parameter] public string Rounded { get; set; }
+    [Parameter] public string Border { get; set; }
 
-
-
-    private void Click()
+    public void OnClick(MouseEventArgs e)
     {
-        OnClick?.Invoke();
+        OnClickFunction.InvokeAsync(FunctionParameter);
     }
 
     protected override void OnInitialized()
     {
+        if (string.IsNullOrWhiteSpace(Href))
+            PreventDefault = true;
+        if (string.IsNullOrWhiteSpace(Role))
+            Role = "button";
+
+        if (string.IsNullOrWhiteSpace(MarginPadding))
+            MarginPadding = "mx-2 px-4 py-2";
         if (string.IsNullOrWhiteSpace(Background))
             Background = "bg-wfbc-blue-2";
         if (string.IsNullOrWhiteSpace(Hover))
@@ -35,5 +46,7 @@
             TextColor = "text-wfbc-white-1";
         if (string.IsNullOrWhiteSpace(MaxWidth))
             MaxWidth = "max-w-fit";
+        if (string.IsNullOrWhiteSpace(Rounded))
+            Rounded = "rounded-full";
     }
 }
