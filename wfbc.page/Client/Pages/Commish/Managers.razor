@@ -1,11 +1,13 @@
 ﻿@page "/commish/managers"
 @attribute [Authorize(Policy = Policies.IsCommish)]
 @inherits ManagersModel
+@using WFBC.Client.Shared.Components.Buttons;
+
 
 <div class="flex flex-col m-3 lg:m-6 max-w-full">
     <div class="flex p-4 mb-2 border rounded-xl shadow-sm">
-        <a class="mx-2 px-4 py-2 rounded-full max-w-fit md:w-1/2 bg-wfbc-blue-2 text-wfbc-white-1" role="button" href="/commish/add_manager" aria-label="add manager link">Add Manager</a>
-    </div>
+        <Button Text="Add Manager" Href="/commish/add_manager" Role="button" AriaLabel="add manager link" />
+   </div>
 
     <div class="p-6 border rounded-xl shadow-sm">
         <div class="-m-1.5 overflow-x-auto">
@@ -28,7 +30,7 @@
                                     <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@man.TeamName</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md">@man.Email</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md flex">
-                                        <a class="mx-2 px-4 py-2 rounded-full bg-wfbc-blue-2 text-wfbc-white-1" href="/commish/edit_manager/@man.Id" aria-label="edit manager link">Edit</a>
+                                        <Button Text="Edit" Href=@("/commish/edit_manager/" + @man.Id) AriaLabel="edit manager link" />
                                         <a @onclick:preventDefault @onclick='() => OpenModal("delete", man.Id)' data-modal-target="delete-manager-modal" data-modal-toggle="delete-manager-modal" class="mx-2 px-4 py-2 rounded-full bg-wfbc-blue-2 text-wfbc-white-1" href="#" aria-label="open modal">Delete</a>
                                     </td>
                                 </tr>
