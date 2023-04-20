@@ -1,12 +1,12 @@
-﻿@page "/commish/managers"
+﻿@page "/commish/drafts"
 @attribute [Authorize(Policy = Policies.IsCommish)]
-@inherits ManagersModel
+@inherits DraftsModel
 @using WFBC.Client.Shared.Components.Buttons;
 
 
 <div class="flex flex-col m-3 lg:m-6 max-w-full">
     <div class="flex p-4 mb-2 border rounded-xl shadow-sm">
-        <Button ButtonText="Add Manager" Href="/commish/add_manager" Role="button" AriaLabel="add manager link" />
+        <Button ButtonText="Create Draft" Href="/commish/create_draft" Role="button" AriaLabel="create draft link" />
    </div>
 
     <div class="p-6 border rounded-xl shadow-sm">
@@ -23,15 +23,15 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-wfbc-blue-2">
-                            @foreach (var manager in managers)
+                            @foreach (var draft in drafts)
                             {
                                 <tr>
-                                    <td class="p-2 md:p-4 text-sm md:text-md">@manager.FirstName</td>
-                                    <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@manager.TeamName</td>
-                                    <td class="p-2 md:p-4 text-sm md:text-md">@manager.Email</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@draft.Year</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@draft.Teams</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@draft.DraftType</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md flex">
-                                        <Button ButtonText="Edit" Href=@("/commish/edit_manager/" + @manager.Id) AriaLabel="edit manager link" />
-                                        <Button ButtonText="Delete" FunctionParameter="@manager.Id" OnClickFunction=OpenDeleteManagerModal AriaLabel="open delete manager modal" />
+                                        <Button ButtonText="Edit" Href=@("/commish/edit_draft/" + @draft.Id) AriaLabel="edit draft link" />
+                                        <Button ButtonText="Delete" FunctionParameter="@draft.Id" OnClickFunction=OpenDeleteDraftModal AriaLabel="open delete draft modal" />
                                     </td>
                                 </tr>
                             }
@@ -44,11 +44,11 @@
 
 </div>
 
-<Modal ModalId="delete-manager-modal" Hidden="@Hidden" CloseModal=CloseModal>
-    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">Are you sure you want to delete this manager?</h3>
-    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"name: {manager.FirstName} {manager.LastName}")</h3>
-    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"team: { manager.TeamName}")</h3>    
-    <Button ButtonText="Yes, I'm sure" OnClickFunction=Delete FunctionParameter="@manager.Id" Hover="hover:bg-wfbc-red-1" />
+<Modal ModalId="delete-draft-modal" Hidden="@Hidden" CloseModal=CloseModal>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">Are you sure you want to delete this draft?</h3>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"year: {draft.Year}")</h3>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"type: { draft.DraftType}")</h3>    
+    <Button ButtonText="Yes, I'm sure" OnClickFunction=Delete FunctionParameter="@draft.Id" Hover="hover:bg-wfbc-red-1" />
     <Button ButtonText="No, cancel" OnClickFunction=CloseModal />
 </Modal>
 
@@ -61,10 +61,10 @@
         Hidden = "hidden";
     }
 
-    public void OpenDeleteManagerModal(string manId)
+    public void OpenDeleteDraftModal(string draftID)
     {
         Hidden = "";
-        DeleteConfirm(manId);
+        DeleteConfirm(draftID);
     }
     public void CloseModal()
     {
@@ -72,7 +72,7 @@
     }
     public async Task Delete(string id)
     {
-        await DeleteManager(id);
+        await DeleteDraft(id);
         CloseModal();
     }
 }

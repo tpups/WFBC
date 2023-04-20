@@ -13,36 +13,32 @@ namespace WFBC.Client.Pages.Commish
     {
         protected string Title = "Add";
         [Parameter]
-        public string manId { get; set; }
+        public string managerID { get; set; }
         protected override async Task OnParametersSetAsync()
         {
-            if (!string.IsNullOrEmpty(manId))
+            if (!string.IsNullOrEmpty(managerID))
             {
                 Title = "Edit";
-                man = await AuthorizedClient.Client.GetFromJsonAsync<Manager>("/api/manager/" + manId);
-                //man = manList.FirstOrDefault(x => x.Id == manId);
+                manager = await AuthorizedClient.Client.GetFromJsonAsync<Manager>("/api/manager/" + managerID);
+                //manager = managers.FirstOrDefault(x => x.Id == manId);
             }
             else
             {
-                man = new Manager();
+                manager = new Manager();
             }
         }
         protected async Task SaveManager()
         {
-            if (man.Id != null)
+            if (manager.Id != null)
             {
-                await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", man);
-                Navigate("/commish/managers");
+                await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", manager);
+                UrlNavigationManager.NavigateTo("/commish/managers");
             }
             else
             {
-                await AuthorizedClient.Client.PostAsJsonAsync("/api/manager/", man);
-                Navigate("/commish/managers");
+                await AuthorizedClient.Client.PostAsJsonAsync("/api/manager/", manager);
+                UrlNavigationManager.NavigateTo("/commish/managers");
             }
-        }
-        public void Navigate(string path = "")
-        {
-            UrlNavigationManager.NavigateTo(path);
         }
     }
 }

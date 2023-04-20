@@ -13,7 +13,8 @@ namespace WFBC.Shared.Models
         public List<string>? Picks { get; set; }
         [Required]
         public string Year { get; set; }
-        public string Type { get; set; }
+        [Required]
+        public string DraftType { get; set; }
         public DateTime? Date { get; set; }
         public int Rounds { get; set; }
     }

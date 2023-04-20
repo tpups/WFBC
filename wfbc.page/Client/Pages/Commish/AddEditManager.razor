@@ -3,49 +3,49 @@
 @inherits AddEditManagerModel
 
 
-<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@man" OnValidSubmit="SaveManager">
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@manager" OnValidSubmit="SaveManager">
     <DataAnnotationsValidator />
     <label class="block">
         <span class="text-wfbc-blue-2">First Name</span>
-        <input @bind="man.FirstName"
+        <input @bind="manager.FirstName"
                type="text"
                class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => man.FirstName)" />
+        <ValidationMessage For="@(() => manager.FirstName)" />
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Last Name</span>
-        <input @bind="man.LastName"
+        <input @bind="manager.LastName"
                type="text"
                class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => man.LastName)" />
+        <ValidationMessage For="@(() => manager.LastName)" />
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Team Name</span>
-        <input @bind="man.TeamName"
+        <input @bind="manager.TeamName"
                type="text"
                class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => man.TeamName)" />
+        <ValidationMessage For="@(() => manager.TeamName)" />
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Email</span>
-        <input @bind="man.Email"
+        <input @bind="manager.Email"
                type="text"
                class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => man.Email)" />
+        <ValidationMessage For="@(() => manager.Email)" />
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Status</span>
-        <input @bind="man.Status"
+        <input @bind="manager.Status"
                type="text"
                class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => man.Status)" />
+        <ValidationMessage For="@(() => manager.Status)" />
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Access</span>
-        <input @bind="man.Access"
+        <input @bind="manager.Access"
                type="text"
                class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => man.Access)" />
+        <ValidationMessage For="@(() => manager.Access)" />
     </label>
     <a @onclick="SaveManager" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-center text-wfbc-white-1">Save</a>
     <a href="/commish/managers" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-center text-wfbc-white-1">Cancel</a>

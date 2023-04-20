@@ -13,15 +13,14 @@ namespace WFBC.Client.Pages.Commish
     {
         protected string Title = "Create";
         [Parameter]
-        public string draftId { get; set; }
-        protected Draft draft = new Draft();
+        public string draftID { get; set; }
         protected List<Pick> picks =new List<Pick>();
         protected override async Task OnParametersSetAsync()
         {
-            if (!String.IsNullOrEmpty(draftId))
+            if (!String.IsNullOrEmpty(draftID))
             {
                 Title = "Edit";
-                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft" + draftId);
+                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft" + draftID);
             }
             else
             {
@@ -38,11 +37,11 @@ namespace WFBC.Client.Pages.Commish
             else if (draft.Rounds != 0)
             {
                 //draft.Picks = new List<string>();
-                List<Manager> managers = manList.FindAll(m => m.Status == "active");
+                List<Manager> _managers = managers.FindAll(m => m.Status == "active");
                 List<string> pickIds = new List<string>();
                 for (int i = 0; i < draft.Rounds; i++)
                 {
-                    foreach (var manager in managers)
+                    foreach (var manager in _managers)
                     {
                         Pick pick = new Pick
                         {

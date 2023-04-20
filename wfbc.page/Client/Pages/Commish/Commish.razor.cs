@@ -19,8 +19,10 @@ namespace WFBC.Client.Pages.Commish
         public PublicClient PublicClient { get; set; }
         [Inject]
         public NavigationManager UrlNavigationManager { get; set; }
-        protected List<Manager> manList = new List<Manager>();
-        protected Manager man = new Manager();
+        protected List<Manager> managers = new List<Manager>();
+        protected Manager manager = new Manager();
+        protected List<Draft> drafts = new List<Draft>();
+        protected Draft draft = new Draft();
         protected override async Task OnInitializedAsync()
         {
             await GetAllManagers();
@@ -28,7 +30,11 @@ namespace WFBC.Client.Pages.Commish
 
         protected async Task GetAllManagers()
         {
-            manList = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager");
+            managers = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager");
+        }
+        protected async Task GetAllDrafts()
+        {
+            drafts = await PublicClient.Client.GetFromJsonAsync<List<Draft>>("api/draft");
         }
     }
 }

@@ -9,18 +9,18 @@ using System.Linq;
 
 namespace WFBC.Client.Pages.Commish
 {
-    public class ManagersModel : CommishModel
+    public class DraftsModel : CommishModel
     {
         protected void DeleteConfirm(string ID)
         {
-            manager = managers.FirstOrDefault(x => x.Id == ID);
+            draft = drafts.FirstOrDefault(x => x.Id == ID);
         }
-        protected async Task DeleteManager(string managerID)
+        protected async Task DeleteDraft(string draftID)
         {
             try
             {
-                await AuthorizedClient.Client.DeleteAsync("api/manager/" + managerID);
-                await GetAllManagers();
+                await AuthorizedClient.Client.DeleteAsync("api/draft/" + draftID);
+                await GetAllDrafts();
             }
             catch (AccessTokenNotAvailableException e)
             {

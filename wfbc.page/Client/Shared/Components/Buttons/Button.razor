@@ -1,4 +1,4 @@
-﻿<NavLink @onclick="() => OnClickFunction.InvokeAsync(FunctionParameter)" class=@($"{Background} {MarginPadding} {TextColor} {Hover} {MaxWidth} {Rounded} {Border} text-center") role="@Role" href="@Href" aria-label="@AriaLabel" type="button" tabindex="0">
+﻿<NavLink @onclick="() => OnClickFunction.InvokeAsync(FunctionParameter)" class=@($"{Background} {MarginPadding} {TextColor} {Hover} {MaxWidth} {Rounded} {Border} text-center") role="@Role" href="@Href" aria-label="@AriaLabel" type="@ButtonType" tabindex="0">
     @ButtonText
 </NavLink>
 
@@ -14,6 +14,7 @@
     [Parameter] public string Role { get; set; }
     [Parameter] public string Href { get; set; }
     [Parameter] public string AriaLabel { get; set; }
+    [Parameter] public string ButtonType { get; set; }
 
     //tailwind classes
     [Parameter] public string MarginPadding { get; set; }
@@ -35,6 +36,8 @@
             PreventDefault = true;
         if (string.IsNullOrWhiteSpace(Role))
             Role = "button";
+        if (string.IsNullOrWhiteSpace(ButtonType))
+            ButtonType = "button";
 
         if (string.IsNullOrWhiteSpace(MarginPadding))
             MarginPadding = "mx-2 px-4 py-2";
