@@ -26,6 +26,7 @@ namespace WFBC.Client.Pages.Commish
         protected override async Task OnInitializedAsync()
         {
             await GetAllManagers();
+            await GetAllDrafts();
         }
 
         protected async Task GetAllManagers()

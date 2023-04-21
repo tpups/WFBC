@@ -15,6 +15,7 @@ namespace WFBC.Shared.Models
         public string Year { get; set; }
         [Required]
         public string DraftType { get; set; }
+        public string? Type { get; set; }
         public DateTime? Date { get; set; }
         public int Rounds { get; set; }
     }
