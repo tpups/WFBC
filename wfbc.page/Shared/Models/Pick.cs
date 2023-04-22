@@ -9,6 +9,10 @@ namespace WFBC.Shared.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
+        [Required]
+        public DateTime? CreatedAt { get; set; }
+        [Required]
+        public DateTime? LastUpdatedAt { get; set; }
         // Team Id of the pick's original team
         [Required]
         public string TeamId { get; set; }

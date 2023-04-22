@@ -23,10 +23,13 @@ namespace WFBC.Client.Pages.Commish
         protected Manager manager = new Manager();
         protected List<Draft> drafts = new List<Draft>();
         protected Draft draft = new Draft();
+        protected List<Team> teams = new List<Team>();
+        protected Team team = new Team();
         protected override async Task OnInitializedAsync()
         {
             await GetAllManagers();
             await GetAllDrafts();
+            await GetAllTeams();
         }
 
         protected async Task GetAllManagers()
@@ -36,6 +39,10 @@ namespace WFBC.Client.Pages.Commish
         protected async Task GetAllDrafts()
         {
             drafts = await PublicClient.Client.GetFromJsonAsync<List<Draft>>("api/draft");
+        }
+        protected async Task GetAllTeams()
+        {
+            teams = await PublicClient.Client.GetFromJsonAsync<List<Team>>("api/team");
         }
     }
 }

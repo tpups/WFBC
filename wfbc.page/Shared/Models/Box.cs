@@ -1,5 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
+using System.ComponentModel.DataAnnotations;
 
 namespace WFBC.Shared.Models
 {
@@ -8,6 +9,10 @@ namespace WFBC.Shared.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
+        [Required]
+        public DateTime? CreatedAt { get; set; }
+        [Required]
+        public DateTime? LastUpdatedAt { get; set; }
         public string ManagerId { get; set; }
         public DateOnly Date { get; set; }
 

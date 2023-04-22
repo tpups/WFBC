@@ -33,9 +33,15 @@ namespace WFBC.Server.Controllers
         }
         [HttpPost]
         [Authorize(Policy = Policies.IsCommish)]
-        public void Post([FromBody] List<Pick> picks)
+        public string[] Post([FromBody] List<Pick> picks)
         {
             _pick.AddPicks(picks);
+            var pickIDs = new List<string>();
+            foreach (var pick in picks)
+            {
+                pickIDs.Add(pick.Id);
+            }
+            return pickIDs.ToArray();
         }
     }
 }

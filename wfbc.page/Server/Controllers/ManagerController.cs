@@ -14,7 +14,7 @@ namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    [Authorize(Policy = Policies.IsCommish)]
     public class ManagerController : ControllerBase
     {
         private readonly IManager _manager;

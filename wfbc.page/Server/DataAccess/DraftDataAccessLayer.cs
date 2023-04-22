@@ -6,6 +6,8 @@ using WFBC.Shared.Models;
 using WFBC.Server.Models;
 using WFBC.Server.Interface;
 using MongoDB.Driver;
+using System.Net.Http;
+using WFBC.Client;
 
 namespace WFBC.Server.DataAccess
 {
@@ -43,11 +45,12 @@ namespace WFBC.Server.DataAccess
             }
         }
         // Add a draft
-        public void AddDraft(Draft draft)
+        public string AddDraft(Draft draft)
         {
             try
             {
                 _db.Drafts.InsertOne(draft);
+                return draft.Id;
             }
             catch
             {
@@ -74,10 +77,13 @@ namespace WFBC.Server.DataAccess
                 FilterDefinition<Draft> draftData = Builders<Draft>.Filter.Eq("Id", id);
                 // also delete all picks for the draft
                 List<string> draftPicks = GetDraft(id).Picks;
-                var picksData = new FilterDefinitionBuilder<Pick>();
-                var picksFilter = picksData.In(p => p.Id, draftPicks);
+                FilterDefinitionBuilder<Pick> picksData = new FilterDefinitionBuilder<Pick>();
+                FilterDefinition<Pick> picksFilter = draftPicks != null && draftPicks.Any() ? picksData.In(p => p.Id, draftPicks) : null;
+                if (picksFilter != null)
+                {
+                    _db.Picks.DeleteMany(picksFilter);
+                }
                 _db.Drafts.DeleteOne(draftData);
-                _db.Picks.DeleteMany(picksFilter);
             }
             catch
             {

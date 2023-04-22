@@ -31,11 +31,14 @@ namespace WFBC.Client.Pages.Commish
         {
             if (manager.Id != null)
             {
+                manager.LastUpdatedAt = DateTime.Now;
                 await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", manager);
                 UrlNavigationManager.NavigateTo("/commish/managers");
             }
             else
             {
+                manager.CreatedAt = DateTime.Now;
+                manager.LastUpdatedAt = manager.CreatedAt;
                 await AuthorizedClient.Client.PostAsJsonAsync("/api/manager/", manager);
                 UrlNavigationManager.NavigateTo("/commish/managers");
             }

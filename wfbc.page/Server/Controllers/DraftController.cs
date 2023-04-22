@@ -13,6 +13,7 @@ namespace WFBC.Server.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Policy = Policies.IsCommish)]
     public class DraftController : ControllerBase
     {
         private readonly IDraft _draft;
@@ -21,29 +22,29 @@ namespace WFBC.Server.Controllers
             _draft = draft;
         }
         [HttpGet]
+        [AllowAnonymous]
         public List<Draft> Get()
         {
             return _draft.GetAllDrafts();
         }
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public Draft Get(string id)
         {
             return _draft.GetDraft(id);
         }
         [HttpPost]
-        [Authorize(Policy = Policies.IsCommish)]
-        public void Post([FromBody]Draft draft)
+        public string Post([FromBody]Draft draft)
         {
             _draft.AddDraft(draft);
+            return draft.Id;
         }
         [HttpPut]
-        [Authorize(Policy = Policies.IsCommish)]
         public void Put([FromBody]Draft draft)
         {
             _draft.UpdateDraft(draft);
         }
-        [HttpDelete]
-        [Authorize(Policy = Policies.IsCommish)]
+        [HttpDelete("{id}")]
         public void Delete(string id)
         {
             _draft.DeleteDraft(id);

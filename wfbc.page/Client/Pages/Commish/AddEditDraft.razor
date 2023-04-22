@@ -27,8 +27,8 @@
         <ValidationMessage For="@(() => draft.Rounds)" />
     </label>
     @*<button type="submit" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-wfbc-white-1">Create Draft</button>*@
-    <Button OnClickFunction=SaveDraft ButtonText="Create Draft" ButtonType="submit" MaxWidth="max-w-full" />
-    <Button ButtonText="Cancel" Href="/commish" MaxWidth="max-w-full" />
+    <Button OnClickFunction=SaveDraft ButtonText="Save Draft" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+    <Button ButtonText="Cancel" Href="/commish/drafts" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
 </EditForm>
 
 @code {

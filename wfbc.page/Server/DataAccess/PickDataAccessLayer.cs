@@ -43,11 +43,12 @@ namespace WFBC.Server.DataAccess
             }
         }
         // Add a draft pick
-        public void AddPick(Pick pick)
+        public string AddPick(Pick pick)
         {
             try
             {
                 _db.Picks.InsertOne(pick);
+                return pick.Id;
             }
             catch
             {
@@ -55,16 +56,19 @@ namespace WFBC.Server.DataAccess
             }
         }
         // Add a list of draft picks
-        public void AddPicks(List<Pick> picks)
+        public string[] AddPicks(List<Pick> picks)
         {
             try
             {
                 var listWrites = new List<WriteModel<Pick>>();
+                var pickIDs = new List<string>();
                 foreach (var pick in picks)
                 {
                     listWrites.Add(new InsertOneModel<Pick>(pick));
+                    pickIDs.Add(pick.Id);
                 }
                 _db.Picks.BulkWriteAsync(listWrites);
+                return pickIDs.ToArray();
             }
             catch
             {
