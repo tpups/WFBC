@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WFBC.Shared.Models
 {
-    public class Draft
+    public class Player
     {
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
@@ -16,20 +16,13 @@ namespace WFBC.Shared.Models
         [Required]
         public DateTime? LastUpdatedAt { get; set; }
 
-        public List<ObjectId>? Teams { get; set; }
-
-        public List<ObjectId>? Picks { get; set; }
-
-        [Required]
-        public int Year { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? TeamId { get; set; }
 
         [Required]
-        public string? DraftType { get; set; }
+        public string? FirstName { get; set; }
 
-        public string? Type { get; set; }
-
-        public DateTime? Date { get; set; }
-
-        public int Rounds { get; set; }
+        [Required]
+        public string? LastName { get; set;}
     }
 }

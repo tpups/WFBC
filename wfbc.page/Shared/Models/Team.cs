@@ -9,13 +9,23 @@ namespace WFBC.Shared.Models
         [BsonId]
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
+
         [Required]
         public DateTime? CreatedAt { get; set; }
+
         [Required]
         public DateTime? LastUpdatedAt { get; set; }
+
         [BsonRepresentation(BsonType.ObjectId)]
         public string? ManagerId { get; set; }
+
         [Required]
         public string? Name { get; set; }
+
+        public string? Status { get; set; }
+
+        public List<ObjectId>? PlayerIds { get; set; }
+
+        public List<ObjectId>? PickIds { get; set; }
     }
 }

@@ -36,22 +36,22 @@
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Status</span>
-        <input @bind="manager.Status"
-               type="text"
-               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => manager.Status)" />
+        <InputSelect @bind-Value="manager.Status" class="mt-1 pl-2 h-6 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0">
+            <option value="Active">Active</option>
+            <option value="Inactive">Inactive</option>
+        </InputSelect>
     </label>
     <label class="block">
         <span class="text-wfbc-blue-2">Access</span>
-        <input @bind="manager.Access"
-               type="text"
-               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
-        <ValidationMessage For="@(() => manager.Access)" />
+        <InputSelect @bind-Value="manager.Access" class="mt-1 pl-2 h-6 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0">
+            <option value="Commish">Commish</option>
+            <option value="Manager">Manager</option>
+        </InputSelect>
     </label>
-    @*<a @onclick="SaveManager" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-center text-wfbc-white-1">Save</a>
-    <a href="/commish/managers" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-center text-wfbc-white-1">Cancel</a>*@
+
     <Button OnClickFunction=SaveManager ButtonText="Save Manager" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
     <Button ButtonText="Cancel" Href="/commish/managers" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+
 </EditForm>
 
 @code {

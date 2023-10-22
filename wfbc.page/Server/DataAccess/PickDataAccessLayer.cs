@@ -87,5 +87,31 @@ namespace WFBC.Server.DataAccess
                 throw;
             }
         }
+        // Delete a draft pick
+        public void DeletePick(string id)
+        {
+            try
+            {
+                FilterDefinition<Pick> pickData = Builders<Pick>.Filter.Eq("Id", id);
+                _db.Picks.DeleteOne(pickData);
+            }
+            catch
+            {
+                throw;
+            }
+        }
+        // Delete multiple draft picks
+        public void DeletePicks(string[] ids)
+        {
+            try
+            {
+                FilterDefinition<Pick> pickData = Builders<Pick>.Filter.In("Id", ids);
+                _db.Picks.DeleteMany(pickData);
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }

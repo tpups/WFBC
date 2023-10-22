@@ -76,7 +76,7 @@ namespace WFBC.Server.DataAccess
             {
                 FilterDefinition<Draft> draftData = Builders<Draft>.Filter.Eq("Id", id);
                 // also delete all picks for the draft
-                List<string> draftPicks = GetDraft(id).Picks;
+                var draftPicks = GetDraft(id).Picks;
                 FilterDefinitionBuilder<Pick> picksData = new FilterDefinitionBuilder<Pick>();
                 FilterDefinition<Pick> picksFilter = draftPicks != null && draftPicks.Any() ? picksData.In(p => p.Id, draftPicks) : null;
                 if (picksFilter != null)

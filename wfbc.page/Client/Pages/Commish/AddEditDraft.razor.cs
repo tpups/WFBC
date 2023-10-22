@@ -10,6 +10,7 @@ using Amazon.Runtime.Internal.Transform;
 using MongoDB.Bson.IO;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using MongoDB.Bson;
 
 namespace WFBC.Client.Pages.Commish
 {
@@ -48,13 +49,19 @@ namespace WFBC.Client.Pages.Commish
 
                 List<Manager> _managers = managers.FindAll(m => m.Status == "active");
 
+                DateTime timestamp = DateTime.Now;
+
                 for (int i = 0; i < draft.Rounds; i++)
                 {
                     foreach (var manager in _managers)
                     {
                         Pick pick = new Pick
                         {
+                            CreatedAt = timestamp,
+                            LastUpdatedAt = timestamp,
                             Round = i + 1,
+                            Year = draft.Year,
+                            DraftType = draft.DraftType,
                             TeamId = manager.TeamId,
                             DraftId = newDraftID
                         };
@@ -67,8 +74,8 @@ namespace WFBC.Client.Pages.Commish
                 // GetFromJsonAsyc allows reutn of lists so why not Post?
 
                 string _newPickIDs = await picksResponse.Content.ReadAsStringAsync();
-                string[] newPickIDs = JsonSerializer.Deserialize<string[]>(_newPickIDs);
-
+                List<ObjectId> newPickIDs = JsonSerializer.Deserialize<List<ObjectId>>(_newPickIDs);
+                draft.Picks = newPickIDs;
             }
             UrlNavigationManager.NavigateTo("/commish/drafts");
         }

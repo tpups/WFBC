@@ -10,5 +10,6 @@ namespace WFBC.Server.Interface
         public void UpdatePick(Pick pick);
         public Pick GetPick(string id);
         public List<Pick> GetPicks(List<string> ids);
+        public void DeletePick(string id);
     }
 }
