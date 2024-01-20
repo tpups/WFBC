@@ -16,9 +16,11 @@ namespace WFBC.Shared.Models
         [Required]
         public DateTime? LastUpdatedAt { get; set; }
 
-        public List<ObjectId>? Teams { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string>? Teams { get; set; }
 
-        public List<ObjectId>? Picks { get; set; }
+        [BsonRepresentation(BsonType.ObjectId)]
+        public List<string>? Picks { get; set; }
 
         [Required]
         public int Year { get; set; }

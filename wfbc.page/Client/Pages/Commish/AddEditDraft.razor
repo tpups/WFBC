@@ -27,10 +27,40 @@
         <ValidationMessage For="@(() => draft.Rounds)" />
     </label>
     @*<button type="submit" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-wfbc-white-1">Create Draft</button>*@
-    <Button OnClickFunction=SaveDraft ButtonText="Save Draft" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+    <Button OnClickFunction=Save ButtonText="Save Draft" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
     <Button ButtonText="Cancel" Href="/commish/drafts" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
 </EditForm>
 
-@code {
+<Modal ModalId="delete-draft-modal" Hidden="@Hidden" CloseModal=CloseModal>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@Message</h3>
+</Modal>
 
+@code {
+    public string Hidden { get; set; }
+    public string Message { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Hidden = "hidden";
+        Message = "";
+    }
+
+    protected async Task Save()
+    {
+        string response = await SaveDraft();
+        if (response != "success")
+        {
+            OpenModal(response);
+        }
+    }
+
+    public void OpenModal(string message)
+    {
+        Hidden = "";
+        Message = message;
+    }
+    public void CloseModal()
+    {
+        Hidden = "hidden";
+    }
 }

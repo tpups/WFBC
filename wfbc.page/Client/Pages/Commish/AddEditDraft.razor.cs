@@ -25,7 +25,7 @@ namespace WFBC.Client.Pages.Commish
             if (!String.IsNullOrEmpty(draftID))
             {
                 Title = "Edit";
-                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft" + draftID);
+                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft/" + draftID);
             }
             else
             {
@@ -33,7 +33,7 @@ namespace WFBC.Client.Pages.Commish
                 picks = new List<Pick>();
             }
         }
-        protected async Task SaveDraft()
+        protected async Task<string> SaveDraft()
         {
             if (draft.Id != null)
             {
@@ -47,7 +47,7 @@ namespace WFBC.Client.Pages.Commish
                 HttpResponseMessage draftResponse = await AuthorizedClient.Client.PostAsJsonAsync("/api/draft/", draft);
                 string newDraftID = await draftResponse.Content.ReadAsStringAsync();
 
-                List<Manager> _managers = managers.FindAll(m => m.Status == "active");
+                List<Manager> _managers = managers.FindAll(m => m.Status == "Active");
 
                 DateTime timestamp = DateTime.Now;
 
@@ -55,6 +55,10 @@ namespace WFBC.Client.Pages.Commish
                 {
                     foreach (var manager in _managers)
                     {
+                        if (string.IsNullOrWhiteSpace(manager.TeamId))
+                        {
+                            return "Not all active managers are assigned to a team. Please update using Teams page.";
+                        }
                         Pick pick = new Pick
                         {
                             CreatedAt = timestamp,
@@ -68,16 +72,17 @@ namespace WFBC.Client.Pages.Commish
                         picks.Add(pick);
                     }
                 }
+
                 HttpResponseMessage picksResponse = await AuthorizedClient.Client.PostAsJsonAsync("/api/pick/", picks);
-
-                // TOTO: need to figure out how to get list or array of IDs back
-                // GetFromJsonAsyc allows reutn of lists so why not Post?
-
                 string _newPickIDs = await picksResponse.Content.ReadAsStringAsync();
-                List<ObjectId> newPickIDs = JsonSerializer.Deserialize<List<ObjectId>>(_newPickIDs);
+                List<string> newPickIDs = JsonSerializer.Deserialize<string[]>(_newPickIDs).ToList();
+
+                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft/" + newDraftID);
                 draft.Picks = newPickIDs;
+                HttpResponseMessage draftAddPicksResponse = await AuthorizedClient.Client.PutAsJsonAsync("/api/draft/", draft);
             }
             UrlNavigationManager.NavigateTo("/commish/drafts");
+            return "success";
         }
     }
 }

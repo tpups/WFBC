@@ -27,7 +27,7 @@
                             {
                                 <tr>
                                     <td class="p-2 md:p-4 text-sm md:text-md">@manager.FirstName</td>
-                                    <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@manager.TeamName</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@(teams.Where(t => t.ManagerId == manager.Id).FirstOrDefault()?.Name)</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md">@manager.Email</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md flex">
                                         <Button ButtonText="Edit" Href=@("/commish/edit_manager/" + @manager.Id) AriaLabel="edit manager link" />
@@ -47,7 +47,6 @@
 <Modal ModalId="delete-manager-modal" Hidden="@Hidden" CloseModal=CloseModal>
     <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">Are you sure you want to delete this manager?</h3>
     <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"name: {manager.FirstName} {manager.LastName}")</h3>
-    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"team: { manager.TeamName}")</h3>    
     <Button ButtonText="Yes, I'm sure" OnClickFunction=Delete FunctionParameter="@manager.Id" Hover="hover:bg-wfbc-red-1" />
     <Button ButtonText="No, cancel" OnClickFunction=CloseModal />
 </Modal>

@@ -1,6 +1,7 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
+using static MongoDB.Driver.WriteConcern;
 
 namespace WFBC.Shared.Models
 {
@@ -23,9 +24,6 @@ namespace WFBC.Shared.Models
 
         [Required]
         public string? LastName { get; set; }
-
-        [Required]
-        public string? TeamName { get; set; }
 
         [BsonRepresentation(BsonType.ObjectId)]
         public string? TeamId { get; set; }

@@ -19,7 +19,7 @@
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Name</th>
                                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-wfbc-black-1 uppercase">Manager</th>
-                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-wfbc-black-1 uppercase">Team Name</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-wfbc-black-1 uppercase">Manager Linked?</th>
                                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-wfbc-black-1 uppercase">Options</th>
                             </tr>
                         </thead>
@@ -29,7 +29,7 @@
                                 <tr>
                                     <td class="p-2 md:p-4 text-sm md:text-md">@team.Name</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md">@managers.Where(m => m.Id == team.ManagerId).FirstOrDefault()?.FirstName</td>
-                                    <td class="p-2 md:p-4 text-sm md:text-md">@managers.Where(m => m.Id == team.ManagerId).FirstOrDefault()?.TeamName</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@(managers.Where(m => m.Id == team.ManagerId).FirstOrDefault()?.TeamId == null ? "NO" : "YES")</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md flex">
                                         <Button ButtonText="Edit" Href=@("/commish/edit_team/" + @team.Id) AriaLabel="edit team link" />
                                         <Button ButtonText="Delete" FunctionParameter="@team.Id" OnClickFunction=OpenDeleteTeamModal AriaLabel="open delete team modal" />
