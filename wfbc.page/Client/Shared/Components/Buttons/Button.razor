@@ -1,4 +1,4 @@
-﻿<NavLink @onclick="() => OnClickFunction.InvokeAsync(FunctionParameter)" class=@($"{Background} {MarginPadding} {TextColor} {Hover} {MaxWidth} {Rounded} {Border} text-center") role="@Role" href="@Href" aria-label="@AriaLabel" type="@ButtonType" tabindex="0">
+﻿<NavLink @onclick="() => OnClickFunction.InvokeAsync(FunctionParameter)" class=@($"{Background} {MarginPadding} {TextColor} {Hover} {MaxWidth} {Rounded} {Border} text-center") role="@Role" href="@Href" aria-label="@AriaLabel" type="@ButtonType" tabindex="0" target="@Target">
     @ButtonText
 </NavLink>
 
@@ -15,6 +15,7 @@
     [Parameter] public string Href { get; set; }
     [Parameter] public string AriaLabel { get; set; }
     [Parameter] public string ButtonType { get; set; }
+    [Parameter] public string Target { get; set;  }
 
     //tailwind classes
     [Parameter] public string MarginPadding { get; set; }
