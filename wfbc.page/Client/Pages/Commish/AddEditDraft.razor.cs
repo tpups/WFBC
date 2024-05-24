@@ -6,6 +6,11 @@ using WFBC.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Net.Http.Json;
+using Amazon.Runtime.Internal.Transform;
+using MongoDB.Bson.IO;
+using System.Text.Json.Serialization;
+using System.Text.Json;
+using MongoDB.Bson;
 
 namespace WFBC.Client.Pages.Commish
 {
@@ -13,55 +18,71 @@ namespace WFBC.Client.Pages.Commish
     {
         protected string Title = "Create";
         [Parameter]
-        public string draftId { get; set; }
-        protected Draft draft = new Draft();
+        public string draftID { get; set; }
+        protected List<Pick> picks =new List<Pick>();
         protected override async Task OnParametersSetAsync()
         {
-            if (!String.IsNullOrEmpty(draftId))
+            if (!String.IsNullOrEmpty(draftID))
             {
                 Title = "Edit";
-                draft = await Http.GetFromJsonAsync<Draft>("/api/draft" + draftId);
+                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft/" + draftID);
             }
             else
             {
                 draft = new Draft();
+                picks = new List<Pick>();
             }
         }
-        protected async Task SaveDraft()
+        protected async Task<string> SaveDraft()
         {
             if (draft.Id != null)
             {
-                await Http.PutAsJsonAsync("/api/draft", draft);
+                draft.LastUpdatedAt = DateTime.Now;
+                await AuthorizedClient.Client.PutAsJsonAsync("/api/draft", draft);
             }
             else if (draft.Rounds != 0)
             {
-                draft.Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString();
-                draft.Picks = new List<string>();
-                List<Manager> managers = manList.FindAll(m => m.Status == "active");
-                List<Pick> picks = new List<Pick>();
+                draft.CreatedAt = DateTime.Now;
+                draft.LastUpdatedAt = draft.CreatedAt;
+                HttpResponseMessage draftResponse = await AuthorizedClient.Client.PostAsJsonAsync("/api/draft/", draft);
+                string newDraftID = await draftResponse.Content.ReadAsStringAsync();
+
+                List<Manager> _managers = managers.FindAll(m => m.Status == "Active");
+
+                DateTime timestamp = DateTime.Now;
+
                 for (int i = 0; i < draft.Rounds; i++)
                 {
-                    foreach (var manager in managers)
+                    foreach (var manager in _managers)
                     {
+                        if (string.IsNullOrWhiteSpace(manager.TeamId))
+                        {
+                            return "Not all active managers are assigned to a team. Please update using Teams page.";
+                        }
                         Pick pick = new Pick
                         {
-                            Id = MongoDB.Bson.ObjectId.GenerateNewId().ToString(),
+                            CreatedAt = timestamp,
+                            LastUpdatedAt = timestamp,
                             Round = i + 1,
-                            ManagerId = manager.Id,
-                            DraftId = draft.Id,
+                            Year = draft.Year,
+                            DraftType = draft.DraftType,
+                            TeamId = manager.TeamId,
+                            DraftId = newDraftID
                         };
                         picks.Add(pick);
-                        draft.Picks.Add(pick.Id);
                     }
                 }
-                await Http.PostAsJsonAsync("/api/pick/", picks);
-                await Http.PostAsJsonAsync("/api/draft/", draft);
+
+                HttpResponseMessage picksResponse = await AuthorizedClient.Client.PostAsJsonAsync("/api/pick/", picks);
+                string _newPickIDs = await picksResponse.Content.ReadAsStringAsync();
+                List<string> newPickIDs = JsonSerializer.Deserialize<string[]>(_newPickIDs).ToList();
+
+                draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft/" + newDraftID);
+                draft.Picks = newPickIDs;
+                HttpResponseMessage draftAddPicksResponse = await AuthorizedClient.Client.PutAsJsonAsync("/api/draft/", draft);
             }
-            ToCommish();
-        }
-        public void ToCommish()
-        {
-            UrlNavigationManager.NavigateTo("/commish");
+            UrlNavigationManager.NavigateTo("/commish/drafts");
+            return "success";
         }
     }
 }

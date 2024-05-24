@@ -1,0 +1,15 @@
+﻿@page "/commish/standings"
+@attribute [Authorize(Policy = Policies.IsCommish)]
+@inherits StandingsModel
+@using WFBC.Client.Shared.Components.Buttons;
+
+
+<div class="flex flex-col m-3 lg:m-6 max-w-full">
+    <div class="flex p-4 mb-2 border rounded-xl shadow-sm">
+        <Button ButtonText="Build Standings" Href="/commish/build_standings" Role="button" AriaLabel="build standings link" />
+    </div>
+</div>
+
+@code {
+
+}

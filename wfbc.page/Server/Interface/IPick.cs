@@ -5,10 +5,11 @@ namespace WFBC.Server.Interface
 {
     public interface IPick
     {
-        public void AddPick(Pick pick);
-        public void AddPicks(List<Pick> picks);
+        public string AddPick(Pick pick);
+        public string[] AddPicks(List<Pick> picks);
         public void UpdatePick(Pick pick);
         public Pick GetPick(string id);
         public List<Pick> GetPicks(List<string> ids);
+        public void DeletePick(string id);
     }
 }

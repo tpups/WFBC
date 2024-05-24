@@ -7,7 +7,7 @@ namespace WFBC.Server.Interface
     {
         public List<Draft> GetAllDrafts();
         public Draft GetDraft(string id);
-        public void AddDraft(Draft draft);
+        public string AddDraft(Draft draft);
         public void UpdateDraft(Draft drafts);
         public void DeleteDraft(string id);
     }

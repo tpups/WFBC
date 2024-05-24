@@ -1,0 +1,17 @@
+﻿@using WFBC.Client.Shared.SVG
+
+<button @onclick=CloseModal type="button" class="absolute top-3 right-2.5 text-wfbc-blue-2 bg-transparent hover:bg-wfbc-blue-1 hover:text-wfbc-white-1 rounded-lg text-sm p-1.5 ml-auto inline-flex items-center" data-modal-hide="@ModalId">
+    <CloseX />
+    <span class="sr-only">Close Modal</span>
+</button>
+
+
+@code {
+    [Parameter] public string ModalId { get; set; }
+    [Parameter] public Action CloseModal { get; set; }
+
+    private void Close()
+    {
+        CloseModal?.Invoke();
+    }
+}

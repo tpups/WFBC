@@ -1,0 +1,78 @@
+﻿@page "/commish/drafts"
+@attribute [Authorize(Policy = Policies.IsCommish)]
+@inherits DraftsModel
+@using WFBC.Client.Shared.Components.Buttons;
+
+
+<div class="flex flex-col m-3 lg:m-6 max-w-full">
+    <div class="flex p-4 mb-2 border rounded-xl shadow-sm">
+        <Button ButtonText="Create Draft" Href="/commish/create_draft" Role="button" AriaLabel="create draft link" />
+   </div>
+
+    <div class="p-6 border rounded-xl shadow-sm">
+        <div class="-m-1.5 overflow-x-auto">
+            <div class="p-1.5 min-w-full inline-block align-middle">
+                <div class="overflow-hidden">
+                    <table class="table-auto min-w-full divide-y divide-wfbc-blue-2">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Year</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Teams</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Type</th>
+                                <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-wfbc-black-1 uppercase">Options</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-wfbc-blue-2">
+                            @foreach (var draft in drafts)
+                            {
+                                <tr>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@draft.Year</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@(draft.Teams != null ? draft.Teams.Count() : "")</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@draft.DraftType</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md flex">
+                                        <Button ButtonText="Edit" Href=@("/commish/edit_draft/" + @draft.Id) AriaLabel="edit draft link" />
+                                        <Button ButtonText="Delete" FunctionParameter="@draft.Id" OnClickFunction=OpenDeleteDraftModal AriaLabel="open delete draft modal" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<Modal ModalId="delete-draft-modal" Hidden="@Hidden" CloseModal=CloseModal>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">Are you sure you want to delete this draft?</h3>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"year: {draft.Year}")</h3>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@($"type: { draft.DraftType}")</h3>    
+    <Button ButtonText="Yes, I'm sure" OnClickFunction=Delete FunctionParameter="@draft.Id" Hover="hover:bg-wfbc-red-1" />
+    <Button ButtonText="No, cancel" OnClickFunction=CloseModal />
+</Modal>
+
+
+@code {
+    public string Hidden { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Hidden = "hidden";
+    }
+
+    public void OpenDeleteDraftModal(string draftID)
+    {
+        Hidden = "";
+        DeleteConfirm(draftID);
+    }
+    public void CloseModal()
+    {
+        Hidden = "hidden";
+    }
+    public async Task Delete(string id)
+    {
+        await DeleteDraft(id);
+        CloseModal();
+    }
+}

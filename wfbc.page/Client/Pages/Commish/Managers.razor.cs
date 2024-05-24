@@ -13,13 +13,13 @@ namespace WFBC.Client.Pages.Commish
     {
         protected void DeleteConfirm(string ID)
         {
-            man = manList.FirstOrDefault(x => x.Id == ID);
+            manager = managers.FirstOrDefault(x => x.Id == ID);
         }
-        protected async Task DeleteManager(string manID)
+        protected async Task DeleteManager(string managerID)
         {
             try
             {
-                await Http.DeleteAsync("api/manager/" + manID);
+                await AuthorizedClient.Client.DeleteAsync("api/manager/" + managerID);
                 await GetAllManagers();
             }
             catch (AccessTokenNotAvailableException e)

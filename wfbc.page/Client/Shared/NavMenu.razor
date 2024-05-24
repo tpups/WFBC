@@ -6,6 +6,7 @@
         switch (NavMenuSection)
         {
             case "rulebook":
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2024">2024 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2023">2023 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2022">2022 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2021">2021 Rulebook</NavLink></li>
@@ -13,6 +14,7 @@
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2016">2016 Rulebook</NavLink></li>
                 break;
             case "results":
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2023">2023 Results</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2022">2022 Results</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2021">2021 Results</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/results/2020">2020 Results</NavLink></li>
@@ -40,7 +42,7 @@
     {
         if (AppState.IsXSmall)
         {
-            AppState.SetCloseDrawer(false, true);
+            AppState.SetDrawerClosed(false, true);
         }
     }
 }

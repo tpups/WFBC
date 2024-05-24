@@ -1,37 +1,66 @@
 ﻿@page "/commish/create_draft"
 @page "/commish/edit_draft/{draftId}"
 @inherits AddEditDraftModel
+@using WFBC.Client.Shared.Components.Buttons
 
-<h3>@Title Draft</h3>
-
-<EditForm Model="@draft" OnValidSubmit="SaveDraft">
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/12" Model="@draft" OnValidSubmit="SaveDraft">
     <DataAnnotationsValidator />
-    <div class="form-group row">
-        <label class="control-label col-md-12">Year</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="draft.Year" />
-        </div>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Year</span>
+        <input @bind="draft.Year"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => draft.Year)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Type</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="draft.Type" />
-        </div>
-        <ValidationMessage For="@(() => draft.Type)" />
-    </div>
-    <div class="form-group row">
-        <label class="control-label col-md-12">Rounds</label>
-        <div class="col-md-4">
-            <input class="form-control" @bind="draft.Rounds" />
-        </div>
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Type</span>
+        <input @bind="draft.DraftType"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
+        <ValidationMessage For="@(() => draft.DraftType)" />
+    </label>
+    <label class="block">
+        <span class="text-wfbc-blue-2">Rounds</span>
+        <input @bind="draft.Rounds"
+               type="text"
+               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => draft.Rounds)" />
-    </div>
-    <div class="form-group">
-        <button type="submit" class="btn btn-primary">Create</button>
-    </div>
+    </label>
+    @*<button type="submit" class="mt-4 px-4 py-2 rounded-full bg-wfbc-blue-2 text-wfbc-white-1">Create Draft</button>*@
+    <Button OnClickFunction=Save ButtonText="Save Draft" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+    <Button ButtonText="Cancel" Href="/commish/drafts" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
 </EditForm>
 
-@code {
+<Modal ModalId="delete-draft-modal" Hidden="@Hidden" CloseModal=CloseModal>
+    <h3 class="mb-5 text-lg font-normal text-wfbc-black-1">@Message</h3>
+</Modal>
 
+@code {
+    public string Hidden { get; set; }
+    public string Message { get; set; }
+
+    protected override void OnInitialized()
+    {
+        Hidden = "hidden";
+        Message = "";
+    }
+
+    protected async Task Save()
+    {
+        string response = await SaveDraft();
+        if (response != "success")
+        {
+            OpenModal(response);
+        }
+    }
+
+    public void OpenModal(string message)
+    {
+        Hidden = "";
+        Message = message;
+    }
+    public void CloseModal()
+    {
+        Hidden = "hidden";
+    }
 }

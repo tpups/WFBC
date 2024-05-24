@@ -38,32 +38,44 @@ namespace WFBC.Server
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddMvc();
+            services.AddControllers();
+
+            // Okta Authentication
             services.AddAuthentication(options =>
             {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-
-            }).AddJwtBearer(options =>
+                options.DefaultAuthenticateScheme = OktaDefaults.ApiAuthenticationScheme;
+                options.DefaultChallengeScheme = OktaDefaults.ApiAuthenticationScheme;
+                options.DefaultSignInScheme = OktaDefaults.ApiAuthenticationScheme;
+            })
+            .AddOktaWebApi(new OktaWebApiOptions()
             {
-                options.Authority = Configuration["OktaSettings:Authority"];
-                options.Audience = Configuration["OktaSettings:Audience"];
+                OktaDomain = Configuration["Okta:OktaDomain"],
+                AuthorizationServerId = Configuration["Okta:AuthorizationServerId"],
+                Audience = Configuration["Okta:Audience"]
             });
-
+            // Authorization Policies
             services.AddAuthorization(options =>
             {
                 options.AddPolicy(Policies.IsCommish, Policies.IsCommishPolicy());
                 options.AddPolicy(Policies.IsManager, Policies.IsManagerPolicy());
             });
-            services.AddControllers();
+            // Swagger
+            services.AddSwaggerGen();
+            // DB
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
             services.AddSingleton<IDatabaseSettings>(x => x.GetRequiredService<IOptions<DatabaseSettings>>().Value);
+            services.AddSingleton<WfbcDBContext>();
+            // Okta
             services.Configure<OktaSettings>(Configuration.GetSection(nameof(OktaSettings)));
             services.AddSingleton<IOktaSettings>(x => x.GetRequiredService<IOptions<OktaSettings>>().Value);
-            services.AddMvc();
+            // Interfaces
+            services.AddTransient<ITeam, TeamDataAccessLayer>();
             services.AddTransient<IManager, ManagerDataAccessLayer>();
             services.AddTransient<IDraft, DraftDataAccessLayer>();
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
-            services.AddSingleton<WfbcDBContext>();
+
             services.AddResponseCompression(opts =>
             {
                 opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
@@ -78,6 +90,9 @@ namespace WFBC.Server
             {
                 app.UseDeveloperExceptionPage();
                 app.UseWebAssemblyDebugging();
+                // Swagger
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
             else
             {

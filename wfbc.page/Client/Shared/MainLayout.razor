@@ -27,8 +27,8 @@
             <nav class="nav-menu">
                 <ul>
                     <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "home" ? "active" : "") href="#" @onclick="() => ChangeNavSection(home)">Home</NavLink></li>
-                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "results" ? "active" : "") href="/results/2022" @onclick="() => ChangeNavSection(results)">Results <Stack /></NavLink></li>
-                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "rulebook" ? "active" : "") href="/rulebook/2023" @onclick="() => ChangeNavSection(rulebook)">Rulebook <Stack /></NavLink></li>
+                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "results" ? "active" : "") href="/results/2023" @onclick="() => ChangeNavSection(results)">Results <Stack /></NavLink></li>
+                    <li class="nav-menu-item left-column-item"><NavLink class=@(navSection == "rulebook" ? "active" : "") href="/rulebook/2024" @onclick="() => ChangeNavSection(rulebook)">Rulebook <Stack /></NavLink></li>
                     <li class="nav-menu-item left-column-item"><NavLink href="https://docs.google.com/spreadsheets/d/1aclQnwGfbWnC7pEORc8wiXJ-xcyD9WpINyF-26l0EUg/edit?usp=sharing" target="_blank">Drafts <ExternalLink /></NavLink></li>
                     <li class="nav-menu-item left-column-item"><NavLink href="https://docs.google.com/spreadsheets/d/1t4w4Mo9HRRAXgy2rzVWhFrWJi1qSTLW3oXPj9VbWUyA/edit?usp=sharing" target="_blank">Picks <ExternalLink /></NavLink></li>
                     <AuthorizeView Policy="@Policies.IsCommish">
@@ -44,7 +44,7 @@
         </aside>
         <div class="main-container w-[inherit] z-10 bg-wfbc-white-1">
             <MenuBar />
-            <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseManagerMenu">
+            <main class="main absolute top-[48px] bottom-0 overflow-auto" @onclick="@CloseMenus">
                 <div class="flex flex-col lg:flex-row px-1 items-center">
                     <CascadingValue Value="this">
                         @Body
@@ -67,9 +67,14 @@
         StateHasChanged();
     }
 
-    public void CloseManagerMenu()
+    public void CloseMenus()
     {
         AppState.SetOpenManagerMenu(close: true);
+
+        if (AppState.IsXSmall)
+        {
+            AppState.SetDrawerClosed(true);
+        }
     }
 
     protected override void OnInitialized()

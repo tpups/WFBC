@@ -25,7 +25,7 @@ namespace WFBC.Client
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-            builder.Services.AddHttpClient("WfbcServerAPI", client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+            builder.Services.AddHttpClient<AuthorizedClient>(client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
                 .AddHttpMessageHandler(sp => sp.GetRequiredService<AuthorizationMessageHandler>()
                     .ConfigureHandler(
                         authorizedUrls: new[] { builder.HostEnvironment.BaseAddress }));
@@ -38,7 +38,7 @@ namespace WFBC.Client
                 builder.Configuration.Bind("Okta", options.ProviderOptions);
                 options.ProviderOptions.ResponseType = "code";
                 options.UserOptions.RoleClaim = "role";
-            }).AddAccountClaimsPrincipalFactory<RolesClaimsPrincipalFactory>();
+            }).AddAccountClaimsPrincipalFactory<GroupsClaimsPrincipalFactory>();
 
             builder.Services.AddAuthorizationCore(options =>
             {
