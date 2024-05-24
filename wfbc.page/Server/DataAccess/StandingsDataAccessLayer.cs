@@ -22,8 +22,9 @@ namespace WFBC.Server.DataAccess
         {
             try
             {
+                string year = date.Year.ToString();
                 FilterDefinition<Standings> filterStandingsData = Builders<Standings>.Filter.Eq("Date", date);
-                return db.Standings.Find(filterStandingsData).FirstOrDefault();
+                return db.Standings[year].Find(filterStandingsData).FirstOrDefault();
             }
             catch
             {

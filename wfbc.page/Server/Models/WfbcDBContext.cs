@@ -25,6 +25,7 @@ namespace WFBC.Server.Models
         private readonly MongoClient client;
         public WfbcDBContext(IDatabaseSettings settings)
         {
+            _dbs = new Dictionary<string, IMongoDatabase>();
             client = new MongoClient(settings.ConnectionString);
             _wfbcDatabase = client.GetDatabase(settings.DatabaseName);
 
