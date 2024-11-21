@@ -1,9 +1,12 @@
 ﻿@page "/commish/build_standings"
-@inherits AddEditTeamModel
+@inherits BuildUpdateStandingsModel
 @using WFBC.Client.Shared.Components.Buttons
 @using MongoDB.Bson
 
-<h3>Build or Update Standings</h3>
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@standings" OnValidSubmit="SaveStandings">
+    <DataAnnotationsValidator />
+
+</EditForm>
 
 @code {
 
