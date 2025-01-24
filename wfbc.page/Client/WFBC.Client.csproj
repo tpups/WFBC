@@ -25,4 +25,9 @@
   <ItemGroup>
     <Folder Include="wwwroot\img\" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Update="Pages\Results\Results24.razor">
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </Content>
+  </ItemGroup>
 </Project>
