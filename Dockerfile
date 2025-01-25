@@ -5,10 +5,12 @@
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
 WORKDIR /app
-EXPOSE 80
-EXPOSE 443
+EXPOSE 8080
+EXPOSE 8081
 
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# needed to fix dotnet restore on Apple silicon using docker buildx --platform linux/amd64
+ENV DOTNET_EnableWriteXorExecute=0
 WORKDIR /src
 COPY ["wfbc.page/Server/WFBC.Server.csproj", "wfbc.page/Server/"]
 COPY ["wfbc.page/Client/WFBC.Client.csproj", "wfbc.page/Client/"]

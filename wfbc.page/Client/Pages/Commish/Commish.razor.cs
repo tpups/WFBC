@@ -25,6 +25,8 @@ namespace WFBC.Client.Pages.Commish
         protected Draft draft = new Draft();
         protected List<Team> teams = new List<Team>();
         protected Team team = new Team();
+        protected List<Standings> allStandings = new List<Standings>();
+        protected Standings standings = new Standings();
         protected override async Task OnInitializedAsync()
         {
             await GetAllManagers();
