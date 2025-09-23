@@ -8,8 +8,15 @@ using System.Linq;
 
 namespace WFBC.Client.Pages.Commish
 {
-    public class StandingsModel : CommishModel
+    public class StandingsModel : ComponentBase
     {
-
+        [Inject]
+        public AuthorizedClient AuthorizedClient { get; set; }
+        [Inject]
+        public PublicClient PublicClient { get; set; }
+        [Inject]
+        public NavigationManager UrlNavigationManager { get; set; }
+        
+        protected Standings standings = new Standings();
     }
 }
