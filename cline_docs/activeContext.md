@@ -16,12 +16,13 @@ Successfully completed fixing all Commish tab button stack overflow issues by re
    - **Teams Button**: Fixed `TeamsModel` inheritance from `CommishModel` → `ComponentBase`
    - **Drafts Button**: Fixed `DraftsModel` inheritance from `CommishModel` → `ComponentBase`  
    - **Managers Button**: Fixed `ManagersModel` inheritance from `CommishModel` → `ComponentBase`
-   - **Standings Button**: Fixed `StandingsModel` inheritance from `CommishModel` → `ComponentBase`
+   - **Standings Button**: ✅ **FINAL FIX** - Removed `@inherits StandingsModel` from Standings.razor (same pattern as original Commish fix)
 
 3. **Technical Implementation Details**:
-   - Applied consistent pattern: break `CommishModel` inheritance, add direct dependency injection
-   - Added required properties and methods to each component (`managers`, `teams`, `drafts`, `standings`)
-   - Updated initialization methods from `OnInitialized()` to `OnInitializedAsync()`
+   - Applied hybrid approach: break `CommishModel` inheritance for complex components, remove inheritance entirely for simple ones
+   - Teams/Drafts/Managers: Added direct dependency injection and required properties
+   - Standings: Removed inheritance completely (follows original Commish fix pattern)
+   - Updated initialization methods from `OnInitialized()` to `OnInitializedAsync()` where needed
    - Resolved dependent component issues (`AddEditTeam`, `BuildUpdateStandings`)
 
 ## Next Steps
