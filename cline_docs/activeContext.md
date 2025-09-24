@@ -1,61 +1,57 @@
 # Active Context
 
+## Recently Completed Task
+**JSON Deserialization Error Fix**: Successfully resolved the "The input does not contain any JSON tokens" error when creating drafts and teams in the WFBC Commissioner interface.
+
+## What Was Fixed
+- **Primary Issue**: JSON deserialization errors when creating drafts and teams
+- **Root Cause**: Okta authorization issuer validation failure due to misconfigured `AuthorizationServerId`
+- **Secondary Issues**: Null ManagerId causing API errors, and some unnecessary debugging code
+
+## Key Technical Findings
+
+### **Root Cause & Primary Fix**
+The real issue was an **Okta issuer validation failure**:
+- **Problem**: Server user secrets had `Okta:AuthorizationServerId = https://login.wfbc.page/oauth2/default` (full URL)
+- **Solution**: Changed to `Okta:AuthorizationServerId = default` (just the ID)
+- **Impact**: Server now properly validates tokens issued by `https://login.wfbc.page/oauth2/default`
+
+### **Supporting Fixes Applied**
+1. **AddEditTeam.razor.cs**: Added null check for `team.ManagerId` to prevent invalid API calls
+2. **AddEditDraft.razor.cs**: Cleaned up unused imports and maintained proper error handling
+3. **Startup.cs**: Added CORS configuration for Blazor WebAssembly with authorization
+
+### **Debugging Code Removed During Cleanup**
+- **GroupsClaimsTransformation.cs**: Deleted entire file (not needed)
+- **Claims transformation registration**: Removed from Startup.cs (Okta handles this correctly)
+- **AuthorizationMessageHandler scopes**: Removed unnecessary explicit scopes (defaults work)
+- **Various unused imports**: Cleaned up across multiple files
+
 ## Current Status
-Successfully completed fixing all Commish tab button stack overflow issues by resolving circular reference problems in component inheritance.
-
-## What I'm Working On Now
-- **Commish Tab Fixes**: ✅ COMPLETED - Fixed all circular reference issues causing stack overflow
-- **Memory Bank Updates**: Updating documentation to reflect recent work and fixes
-
-## Recent Changes
-1. **Memory Bank Initialization** (Session Start)
-   - Created comprehensive cline_docs directory structure
-   - Built all required memory bank files with accurate project context
-
-2. **Commish Tab Circular Reference Fixes** (Main Work)
-   - **Teams Button**: Fixed `TeamsModel` inheritance from `CommishModel` → `ComponentBase`
-   - **Drafts Button**: Fixed `DraftsModel` inheritance from `CommishModel` → `ComponentBase`  
-   - **Managers Button**: Fixed `ManagersModel` inheritance from `CommishModel` → `ComponentBase`
-   - **Standings Button**: ✅ **FINAL FIX** - Removed `@inherits StandingsModel` from Standings.razor (same pattern as original Commish fix)
-
-3. **Technical Implementation Details**:
-   - Applied hybrid approach: break `CommishModel` inheritance for complex components, remove inheritance entirely for simple ones
-   - Teams/Drafts/Managers: Added direct dependency injection and required properties
-   - Standings: Removed inheritance completely (follows original Commish fix pattern)
-   - Updated initialization methods from `OnInitialized()` to `OnInitializedAsync()` where needed
-   - Resolved dependent component issues (`AddEditTeam`, `BuildUpdateStandings`)
-
-## Next Steps
-1. ✅ **Complete Commish Tab**: All four main buttons (Teams, Drafts, Managers, Standings) now working
-2. **Data Visualization**: Next major goal - implement charts/graphs for season standings over time
-3. **Season Data Display**: Enhanced season information views using existing MongoDB data
+- ✅ **Team Creation**: Fully functional with proper authorization
+- ✅ **Draft Creation**: Fully functional with proper authorization (creates draft + all pick records)
+- ✅ **Authorization**: All endpoints properly secured with clean Okta configuration
+- ✅ **Error Handling**: Comprehensive with specific status codes
+- ✅ **Code Quality**: Clean, minimal, maintainable solution
 
 ## Key Files Modified
-- `wfbc.page/Client/Pages/Commish/Teams.razor.cs` - Removed CommishModel inheritance
-- `wfbc.page/Client/Pages/Commish/Teams.razor` - Updated async initialization
-- `wfbc.page/Client/Pages/Commish/Drafts.razor.cs` - Removed CommishModel inheritance
-- `wfbc.page/Client/Pages/Commish/Managers.razor.cs` - Removed CommishModel inheritance
-- `wfbc.page/Client/Pages/Commish/Managers.razor` - Updated async initialization
-- `wfbc.page/Client/Pages/Commish/Standings.razor.cs` - Removed CommishModel inheritance
+- `wfbc.page/Client/Pages/Commish/AddEditTeam.razor.cs` - Added null ManagerId check
+- `wfbc.page/Client/Pages/Commish/AddEditDraft.razor.cs` - Cleaned imports, maintained error handling
+- `wfbc.page/Server/Startup.cs` - Added CORS configuration, cleaned imports
+- `wfbc.page/Client/Program.cs` - Cleaned AuthorizationMessageHandler configuration
+- **Deleted**: `wfbc.page/Server/Models/GroupsClaimsTransformation.cs` (unnecessary)
 
-## Current Understanding
-The WFBC project has solid foundations with the Commish interface now fully functional:
-- ✅ Commissioner authentication and authorization working
-- ✅ All Commish tab navigation working (Teams, Drafts, Managers, Standings)
-- ✅ CRUD operations available for league management
-- 🎯 **Next Focus**: Season data visualization with charts/graphs
-- 📊 **Data Ready**: Historical season data available in MongoDB for visualization
+## User Action Required (Completed)
+The user needed to update their server user secrets:
+```
+Okta:AuthorizationServerId = "default"
+```
+This was the critical fix that resolved the authorization validation failure.
 
-## Technical Approach Used
-**Circular Reference Resolution Pattern**:
-1. Identify components inheriting from `CommishModel`
-2. Change inheritance to `ComponentBase`
-3. Add direct dependency injection (`AuthorizedClient`, `PublicClient`, `NavigationManager`)
-4. Add required data properties and loading methods
-5. Update initialization to async pattern
-6. Test and verify functionality
+## Next Steps
+The commissioner interface is now fully functional for:
+- Creating and managing teams
+- Creating drafts with automatic pick generation
+- Managing league operations with proper authentication
 
-## Success Metrics
-- ✅ Build succeeds with no errors
-- ✅ All Commish buttons work without stack overflow
-- ✅ League management operations functional
+The codebase is clean and optimized with proper error handling and security.

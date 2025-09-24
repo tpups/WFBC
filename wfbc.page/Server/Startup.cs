@@ -2,26 +2,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.ResponseCompression;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
 using System.Linq;
 using WFBC.Server.Interface;
 using WFBC.Server.DataAccess;
 using WFBC.Server.Models;
 using WFBC.Shared.Models;
 using WFBC.Shared;
-using Microsoft.EntityFrameworkCore.Storage;
-using System.Data;
-using MongoDB.Driver.Core.Configuration;
 using Okta.AspNetCore;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc.Authorization;
-using System.Security.Claims;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace WFBC.Server
 {
@@ -41,6 +33,19 @@ namespace WFBC.Server
             services.AddMvc();
             services.AddControllers();
 
+            // CORS Configuration for Blazor WebAssembly with Authorization
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder
+                        .WithOrigins("https://localhost:5003", "http://localhost:5003") // Your client URLs
+                        .AllowAnyMethod()
+                        .AllowAnyHeader()
+                        .AllowCredentials(); // Critical for authorization tokens
+                });
+            });
+
             // Okta Authentication
             services.AddAuthentication(options =>
             {
@@ -54,6 +59,7 @@ namespace WFBC.Server
                 AuthorizationServerId = Configuration["Okta:AuthorizationServerId"],
                 Audience = Configuration["Okta:Audience"]
             });
+
             // Authorization Policies
             services.AddAuthorization(options =>
             {
@@ -106,6 +112,8 @@ namespace WFBC.Server
             app.UseStaticFiles();
 
             app.UseRouting();
+            
+            app.UseCors(); // Enable CORS middleware
 
             app.UseAuthentication();
             app.UseAuthorization();

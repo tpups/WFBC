@@ -56,18 +56,17 @@ namespace WFBC.Server.DataAccess
             }
         }
         // Add a list of draft picks
-        public string[] AddPicks(List<Pick> picks)
+        public async Task<string[]> AddPicks(List<Pick> picks)
         {
             try
             {
-                var listWrites = new List<WriteModel<Pick>>();
+                // Insert picks one by one to get the generated IDs
                 var pickIDs = new List<string>();
                 foreach (var pick in picks)
                 {
-                    listWrites.Add(new InsertOneModel<Pick>(pick));
+                    await _db.Picks.InsertOneAsync(pick);
                     pickIDs.Add(pick.Id);
                 }
-                _db.Picks.BulkWriteAsync(listWrites);
                 return pickIDs.ToArray();
             }
             catch
