@@ -10,6 +10,7 @@ using System.Linq;
 using WFBC.Server.Interface;
 using WFBC.Server.DataAccess;
 using WFBC.Server.Models;
+using WFBC.Server.Services;
 using WFBC.Shared.Models;
 using WFBC.Shared;
 using Okta.AspNetCore;
@@ -81,6 +82,11 @@ namespace WFBC.Server
             services.AddTransient<IDraft, DraftDataAccessLayer>();
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
+            // Services
+            services.AddTransient<RotisserieStandingsService>();
+
+            // SignalR
+            services.AddSignalR();
 
             services.AddResponseCompression(opts =>
             {
@@ -122,6 +128,7 @@ namespace WFBC.Server
             {
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
+                endpoints.MapHub<WFBC.Server.Hubs.ProgressHub>("/progressHub");
                 endpoints.MapFallbackToFile("index.html");
             });
         }
