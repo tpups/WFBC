@@ -79,5 +79,19 @@ namespace WFBC.Server.DataAccess
                 throw;
             }
         }
+
+        // Get teams for a specific season/year
+        public List<SeasonTeam> GetTeamsForSeason(string year)
+        {
+            try
+            {
+                var collection = _db.SeasonTeams[year];
+                return collection.Find(_ => true).ToList();
+            }
+            catch
+            {
+                throw;
+            }
+        }
     }
 }

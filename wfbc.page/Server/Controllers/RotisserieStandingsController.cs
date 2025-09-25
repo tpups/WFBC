@@ -46,12 +46,12 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                // Get all teams for the year (you might need to modify this based on your team filtering logic)
-                var teams = _teamService.GetAllTeams().ToList();
+                // Get teams for the specific year
+                var seasonTeams = _teamService.GetTeamsForSeason(year);
                 
-                if (!teams.Any())
+                if (!seasonTeams.Any())
                 {
-                    return BadRequest("No teams found for calculation");
+                    return BadRequest($"No teams found for {year}");
                 }
 
                 // Use the new method with progress reporting (progress will be logged server-side)
@@ -60,15 +60,10 @@ namespace WFBC.Server.Controllers
                     Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] {message}");
                 });
 
-                var calculatedStandings = await _rotisserieService.CalculateStandingsForSeason(year, teams, null, progress);
+                var calculatedStandings = await _rotisserieService.CalculateStandingsForSeason(year, seasonTeams, null, progress);
 
-                // Save all calculated standings to the database
-                foreach (var standing in calculatedStandings)
-                {
-                    // You might want to implement an UpsertStandings method or check for existing records
-                    // For now, this assumes we're inserting new records
-                    await SaveStandingToDatabase(standing, year);
-                }
+                // Save all calculated standings to the database using bulk save
+                await SaveStandingsToDatabase(calculatedStandings, year);
 
                 var startDate = new DateTime(int.Parse(year), 1, 1);
                 var endDate = new DateTime(int.Parse(year), 12, 31);
@@ -90,12 +85,12 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                // Get all teams for the year
-                var teams = _teamService.GetAllTeams().ToList();
+                // Get teams for the specific year
+                var seasonTeams = _teamService.GetTeamsForSeason(year);
                 
-                if (!teams.Any())
+                if (!seasonTeams.Any())
                 {
-                    return BadRequest("No teams found for calculation");
+                    return BadRequest($"No teams found for {year}");
                 }
 
                 // Generate unique progress group ID
@@ -121,9 +116,9 @@ namespace WFBC.Server.Controllers
                         });
 
                         // Send debug message about team count
-                        await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", $"Found {teams.Count} teams for calculation...");
+                        await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", $"Found {seasonTeams.Count} teams for calculation...");
 
-                        var calculatedStandings = await _rotisserieService.CalculateStandingsForSeason(year, teams, progressGroupId, progress, cancellationToken);
+                        var calculatedStandings = await _rotisserieService.CalculateStandingsForSeason(year, seasonTeams, progressGroupId, progress, cancellationToken);
 
                         // Check if cancelled before saving
                         if (cancellationToken.IsCancellationRequested)
@@ -135,11 +130,13 @@ namespace WFBC.Server.Controllers
                             return;
                         }
 
-                        // Save all calculated standings to the database
-                        foreach (var standing in calculatedStandings)
+                        // Save all calculated standings to the database using bulk save
+                        if (!cancellationToken.IsCancellationRequested)
                         {
-                            if (cancellationToken.IsCancellationRequested) break;
-                            await SaveStandingToDatabase(standing, year);
+                            Console.WriteLine($"[Controller] About to save {calculatedStandings?.Count ?? 0} standings for year {year}");
+                            await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", "Saving standings to database...");
+                            await SaveStandingsToDatabase(calculatedStandings, year);
+                            Console.WriteLine($"[Controller] Finished saving standings for year {year}");
                         }
 
                         if (!cancellationToken.IsCancellationRequested)
@@ -222,14 +219,14 @@ namespace WFBC.Server.Controllers
                     return BadRequest("Invalid date format");
                 }
 
-                var teams = _teamService.GetAllTeams().ToList();
+                var seasonTeams = _teamService.GetTeamsForSeason(year);
                 
-                if (!teams.Any())
+                if (!seasonTeams.Any())
                 {
-                    return BadRequest("No teams found for calculation");
+                    return BadRequest($"No teams found for {year}");
                 }
 
-                var standings = await _rotisserieService.CalculateStandingsForDate(year, targetDate, teams);
+                var standings = await _rotisserieService.CalculateStandingsForDate(year, targetDate, seasonTeams);
 
                 // Save standings to database
                 foreach (var standing in standings)
@@ -258,14 +255,14 @@ namespace WFBC.Server.Controllers
                     return BadRequest("Invalid date format");
                 }
 
-                var teams = _teamService.GetAllTeams().ToList();
+                var seasonTeams = _teamService.GetTeamsForSeason(year);
                 
-                if (!teams.Any())
+                if (!seasonTeams.Any())
                 {
-                    return BadRequest("No teams found for calculation");
+                    return BadRequest($"No teams found for {year}");
                 }
 
-                var standings = await _rotisserieService.CalculateStandingsForDate(year, targetDate, teams);
+                var standings = await _rotisserieService.CalculateStandingsForDate(year, targetDate, seasonTeams);
 
                 return Ok(standings);
             }
@@ -277,17 +274,35 @@ namespace WFBC.Server.Controllers
 
         private async Task SaveStandingToDatabase(Standings standing, string year)
         {
-            // This is a simplified save - you might want to implement upsert logic
-            // to handle cases where standings for a date already exist
-            
-            // Note: The current IStandings interface might need to be extended to support this
-            // For now, this is a placeholder for the save operation
-            
-            // You would typically use something like:
-            // await _standingsService.CreateOrUpdateStanding(standing, year);
-            
-            // Since the interface might be limited, you might need to extend it or 
-            // access the database context directly through the service
+            // Save individual standing record - used for single date calculations
+            await _standingsService.SaveStandingsAsync(new List<Standings> { standing }, year);
+        }
+
+        private async Task SaveStandingsToDatabase(List<Standings> standings, string year)
+        {
+            // Save multiple standings records - used for bulk season calculations
+            await _standingsService.SaveStandingsAsync(standings, year);
+        }
+
+        [HttpGet("check/{year}")]
+        public async Task<IActionResult> CheckExistingStandings(string year)
+        {
+            try
+            {
+                var standingsInfo = await _standingsService.GetExistingStandingsInfoAsync(year);
+                
+                return Ok(new
+                {
+                    Year = year,
+                    Exist = standingsInfo.Exist,
+                    LastUpdated = standingsInfo.LastUpdated,
+                    RecordCount = standingsInfo.RecordCount
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Error checking existing standings: {ex.Message}" });
+            }
         }
 
         [HttpGet("years")]

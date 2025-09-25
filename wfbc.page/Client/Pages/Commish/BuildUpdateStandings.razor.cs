@@ -31,6 +31,8 @@ namespace WFBC.Client.Pages.Commish
         private HubConnection? hubConnection;
         protected object formModel = new object(); // Simple model for EditForm
         protected string? currentProgressGroupId = null;
+        protected bool showConfirmationDialog = false;
+        protected string confirmationMessage = "";
 
         protected override async Task OnInitializedAsync()
         {
@@ -66,6 +68,56 @@ namespace WFBC.Client.Pages.Commish
                 return;
             }
 
+            // First check if standings already exist for this year
+            try
+            {
+                calculationMessage = $"Checking existing standings for {selectedYear}...";
+                StateHasChanged();
+
+                var checkResponse = await AuthorizedClient.Client.GetFromJsonAsync<StandingsCheckResponse>($"/api/RotisserieStandings/check/{selectedYear}");
+                
+                if (checkResponse?.Exist == true)
+                {
+                    var lastUpdatedText = checkResponse.LastUpdated.HasValue 
+                        ? checkResponse.LastUpdated.Value.ToString("MMMM dd, yyyy 'at' h:mm tt")
+                        : "Unknown date";
+                    
+                    confirmationMessage = $"Standings for {selectedYear} already exist (last updated: {lastUpdatedText}). " +
+                                        $"Found {checkResponse.RecordCount} records. Do you want to recalculate and overwrite them?";
+                    showConfirmationDialog = true;
+                    calculationMessage = "";
+                    StateHasChanged();
+                    return;
+                }
+            }
+            catch (Exception ex)
+            {
+                errorMessage = $"Error checking existing standings: {ex.Message}";
+                calculationMessage = "";
+                StateHasChanged();
+                return;
+            }
+
+            // If no existing standings, proceed with calculation
+            await StartCalculation();
+        }
+
+        protected async Task ConfirmOverwrite()
+        {
+            showConfirmationDialog = false;
+            StateHasChanged();
+            await StartCalculation();
+        }
+
+        protected void CancelOverwrite()
+        {
+            showConfirmationDialog = false;
+            confirmationMessage = "";
+            StateHasChanged();
+        }
+
+        private async Task StartCalculation()
+        {
             isCalculating = true;
             calculationMessage = $"Initializing calculation for {selectedYear}...";
             errorMessage = "";
@@ -284,5 +336,13 @@ namespace WFBC.Client.Pages.Commish
                 // Expected when cancellation is requested
             }
         }
+    }
+
+    public class StandingsCheckResponse
+    {
+        public string Year { get; set; } = "";
+        public bool Exist { get; set; }
+        public DateTime? LastUpdated { get; set; }
+        public int RecordCount { get; set; }
     }
 }

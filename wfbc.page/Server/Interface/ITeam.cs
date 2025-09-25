@@ -10,5 +10,6 @@ namespace WFBC.Server.Interface
         public void AddTeam(Team team);
         public void UpdateTeam(Team team);
         public void DeleteTeam(string id);
+        public List<SeasonTeam> GetTeamsForSeason(string year);
     }
 }

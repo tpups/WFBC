@@ -25,7 +25,7 @@ namespace WFBC.Server.Services
             _seasonSettings = seasonSettings;
         }
 
-        public async Task<List<Standings>> CalculateStandingsForDate(string year, DateTime date, List<Team> teams)
+        public async Task<List<Standings>> CalculateStandingsForDate(string year, DateTime date, List<SeasonTeam> teams)
         {
             var startDate = new DateTime(int.Parse(year), 1, 1);
             var endDate = date;
@@ -47,7 +47,7 @@ namespace WFBC.Server.Services
             return standings;
         }
 
-        public async Task<List<Standings>> CalculateStandingsForSeason(string year, List<Team> teams, string? progressGroupId = null, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
+        public async Task<List<Standings>> CalculateStandingsForSeason(string year, List<SeasonTeam> teams, string? progressGroupId = null, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
             // Get season settings for the specified year
             var seasonSettings = _seasonSettings.GetSeasonSettings(int.Parse(year));
@@ -63,42 +63,40 @@ namespace WFBC.Server.Services
             var endDate = seasonSettings.SeasonEndDate;
             var allStandings = new List<Standings>();
 
-            var startMessage = $"Starting calculation for {year} season from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}...";
+            var startMessage = $"Starting optimized calculation for {year} season from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}...";
             if (!string.IsNullOrEmpty(progressGroupId))
             {
                 await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", startMessage);
             }
             progress?.Report(startMessage);
 
-            // Calculate daily standings for the configured season date range
-            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            // PERFORMANCE OPTIMIZATION: Load all season data once instead of querying for each day
+            var loadingMessage = "Loading all season box score data...";
+            if (!string.IsNullOrEmpty(progressGroupId))
             {
-                // Check for cancellation before each day's calculation
-                cancellationToken.ThrowIfCancellationRequested();
-                
-                var progressMessage = $"Processing standings for {date:yyyy-MM-dd}...";
-                if (!string.IsNullOrEmpty(progressGroupId))
-                {
-                    await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", progressMessage);
-                }
-                progress?.Report(progressMessage);
-                
-                var dailyStandings = await CalculateStandingsForDate(year, date, teams);
-                allStandings.AddRange(dailyStandings);
-                
-                // Small delay to allow progress updates to be processed and check for cancellation
-                try
-                {
-                    await Task.Delay(1, cancellationToken);
-                }
-                catch (OperationCanceledException)
-                {
-                    // Re-throw to be handled at the controller level
-                    throw;
-                }
+                await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", loadingMessage);
+            }
+            progress?.Report(loadingMessage);
+
+            var seasonBoxScores = await LoadAllSeasonBoxScores(year, startDate, endDate);
+            if (seasonBoxScores == null)
+            {
+                throw new Exception("Failed to load season box score data");
             }
 
-            var completedMessage = $"Completed calculation for {year} season! Processed {(endDate - startDate).Days + 1} days from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}.";
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var processingMessage = "Processing daily standings with loaded data...";
+            if (!string.IsNullOrEmpty(progressGroupId))
+            {
+                await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", processingMessage);
+            }
+            progress?.Report(processingMessage);
+
+            // Process daily standings incrementally using pre-loaded data
+            allStandings = await ProcessIncrementalStandings(year, teams, startDate, endDate, seasonBoxScores, progressGroupId, progress, cancellationToken);
+
+            var completedMessage = $"Completed optimized calculation for {year} season! Processed {(endDate - startDate).Days + 1} days from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}.";
             if (!string.IsNullOrEmpty(progressGroupId))
             {
                 await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", completedMessage);
@@ -109,7 +107,7 @@ namespace WFBC.Server.Services
         }
 
         private async Task<Dictionary<string, Dictionary<string, Dictionary<string, object>>>> GetTeamTotals(
-            string year, List<Team> teams, DateTime startDate, DateTime endDate)
+            string year, List<SeasonTeam> teams, DateTime startDate, DateTime endDate)
         {
             try
             {
@@ -117,7 +115,7 @@ namespace WFBC.Server.Services
                 
                 foreach (var team in teams)
                 {
-                    totals[team.Id!] = new Dictionary<string, Dictionary<string, object>>
+                    totals[team.TeamId!] = new Dictionary<string, Dictionary<string, object>>
                     {
                         ["hit"] = new Dictionary<string, object>(),
                         ["pitch"] = new Dictionary<string, object>()
@@ -520,7 +518,7 @@ namespace WFBC.Server.Services
         private List<Standings> BuildStandingsFromPoints(
             Dictionary<string, List<TeamCategoryResult>> hittingPoints,
             Dictionary<string, List<TeamCategoryResult>> pitchingPoints,
-            List<Team> teams, string year, DateTime date)
+            List<SeasonTeam> teams, string year, DateTime date)
         {
             var standings = new List<Standings>();
 
@@ -530,9 +528,9 @@ namespace WFBC.Server.Services
                 {
                     Year = year,
                     Date = date,
-                    TeamId = team.Id,
-                    TeamName = team.Name,
-                    Manager = team.ManagerId,
+                    TeamId = team.TeamId,
+                    TeamName = team.TeamName,
+                    Manager = team.Manager,
                     CreatedAt = DateTime.UtcNow,
                     LastUpdatedAt = DateTime.UtcNow
                 };
@@ -540,7 +538,7 @@ namespace WFBC.Server.Services
                 // Set hitting values and points
                 foreach (var cat in hittingPoints.Keys)
                 {
-                    var teamResult = hittingPoints[cat].First(x => x.TeamId == team.Id);
+                    var teamResult = hittingPoints[cat].First(x => x.TeamId == team.TeamId);
                     SetStandingProperty(standing, cat, teamResult.Value, teamResult.Points);
                     standing.TotalHittingPoints += teamResult.Points;
                 }
@@ -548,7 +546,7 @@ namespace WFBC.Server.Services
                 // Set pitching values and points
                 foreach (var cat in pitchingPoints.Keys)
                 {
-                    var teamResult = pitchingPoints[cat].First(x => x.TeamId == team.Id);
+                    var teamResult = pitchingPoints[cat].First(x => x.TeamId == team.TeamId);
                     SetStandingProperty(standing, cat, teamResult.Value, teamResult.Points);
                     standing.TotalPitchingPoints += teamResult.Points;
                 }
@@ -636,6 +634,264 @@ namespace WFBC.Server.Services
                     break;
             }
         }
+
+        // PERFORMANCE OPTIMIZATION METHODS
+
+        private async Task<SeasonBoxScoreData?> LoadAllSeasonBoxScores(string year, DateTime startDate, DateTime endDate)
+        {
+            try
+            {
+                var data = new SeasonBoxScoreData();
+
+                // Load all hitting box scores for the season
+                var hitCollection = _db.BoxScores[year]["hitting"];
+                var hitFilter = Builders<Box>.Filter.And(
+                    Builders<Box>.Filter.Eq("player", "TOT"),
+                    Builders<Box>.Filter.Eq("position", "A"),
+                    Builders<Box>.Filter.Gte("stats_date", startDate.ToString("yyyy-MM-dd")),
+                    Builders<Box>.Filter.Lte("stats_date", endDate.ToString("yyyy-MM-dd"))
+                );
+                data.HittingBoxScores = await hitCollection.Find(hitFilter).ToListAsync();
+
+                // Load all pitching box scores for the season
+                var pitchCollection = _db.BoxScores[year]["pitching"];
+                var pitchFilter = Builders<Box>.Filter.And(
+                    Builders<Box>.Filter.Eq("player", "TOT"),
+                    Builders<Box>.Filter.Eq("position", "A"),
+                    Builders<Box>.Filter.Gte("stats_date", startDate.ToString("yyyy-MM-dd")),
+                    Builders<Box>.Filter.Lte("stats_date", endDate.ToString("yyyy-MM-dd"))
+                );
+                data.PitchingBoxScores = await pitchCollection.Find(pitchFilter).ToListAsync();
+
+                // Load quality appearance data (individual pitcher stats)
+                var qaFilter = Builders<Box>.Filter.And(
+                    Builders<Box>.Filter.Eq("position", "P"),
+                    Builders<Box>.Filter.Ne("player", "TOT"),
+                    Builders<Box>.Filter.Gte("stats_date", startDate.ToString("yyyy-MM-dd")),
+                    Builders<Box>.Filter.Lte("stats_date", endDate.ToString("yyyy-MM-dd"))
+                );
+                data.QualityAppearanceBoxScores = await pitchCollection.Find(qaFilter).ToListAsync();
+
+                // Group data by date for efficient daily processing
+                data.HittingByDate = data.HittingBoxScores
+                    .Where(b => !string.IsNullOrEmpty(b.StatsDate))
+                    .GroupBy(b => b.StatsDate!)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                data.PitchingByDate = data.PitchingBoxScores
+                    .Where(b => !string.IsNullOrEmpty(b.StatsDate))
+                    .GroupBy(b => b.StatsDate!)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                data.QualityAppearanceByDate = data.QualityAppearanceBoxScores
+                    .Where(b => !string.IsNullOrEmpty(b.StatsDate))
+                    .GroupBy(b => b.StatsDate!)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+
+                return data;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error loading season box scores: {ex.Message}");
+                return null;
+            }
+        }
+
+        private async Task<List<Standings>> ProcessIncrementalStandings(
+            string year, List<SeasonTeam> teams, DateTime startDate, DateTime endDate, 
+            SeasonBoxScoreData seasonData, string? progressGroupId, IProgress<string>? progress, 
+            CancellationToken cancellationToken)
+        {
+            var allStandings = new List<Standings>();
+            
+            // Initialize running totals for all teams
+            var runningTotals = new Dictionary<string, Dictionary<string, Dictionary<string, object>>>();
+            foreach (var team in teams)
+            {
+                runningTotals[team.TeamId!] = new Dictionary<string, Dictionary<string, object>>
+                {
+                    ["hit"] = new Dictionary<string, object>(),
+                    ["pitch"] = new Dictionary<string, object>()
+                };
+            }
+
+            var hittingCategories = new[] { "AVG", "OPS", "R", "SB", "HR", "RBI" };
+            var pitchingCategories = year == "2019" 
+                ? new[] { "ERA", "WHIP", "IP", "K", "S", "QS" }
+                : new[] { "ERA", "WHIP", "IP", "K", "SV", "QS" };
+
+            // Process each day incrementally
+            for (var date = startDate; date <= endDate; date = date.AddDays(1))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                var dateStr = date.ToString("yyyy-MM-dd");
+                var progressMessage = $"Processing standings for {dateStr}...";
+                
+                if (!string.IsNullOrEmpty(progressGroupId))
+                {
+                    await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", progressMessage);
+                }
+                progress?.Report(progressMessage);
+
+                // Add daily hitting data to running totals
+                if (seasonData.HittingByDate.TryGetValue(dateStr, out var dailyHitting))
+                {
+                    ProcessDailyHittingData(dailyHitting, runningTotals);
+                }
+
+                // Add daily pitching data to running totals
+                if (seasonData.PitchingByDate.TryGetValue(dateStr, out var dailyPitching))
+                {
+                    ProcessDailyPitchingData(dailyPitching, runningTotals, year);
+                }
+
+                // Add daily quality appearances to running totals
+                if (seasonData.QualityAppearanceByDate.TryGetValue(dateStr, out var dailyQA))
+                {
+                    ProcessDailyQualityAppearances(dailyQA, runningTotals);
+                }
+
+                // Calculate standings using current running totals
+                var hittingPoints = CalculateHittingPoints(runningTotals, hittingCategories, teams.Count);
+                var pitchingPoints = CalculatePitchingPoints(runningTotals, pitchingCategories, teams.Count);
+                var dailyStandings = BuildStandingsFromPoints(hittingPoints, pitchingPoints, teams, year, date);
+                
+                allStandings.AddRange(dailyStandings);
+
+                // Small delay for progress and cancellation checking
+                await Task.Delay(1, cancellationToken);
+            }
+
+            return allStandings;
+        }
+
+        private void ProcessDailyHittingData(List<Box> dailyBoxScores, 
+            Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals)
+        {
+            var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "PA", "R", "RBI", "SB", "SF" };
+            
+            foreach (var score in dailyBoxScores)
+            {
+                if (score.TeamId != null && runningTotals.ContainsKey(score.TeamId))
+                {
+                    var team = runningTotals[score.TeamId]["hit"];
+                    
+                    foreach (var stat in hStats)
+                    {
+                        var value = GetHittingStatValue(score, stat);
+                        if (value.HasValue)
+                        {
+                            if (team.ContainsKey(stat))
+                            {
+                                team[stat] = (int)team[stat] + value.Value;
+                            }
+                            else
+                            {
+                                team[stat] = value.Value;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ProcessDailyPitchingData(List<Box> dailyBoxScores, 
+            Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals, string year)
+        {
+            var pStats = year == "2019" 
+                ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" }
+                : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" };
+
+            foreach (var score in dailyBoxScores)
+            {
+                if (score.TeamId != null && runningTotals.ContainsKey(score.TeamId))
+                {
+                    var team = runningTotals[score.TeamId]["pitch"];
+                    
+                    foreach (var stat in pStats)
+                    {
+                        if (stat == "IP")
+                        {
+                            // Handle IP special case
+                            if (!string.IsNullOrEmpty(score.InningsPitched))
+                            {
+                                decimal innings = decimal.Parse(score.InningsPitched);
+                                
+                                // Handle 2019 special IP calculation
+                                if (year == "2019")
+                                {
+                                    decimal partialInnings = innings % 1 * 3.3m;
+                                    decimal fullInnings = Math.Floor(innings);
+                                    innings = fullInnings + partialInnings;
+                                }
+
+                                if (team.ContainsKey(stat))
+                                {
+                                    decimal currentTotal = (decimal)team[stat];
+                                    decimal newTotal = currentTotal + innings;
+                                    decimal outs = Math.Round(newTotal * 3);
+                                    decimal newIP = Math.Round(outs / 3, 2);
+                                    team[stat] = newIP;
+                                }
+                                else
+                                {
+                                    team[stat] = innings;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            var value = GetPitchingStatValue(score, stat);
+                            if (value.HasValue)
+                            {
+                                if (team.ContainsKey(stat))
+                                {
+                                    team[stat] = (int)team[stat] + value.Value;
+                                }
+                                else
+                                {
+                                    team[stat] = value.Value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        private void ProcessDailyQualityAppearances(List<Box> dailyBoxScores, 
+            Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals)
+        {
+            foreach (var score in dailyBoxScores)
+            {
+                if (score.TeamId != null && runningTotals.ContainsKey(score.TeamId))
+                {
+                    if (!string.IsNullOrEmpty(score.InningsPitched) && score.EarnedRuns != null)
+                    {
+                        decimal ip = decimal.Parse(score.InningsPitched);
+                        var er = ConvertToInt(score.EarnedRuns);
+                        
+                        if (ip >= 5 && er.HasValue)
+                        {
+                            decimal era = ip > 0 ? (9 * er.Value) / ip : 99999;
+                            if (era <= 4.5m)
+                            {
+                                var team = runningTotals[score.TeamId]["pitch"];
+                                if (team.ContainsKey("QA"))
+                                {
+                                    team["QA"] = (int)team["QA"] + 1;
+                                }
+                                else
+                                {
+                                    team["QA"] = 1;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public class TeamCategoryResult
@@ -643,5 +899,17 @@ namespace WFBC.Server.Services
         public string TeamId { get; set; } = string.Empty;
         public decimal Value { get; set; }
         public decimal Points { get; set; }
+    }
+
+    public class SeasonBoxScoreData
+    {
+        public List<Box> HittingBoxScores { get; set; } = new List<Box>();
+        public List<Box> PitchingBoxScores { get; set; } = new List<Box>();
+        public List<Box> QualityAppearanceBoxScores { get; set; } = new List<Box>();
+        
+        // Grouped by date for efficient daily processing
+        public Dictionary<string, List<Box>> HittingByDate { get; set; } = new Dictionary<string, List<Box>>();
+        public Dictionary<string, List<Box>> PitchingByDate { get; set; } = new Dictionary<string, List<Box>>();
+        public Dictionary<string, List<Box>> QualityAppearanceByDate { get; set; } = new Dictionary<string, List<Box>>();
     }
 }

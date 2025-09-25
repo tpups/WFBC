@@ -74,6 +74,19 @@ namespace WFBC.Server.Models
                 return _standings;
             }
         }
+        public Dictionary<string, IMongoCollection<SeasonTeam>> SeasonTeams
+        {
+            get
+            {
+                Dictionary<string, IMongoCollection<SeasonTeam>> _seasonTeams = new Dictionary<string, IMongoCollection<SeasonTeam>>();
+                for (int i = _settings.StartYear; i <= _settings.EndYear; i++)
+                {
+                    string year = i.ToString();
+                    _seasonTeams.Add(year, _dbs[year].GetCollection<SeasonTeam>("teams"));
+                }
+                return _seasonTeams;
+            }
+        }
         public Dictionary<string, Dictionary<string, IMongoCollection<Box>>> BoxScores
         {
             get
