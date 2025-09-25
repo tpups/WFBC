@@ -54,6 +54,13 @@ namespace WFBC.Server.Models
                 return _wfbcDatabase.GetCollection<Team>("teams");
             }
         }
+        public IMongoCollection<SeasonSettings> Settings
+        {
+            get
+            {
+                return _wfbcDatabase.GetCollection<SeasonSettings>("settings");
+            }
+        }
         public Dictionary<string, IMongoCollection<Standings>> Standings
         {
             get

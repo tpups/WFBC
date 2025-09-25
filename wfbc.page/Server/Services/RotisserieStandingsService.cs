@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using MongoDB.Driver;
 using WFBC.Shared.Models;
 using WFBC.Server.Models;
+using WFBC.Server.Interface;
 using Microsoft.AspNetCore.SignalR;
 using WFBC.Server.Hubs;
 
@@ -14,11 +16,13 @@ namespace WFBC.Server.Services
     {
         private readonly WfbcDBContext _db;
         private readonly IHubContext<ProgressHub> _hubContext;
+        private readonly ISeasonSettings _seasonSettings;
 
-        public RotisserieStandingsService(WfbcDBContext db, IHubContext<ProgressHub> hubContext)
+        public RotisserieStandingsService(WfbcDBContext db, IHubContext<ProgressHub> hubContext, ISeasonSettings seasonSettings)
         {
             _db = db;
             _hubContext = hubContext;
+            _seasonSettings = seasonSettings;
         }
 
         public async Task<List<Standings>> CalculateStandingsForDate(string year, DateTime date, List<Team> teams)
@@ -43,22 +47,35 @@ namespace WFBC.Server.Services
             return standings;
         }
 
-        public async Task<List<Standings>> CalculateStandingsForSeason(string year, List<Team> teams, string? progressGroupId = null, IProgress<string>? progress = null)
+        public async Task<List<Standings>> CalculateStandingsForSeason(string year, List<Team> teams, string? progressGroupId = null, IProgress<string>? progress = null, CancellationToken cancellationToken = default)
         {
-            var startDate = new DateTime(int.Parse(year), 1, 1);
-            var endDate = new DateTime(int.Parse(year), 12, 31);
+            // Get season settings for the specified year
+            var seasonSettings = _seasonSettings.GetSeasonSettings(int.Parse(year));
+            
+            // If no settings exist, create and save default ones
+            if (seasonSettings == null)
+            {
+                seasonSettings = new SeasonSettings(int.Parse(year));
+                _seasonSettings.AddSeasonSettings(seasonSettings);
+            }
+            
+            var startDate = seasonSettings.SeasonStartDate;
+            var endDate = seasonSettings.SeasonEndDate;
             var allStandings = new List<Standings>();
 
-            var startMessage = $"Starting calculation for {year} season...";
+            var startMessage = $"Starting calculation for {year} season from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}...";
             if (!string.IsNullOrEmpty(progressGroupId))
             {
                 await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", startMessage);
             }
             progress?.Report(startMessage);
 
-            // Calculate daily standings for the entire season
+            // Calculate daily standings for the configured season date range
             for (var date = startDate; date <= endDate; date = date.AddDays(1))
             {
+                // Check for cancellation before each day's calculation
+                cancellationToken.ThrowIfCancellationRequested();
+                
                 var progressMessage = $"Processing standings for {date:yyyy-MM-dd}...";
                 if (!string.IsNullOrEmpty(progressGroupId))
                 {
@@ -69,11 +86,19 @@ namespace WFBC.Server.Services
                 var dailyStandings = await CalculateStandingsForDate(year, date, teams);
                 allStandings.AddRange(dailyStandings);
                 
-                // Small delay to allow progress updates to be processed
-                await Task.Delay(1);
+                // Small delay to allow progress updates to be processed and check for cancellation
+                try
+                {
+                    await Task.Delay(1, cancellationToken);
+                }
+                catch (OperationCanceledException)
+                {
+                    // Re-throw to be handled at the controller level
+                    throw;
+                }
             }
 
-            var completedMessage = $"Completed calculation for {year} season!";
+            var completedMessage = $"Completed calculation for {year} season! Processed {(endDate - startDate).Days + 1} days from {startDate:yyyy-MM-dd} to {endDate:yyyy-MM-dd}.";
             if (!string.IsNullOrEmpty(progressGroupId))
             {
                 await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", completedMessage);

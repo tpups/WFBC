@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Threading;
+using System.Collections.Concurrent;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -23,6 +25,9 @@ namespace WFBC.Server.Controllers
         private readonly ITeam _teamService;
         private readonly IStandings _standingsService;
         private readonly IHubContext<ProgressHub> _hubContext;
+        
+        // Static dictionary to track active calculations and their cancellation tokens
+        private static readonly ConcurrentDictionary<string, CancellationTokenSource> _activeCalculations = new();
 
         public RotisserieStandingsController(
             RotisserieStandingsService rotisserieService, 
@@ -95,12 +100,18 @@ namespace WFBC.Server.Controllers
 
                 // Generate unique progress group ID
                 var progressGroupId = $"standings-{year}-{Guid.NewGuid():N}";
+                
+                // Create cancellation token source for this calculation
+                var cancellationTokenSource = new CancellationTokenSource();
+                _activeCalculations.TryAdd(progressGroupId, cancellationTokenSource);
 
                 // Start calculation in background task
                 _ = Task.Factory.StartNew(async () =>
                 {
                     try
                     {
+                        var cancellationToken = cancellationTokenSource.Token;
+                        
                         // Send debug message to confirm background task started
                         await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", $"Background task started for {year}...");
                         
@@ -112,19 +123,42 @@ namespace WFBC.Server.Controllers
                         // Send debug message about team count
                         await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", $"Found {teams.Count} teams for calculation...");
 
-                        var calculatedStandings = await _rotisserieService.CalculateStandingsForSeason(year, teams, progressGroupId, progress);
+                        var calculatedStandings = await _rotisserieService.CalculateStandingsForSeason(year, teams, progressGroupId, progress, cancellationToken);
+
+                        // Check if cancelled before saving
+                        if (cancellationToken.IsCancellationRequested)
+                        {
+                            await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("CalculationError", new {
+                                Error = "Calculation was cancelled",
+                                Success = false
+                            });
+                            return;
+                        }
 
                         // Save all calculated standings to the database
                         foreach (var standing in calculatedStandings)
                         {
+                            if (cancellationToken.IsCancellationRequested) break;
                             await SaveStandingToDatabase(standing, year);
                         }
 
-                        // Send completion notification via SignalR
-                        await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("CalculationComplete", new {
-                            Message = $"Successfully calculated standings for {year}",
-                            RecordsCreated = calculatedStandings.Count,
-                            Success = true
+                        if (!cancellationToken.IsCancellationRequested)
+                        {
+                            // Send completion notification via SignalR
+                            await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("CalculationComplete", new {
+                                Message = $"Successfully calculated standings for {year}",
+                                RecordsCreated = calculatedStandings.Count,
+                                Success = true
+                            });
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // Expected when cancelled (catches both OperationCanceledException and TaskCanceledException)
+                        Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Calculation for {year} was cancelled");
+                        await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("CalculationError", new {
+                            Error = "Calculation was cancelled",
+                            Success = false
                         });
                     }
                     catch (Exception ex)
@@ -135,6 +169,12 @@ namespace WFBC.Server.Controllers
                             Error = $"Error calculating standings: {ex.Message}",
                             Success = false
                         });
+                    }
+                    finally
+                    {
+                        // Clean up the cancellation token
+                        _activeCalculations.TryRemove(progressGroupId, out _);
+                        cancellationTokenSource?.Dispose();
                     }
                 }, TaskCreationOptions.LongRunning).Unwrap();
 
@@ -147,6 +187,28 @@ namespace WFBC.Server.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, new { Error = $"Error starting calculation: {ex.Message}" });
+            }
+        }
+
+        [HttpPost("cancel/{progressGroupId}")]
+        public IActionResult CancelCalculation(string progressGroupId)
+        {
+            try
+            {
+                if (_activeCalculations.TryGetValue(progressGroupId, out var cancellationTokenSource))
+                {
+                    cancellationTokenSource.Cancel();
+                    Console.WriteLine($"[{DateTime.Now:HH:mm:ss}] Cancellation requested for {progressGroupId}");
+                    return Ok(new { Message = "Cancellation requested", Success = true });
+                }
+                else
+                {
+                    return NotFound(new { Message = "Calculation not found or already completed", Success = false });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = $"Error cancelling calculation: {ex.Message}" });
             }
         }
 

@@ -15,11 +15,12 @@ using System.Net.Http.Json;
 
 namespace WFBC.Client.Pages.Commish
 {
-    public class BuildUpdateStandingsModel : StandingsModel, IAsyncDisposable
+    public class BuildUpdateStandingsModel : ComponentBase, IAsyncDisposable
     {
         [Inject] protected NavigationManager Navigation { get; set; } = default!;
         [Inject] protected AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
         [Inject] protected IAccessTokenProvider AccessTokenProvider { get; set; } = default!;
+        [Inject] protected AuthorizedClient AuthorizedClient { get; set; } = default!;
         
         protected string Title = "Build Season Standings";
         protected List<string> availableYears = new List<string>();
@@ -28,6 +29,8 @@ namespace WFBC.Client.Pages.Commish
         protected string calculationMessage = "";
         protected string errorMessage = "";
         private HubConnection? hubConnection;
+        protected object formModel = new object(); // Simple model for EditForm
+        protected string? currentProgressGroupId = null;
 
         protected override async Task OnInitializedAsync()
         {
@@ -133,6 +136,9 @@ namespace WFBC.Client.Pages.Commish
                         
                         if (!string.IsNullOrEmpty(progressGroupId))
                         {
+                            // Store the progress group ID for cancellation
+                            currentProgressGroupId = progressGroupId;
+                            
                             // Join the progress group
                             await hubConnection.InvokeAsync("JoinProgressGroup", progressGroupId);
                             calculationMessage = $"Connected to real-time progress for {selectedYear}...";
@@ -205,6 +211,40 @@ namespace WFBC.Client.Pages.Commish
             selectedYear = e.Value?.ToString() ?? "";
             calculationMessage = "";
             errorMessage = "";
+        }
+
+        protected async Task CancelCalculation()
+        {
+            if (!string.IsNullOrEmpty(currentProgressGroupId))
+            {
+                try
+                {
+                    var response = await AuthorizedClient.Client.PostAsync($"/api/RotisserieStandings/cancel/{currentProgressGroupId}", null);
+                    
+                    if (response.IsSuccessStatusCode)
+                    {
+                        calculationMessage = "Cancellation requested...";
+                        isCalculating = false;
+                        currentProgressGroupId = null;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        errorMessage = "Failed to cancel calculation";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    errorMessage = $"Error cancelling calculation: {ex.Message}";
+                }
+            }
+            else
+            {
+                // If no progress group ID, just reset the UI state
+                isCalculating = false;
+                calculationMessage = "";
+                StateHasChanged();
+            }
         }
 
         private async Task ShowProgressAsync(CancellationToken cancellationToken)

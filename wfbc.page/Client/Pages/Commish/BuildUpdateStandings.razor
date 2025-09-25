@@ -3,8 +3,7 @@
 @using WFBC.Client.Shared.Components.Buttons
 @using MongoDB.Bson
 
-<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@standings" OnValidSubmit="BuildStandings">
-    <DataAnnotationsValidator />
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@formModel" OnValidSubmit="BuildStandings">
     
     <label class="block">
         <span class="text-wfbc-blue-2">Select Year</span>
@@ -52,14 +51,16 @@
     {
         <Button OnClickFunction=PreviewStandings ButtonText="Preview Data" MaxWidth="max-w-full" MarginPadding="mx-2 mt-4 px-4 py-2" />
         <Button OnClickFunction=BuildStandings ButtonText="Build Season Standings" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+        <Button ButtonText="Back to Standings" Href="/commish/standings" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
     }
     else
     {
         <div class="mx-2 mt-4 px-4 py-2 max-w-full bg-gray-400 text-white rounded-full text-center">
             Calculating...
         </div>
+        <Button OnClickFunction=CancelCalculation ButtonText="Cancel Calculation" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+        <Button ButtonText="Back to Standings" Href="/commish/standings" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
     }
-    <Button ButtonText="Cancel" Href="/commish/standings" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
 
     <!-- Information Panel -->
     <div class="mt-6 p-4 bg-wfbc-grey-1 rounded-md">
