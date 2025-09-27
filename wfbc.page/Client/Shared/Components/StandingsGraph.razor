@@ -1,0 +1,262 @@
+@using WFBC.Shared.Models
+@inject IJSRuntime JSRuntime
+
+<div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
+    @if (ProgressionData?.Count > 0)
+    {
+        <!-- Graph Container -->
+        <div class="mb-4">
+            <h3 class="text-lg font-semibold text-wfbc-blue-2 mb-2">Points Progression Over Time - @Year</h3>
+            <p class="text-sm text-gray-600 mb-4">Track each team's total points throughout the season</p>
+        </div>
+
+        <!-- Chart Canvas -->
+        <div class="relative" style="height: 400px;">
+            <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
+        </div>
+
+        <!-- Legend and Controls (Future Enhancement) -->
+        <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+                <strong>Note:</strong> Interactive features (team filtering, date hover details) will be added in future updates.
+                Currently showing @teamCount teams with @dataPointCount total data points.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="p-8 text-center text-gray-500">
+            <div class="mb-4">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
+            <p class="text-lg font-medium">No progression data available</p>
+            <p class="text-sm">Ensure standings have been calculated with daily data.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<Standings> ProgressionData { get; set; } = new();
+    [Parameter] public string Year { get; set; } = "2023";
+
+    private int teamCount = 0;
+    private int dataPointCount = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ProgressionData?.Count > 0)
+        {
+            await RenderChart();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ProgressionData?.Count > 0)
+        {
+            UpdateDataStats();
+            
+            // Re-render chart if data changed
+            await Task.Delay(100); // Small delay to ensure DOM is ready
+            await RenderChart();
+        }
+    }
+
+    private void UpdateDataStats()
+    {
+        teamCount = ProgressionData.Select(s => s.TeamId).Distinct().Count();
+        dataPointCount = ProgressionData.Count;
+    }
+
+    private async Task RenderChart()
+    {
+        try
+        {
+            if (ProgressionData?.Count == 0) return;
+
+            // Prepare data for Chart.js
+            var chartData = PrepareChartData();
+            var canvasId = $"standingsChart-{Year}";
+
+            // Call JavaScript function to render the chart
+            await JSRuntime.InvokeVoidAsync("renderStandingsChart", canvasId, chartData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering chart: {ex.Message}");
+        }
+    }
+
+    private object PrepareChartData()
+    {
+        // Group data by team and sort by date
+        var teamData = ProgressionData
+            .GroupBy(s => s.TeamId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(s => s.Date).ToList()
+            );
+
+        // Get all unique dates and sort them
+        var allDates = ProgressionData
+            .Select(s => s.Date)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList();
+
+        // Define colors for teams using the chart palette
+        var colors = new[]
+        {
+            "#ffcb51", "#a188ff", "#c2ff48", "#e41973", "#c199bc", "#da5fce",
+            "#de704b", "#baba00", "#008eab", "#74c664", "#bba775", "#89cbb3"
+        };
+
+        // Create datasets for each team
+        var datasets = new List<object>();
+        int colorIndex = 0;
+
+        foreach (var team in teamData)
+        {
+            var teamStandings = team.Value;
+            var teamName = teamStandings.FirstOrDefault()?.TeamName ?? $"Team {team.Key}";
+            var color = colors[colorIndex % colors.Length];
+
+            // Create data points for each date
+            var dataPoints = allDates.Select(date =>
+            {
+                var standing = teamStandings.FirstOrDefault(s => s.Date.Date == date.Date);
+                return standing?.TotalPoints ?? 0;
+            }).ToArray();
+
+            datasets.Add(new
+            {
+                label = teamName,
+                data = dataPoints,
+                borderColor = color,
+                backgroundColor = color,
+                fill = false,
+                tension = 0.1,
+                pointRadius = 2,
+                pointHoverRadius = 5
+            });
+
+            colorIndex++;
+        }
+
+        return new
+        {
+            labels = allDates.Select(d => d.ToString("MM/dd")).ToArray(),
+            datasets = datasets
+        };
+    }
+}
+
+<script>
+    window.renderStandingsChart = function(canvasId, chartData) {
+        // Destroy existing chart if it exists
+        if (window.standingsCharts && window.standingsCharts[canvasId]) {
+            window.standingsCharts[canvasId].destroy();
+        }
+
+        // Initialize charts storage
+        if (!window.standingsCharts) {
+            window.standingsCharts = {};
+        }
+
+        // Get canvas element
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error('Canvas not found:', canvasId);
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+
+        // Check if Chart.js is available
+        if (typeof Chart === 'undefined') {
+            // Fallback: Create a simple text-based chart or load Chart.js dynamically
+            console.warn('Chart.js not available. Implementing fallback...');
+            renderFallbackChart(canvas, chartData);
+            return;
+        }
+
+        // Create Chart.js chart
+        window.standingsCharts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: false
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 15
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Total Points'
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+    };
+
+    function renderFallbackChart(canvas, chartData) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+        
+        // Set background
+        ctx.fillStyle = '#f9fafb';
+        ctx.fillRect(0, 0, width, height);
+
+        // Draw message
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Chart.js not loaded', width / 2, height / 2 - 20);
+        ctx.fillText('Graph functionality requires Chart.js library', width / 2, height / 2 + 10);
+        
+        // Draw basic stats
+        ctx.font = '12px sans-serif';
+        ctx.fillText(`${chartData.datasets.length} teams • ${chartData.labels.length} data points`, width / 2, height / 2 + 40);
+    }
+</script>

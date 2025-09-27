@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WFBC.Shared.Models;
+using WFBC.Client.Services;
 using BlazorPro.BlazorSize;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -56,6 +57,10 @@ namespace WFBC.Client
             builder.Services.AddApiAuthorization();
 
             builder.Services.AddSingleton<AppState>();
+
+            // Register StandingsCacheService with PublicClient for standings data
+            builder.Services.AddScoped<StandingsCacheService>(sp => 
+                new StandingsCacheService(sp.GetRequiredService<PublicClient>().Client));
 
             builder.Services.AddMediaQueryService();
 

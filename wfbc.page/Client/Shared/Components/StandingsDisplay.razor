@@ -1,0 +1,331 @@
+@using WFBC.Shared.Models
+@using WFBC.Client.Services
+@using System.Threading
+@inject StandingsCacheService CacheService
+
+<div class="flex flex-col m-3 lg:m-6">
+    
+    @if (ShowTitle)
+    {
+        <h2 class="text-2xl font-bold text-wfbc-blue-2 mb-4">World Fantasy Baseball Classic @Year Standings</h2>
+    }
+
+    <!-- Tab Navigation -->
+    <div class="flex mb-6 border-b border-wfbc-grey-1">
+        <button class="px-6 py-3 font-medium border-b-2 @(activeTab == "table" ? "border-wfbc-blue-1 text-wfbc-blue-1" : "border-transparent text-wfbc-grey-2 hover:text-wfbc-blue-2")"
+                @onclick="@(() => SetActiveTab("table"))">
+            Standings Table
+        </button>
+        <button class="px-6 py-3 font-medium border-b-2 @(activeTab == "graph" ? "border-wfbc-blue-1 text-wfbc-blue-1" : "border-transparent text-wfbc-grey-2 hover:text-wfbc-blue-2")"
+                @onclick="@(() => SetActiveTab("graph"))">
+            Points Over Time
+        </button>
+    </div>
+
+    <!-- Loading State -->
+    @if (isLoading)
+    {
+        <div class="flex flex-col justify-center items-center py-8">
+            <div class="flex items-center mb-2">
+                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-wfbc-blue-1"></div>
+                <span class="ml-3 text-wfbc-blue-2 font-medium">@GetLoadingMessage()</span>
+            </div>
+            @if (activeTab == "graph")
+            {
+                <div class="text-sm text-wfbc-grey-2 text-center">
+                    Loading historical progression data - this may take a moment on first load
+                </div>
+            }
+            else if (activeTab == "table")
+            {
+                <div class="text-sm text-wfbc-grey-2 text-center">
+                    Fetching final standings - please wait
+                </div>
+            }
+        </div>
+    }
+    
+    <!-- Error State -->
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="bg-wfbc-red-1 text-white p-4 rounded-lg mb-4">
+            <strong>Error:</strong> @errorMessage
+        </div>
+    }
+
+    <!-- Content Container -->
+    @if (!isLoading && string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="@(activeTab == "table" ? "" : "hidden")">
+            <StandingsTable Standings="finalStandings" />
+        </div>
+
+        <div class="@(activeTab == "graph" ? "" : "hidden")">
+            <StandingsGraph ProgressionData="progressionData" Year="@Year" />
+        </div>
+    }
+
+    <!-- Cache Info (Debug - can be removed in production) -->
+    @if (ShowCacheInfo && cacheStatus != null)
+    {
+        <div class="mt-4 p-3 bg-wfbc-grey-1 rounded text-sm text-wfbc-blue-2">
+            <strong>Cache Status:</strong> 
+            @if (cacheStatus.IsCached)
+            {
+                <span>Cached @cacheStatus.AgeMinutes.ToString("F1") minutes ago | 
+                Final: @(cacheStatus.HasFinalStandings ? "✓" : "✗") | 
+                Progression: @(cacheStatus.HasProgressionData ? "✓" : "✗")</span>
+            }
+            else
+            {
+                <span>Not cached</span>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public string Year { get; set; } = "2023";
+    [Parameter] public bool ShowTitle { get; set; } = true;
+    [Parameter] public bool ShowCacheInfo { get; set; } = false; // For debugging
+    [Parameter] public string InitialTab { get; set; } = "table";
+
+    private string activeTab = "table";
+    private bool isLoading = true;
+    private string errorMessage = "";
+    private List<Standings> finalStandings = new();
+    private List<Standings> progressionData = new();
+    private StandingsCacheStatus cacheStatus;
+    private string? previousYear; // Track year changes
+    private CancellationTokenSource? _cancellationTokenSource; // Cancel ongoing operations
+
+    protected override async Task OnInitializedAsync()
+    {
+        activeTab = InitialTab;
+        await LoadStandingsData();
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        // Check if year parameter has actually changed
+        if (previousYear != null && previousYear != Year)
+        {
+            // Cancel any ongoing operations for the previous year
+            _cancellationTokenSource?.Cancel();
+            _cancellationTokenSource?.Dispose();
+            _cancellationTokenSource = new CancellationTokenSource();
+            
+            // Year changed - reset all component state
+            Console.WriteLine($"[StandingsDisplay] Year changed from {previousYear} to {Year} - canceling previous operations and resetting state");
+            
+            finalStandings.Clear();
+            progressionData.Clear();
+            errorMessage = "";
+            isLoading = true;
+            
+            // Update tracking variable immediately to prevent race conditions
+            previousYear = Year;
+            
+            // Load fresh data for the new year
+            await LoadStandingsData();
+        }
+        else if (previousYear == null)
+        {
+            // First time setting parameters - create cancellation token and load data
+            _cancellationTokenSource = new CancellationTokenSource();
+            
+            if (activeTab == "table" && finalStandings?.Count == 0)
+            {
+                await LoadFinalStandings();
+            }
+            else if (activeTab == "graph" && progressionData?.Count == 0)
+            {
+                await LoadProgressionData();
+            }
+            
+            // Update tracking variable
+            previousYear = Year;
+        }
+    }
+
+    private async Task SetActiveTab(string tab)
+    {
+        if (activeTab == tab) return;
+        
+        activeTab = tab;
+        StateHasChanged();
+
+        // Load data for the new tab if not already loaded
+        if (tab == "table" && finalStandings?.Count == 0)
+        {
+            await LoadFinalStandings();
+        }
+        else if (tab == "graph" && progressionData?.Count == 0)
+        {
+            await LoadProgressionData();
+        }
+    }
+
+    private async Task LoadStandingsData()
+    {
+        // Load data for the initial tab
+        if (activeTab == "table")
+        {
+            await LoadFinalStandings();
+        }
+        else
+        {
+            await LoadProgressionData();
+        }
+        
+        // Update cache status for debugging
+        if (ShowCacheInfo)
+        {
+            cacheStatus = CacheService.GetCacheStatus(Year);
+        }
+    }
+
+    private async Task LoadFinalStandings()
+    {
+        var requestYear = Year; // Capture year at start of request
+        var token = _cancellationTokenSource?.Token ?? CancellationToken.None;
+        
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            StateHasChanged();
+
+            Console.WriteLine($"[StandingsDisplay] LoadFinalStandings for year {requestYear}");
+            
+            // Check if cancelled before making request
+            token.ThrowIfCancellationRequested();
+            
+            var data = await CacheService.GetFinalStandingsAsync(requestYear);
+            
+            // Validate year hasn't changed since request started
+            if (requestYear != Year)
+            {
+                Console.WriteLine($"[StandingsDisplay] Discarding final standings for {requestYear} - year changed to {Year}");
+                return;
+            }
+            
+            // Check if cancelled after request
+            token.ThrowIfCancellationRequested();
+            
+            Console.WriteLine($"[StandingsDisplay] Received {data?.Count ?? 0} final standings for year {requestYear}");
+            finalStandings = data ?? new List<Standings>();
+            
+            if (finalStandings.Count == 0)
+            {
+                errorMessage = $"No standings data found for {requestYear}. Please ensure standings have been calculated.";
+                Console.WriteLine($"[StandingsDisplay] Setting error message for year {requestYear} due to empty results");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"[StandingsDisplay] LoadFinalStandings for year {requestYear} was cancelled");
+            return; // Don't update UI state when cancelled
+        }
+        catch (Exception ex)
+        {
+            // Only show error if we're still on the same year
+            if (requestYear == Year)
+            {
+                errorMessage = $"Failed to load standings: {ex.Message}";
+                Console.WriteLine($"[StandingsDisplay] Exception loading final standings for year {requestYear}: {ex}");
+            }
+        }
+        finally
+        {
+            // Only update loading state if we're still on the same year
+            if (requestYear == Year)
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    private async Task LoadProgressionData()
+    {
+        var requestYear = Year; // Capture year at start of request
+        var token = _cancellationTokenSource?.Token ?? CancellationToken.None;
+        
+        try
+        {
+            isLoading = true;
+            errorMessage = "";
+            StateHasChanged();
+
+            Console.WriteLine($"[StandingsDisplay] LoadProgressionData for year {requestYear}");
+            
+            // Check if cancelled before making request
+            token.ThrowIfCancellationRequested();
+            
+            var data = await CacheService.GetProgressionDataAsync(requestYear);
+            
+            // Validate year hasn't changed since request started
+            if (requestYear != Year)
+            {
+                Console.WriteLine($"[StandingsDisplay] Discarding progression data for {requestYear} - year changed to {Year}");
+                return;
+            }
+            
+            // Check if cancelled after request
+            token.ThrowIfCancellationRequested();
+            
+            Console.WriteLine($"[StandingsDisplay] Received {data?.Count ?? 0} progression data points for year {requestYear}");
+            progressionData = data ?? new List<Standings>();
+            
+            if (progressionData.Count == 0)
+            {
+                errorMessage = $"No progression data found for {requestYear}. Please ensure standings have been calculated.";
+                Console.WriteLine($"[StandingsDisplay] Setting error message for year {requestYear} due to empty progression data");
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            Console.WriteLine($"[StandingsDisplay] LoadProgressionData for year {requestYear} was cancelled");
+            return; // Don't update UI state when cancelled
+        }
+        catch (Exception ex)
+        {
+            // Only show error if we're still on the same year
+            if (requestYear == Year)
+            {
+                errorMessage = $"Failed to load progression data: {ex.Message}";
+                Console.WriteLine($"[StandingsDisplay] Exception loading progression data for year {requestYear}: {ex}");
+            }
+        }
+        finally
+        {
+            // Only update loading state if we're still on the same year
+            if (requestYear == Year)
+            {
+                isLoading = false;
+                StateHasChanged();
+            }
+        }
+    }
+
+    // Public method to refresh data (useful after standings updates)
+    public async Task RefreshData()
+    {
+        CacheService.InvalidateCache(Year);
+        finalStandings.Clear();
+        progressionData.Clear();
+        await LoadStandingsData();
+    }
+
+    // Get dynamic loading message based on current tab and state
+    private string GetLoadingMessage()
+    {
+        return activeTab switch
+        {
+            "table" => "Loading standings table...",
+            "graph" => "Loading points progression...",
+            _ => "Loading standings data..."
+        };
+    }
+}

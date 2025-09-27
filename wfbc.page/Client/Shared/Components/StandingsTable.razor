@@ -1,0 +1,188 @@
+@using WFBC.Shared.Models
+
+<div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
+    @if (Standings?.Count > 0)
+    {
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-wfbc-grey-1 dark:bg-gray-700">
+                    <tr>
+                        <!-- Team Info -->
+                        <th scope="col" class="sticky left-0 z-10 bg-wfbc-grey-1 dark:bg-gray-700 px-4 py-3 text-left text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r border-gray-300">
+                            Team
+                        </th>
+                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r-2 border-wfbc-blue-1">
+                            Total Points
+                        </th>
+                        
+                        <!-- Hitting Categories -->
+                        <th colspan="6" class="px-4 py-2 text-center text-sm font-semibold text-wfbc-blue-2 bg-wfbc-blue-1 bg-opacity-10 border-r-2 border-wfbc-blue-1">
+                            Hitting Categories
+                        </th>
+                        
+                        <!-- Pitching Categories -->
+                        <th colspan="6" class="px-4 py-2 text-center text-sm font-semibold text-wfbc-blue-2 bg-wfbc-blue-1 bg-opacity-10">
+                            Pitching Categories
+                        </th>
+                    </tr>
+                    <tr>
+                        <!-- Spacers for team and total -->
+                        <th class="sticky left-0 z-10 bg-wfbc-grey-1 dark:bg-gray-700"></th>
+                        <th class="border-r-2 border-wfbc-blue-1"></th>
+                        
+                        <!-- Hitting Category Headers -->
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>AVG</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>OPS</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>R</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>RBI</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>SB</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r-2 border-wfbc-blue-1">
+                            <div>HR</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        
+                        <!-- Pitching Category Headers -->
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>ERA</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>WHIP</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>K</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>IP</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>QS</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                        <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
+                            <div>S</div>
+                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                        </th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                    @for (int i = 0; i < Standings.Count; i++)
+                    {
+                        var standing = Standings[i];
+                        var rank = i + 1;
+                        var rowClass = rank <= 3 ? "bg-wfbc-yellow-1 bg-opacity-20" : (rank % 2 == 0 ? "bg-gray-50 dark:bg-gray-900" : "bg-white dark:bg-gray-800");
+                        
+                        <tr class="@rowClass hover:bg-wfbc-blue-1 hover:bg-opacity-10">
+                            <!-- Team Info (Sticky) -->
+                            <td class="sticky left-0 z-10 @rowClass px-4 py-4 border-r border-gray-300">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 w-8 h-8 bg-wfbc-blue-1 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                                        @rank
+                                    </div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-wfbc-blue-2 dark:text-white">
+                                            @standing.TeamName
+                                        </div>
+                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                            @standing.Manager
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            
+                            <!-- Total Points -->
+                            <td class="px-4 py-4 text-center border-r-2 border-wfbc-blue-1">
+                                <div class="text-lg font-bold text-wfbc-blue-2 dark:text-white">
+                                    @standing.TotalPoints.ToString("F1")
+                                </div>
+                                <div class="text-xs text-gray-500">
+                                    H: @standing.TotalHittingPoints.ToString("F1") | P: @standing.TotalPitchingPoints.ToString("F1")
+                                </div>
+                            </td>
+                            
+                            <!-- Hitting Categories -->
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.AVG.ToString("F3")</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.AVG_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.OPS.ToString("F3")</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.OPS_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.R</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.R_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.RBI</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.RBI_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.SB</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.SB_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm border-r-2 border-wfbc-blue-1">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.HR</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.HR_Points.ToString("F1")</div>
+                            </td>
+                            
+                            <!-- Pitching Categories -->
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.ERA.ToString("F2")</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.ERA_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.WHIP.ToString("F2")</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.WHIP_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.K</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.K_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.IP.ToString("F1")</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.IP_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.QS</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.QS_Points.ToString("F1")</div>
+                            </td>
+                            <td class="px-2 py-4 text-center text-sm">
+                                <div class="font-medium text-gray-900 dark:text-white">@standing.S</div>
+                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.S_Points.ToString("F1")</div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <div class="p-8 text-center text-gray-500">
+            <p>No standings data available.</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<Standings> Standings { get; set; } = new();
+}

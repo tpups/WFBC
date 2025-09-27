@@ -7,8 +7,8 @@ namespace WFBC.Server.Models
     public class WfbcDBContext
     {
         private readonly IMongoDatabase _wfbcDatabase;
-        private readonly Dictionary<string, IMongoDatabase> _dbs;
-        private readonly MongoClient client;
+        public readonly Dictionary<string, IMongoDatabase> _dbs; // Made public for metadata operations
+        public readonly MongoClient client; // Made public for metadata operations
         private readonly IDatabaseSettings _settings;
         public WfbcDBContext(IDatabaseSettings settings)
         {
