@@ -1,9 +1,25 @@
 # Active Context
 
-## Current Task: Commish Tab Enhancements & Infrastructure Fixes - COMPLETE ✅
-**Status**: ✅ **COMPLETE** - Successfully enhanced Commish tab functionality and resolved critical Tailwind infrastructure issues!
+## Current Task: Dynamic Chart Legend Enhancement - COMPLETE ✅
+**Status**: ✅ **COMPLETE** - Successfully implemented dynamic chart legend functionality with real-time tooltip reordering!
 
 ## What We Just Accomplished (September 26, 2025)
+
+### ✅ **Dynamic Chart Legend Enhancement**
+**Real-time Tooltip Reordering**: Enhanced the standings chart with dynamic legend functionality
+- **Static Legend**: Teams permanently ordered by final standings (highest to lowest points) below chart
+- **Dynamic Tooltip**: Real-time reordering of teams based on standings for each hovered date
+- **Team Colors**: Colored squares displayed next to each team name in tooltip
+- **Smart Ranking**: Shows correct position numbers (1., 2., 3., etc.) for each date
+- **Format**: Clean "1. Team Name: XXX pts" display with proper date-specific sorting
+- **File Modified**: `wfbc.page/Client/Shared/Components/StandingsGraph.razor`
+- **Technical**: Used Chart.js `itemSort` function for proper tooltip item reordering
+- **Impact**: Users can now see exactly how team standings changed over time with visual color association
+
+## Previous Major Accomplishment: Commish Tab Enhancements & Infrastructure Fixes - COMPLETE ✅
+**Status**: ✅ **COMPLETE** - Successfully enhanced Commish tab functionality and resolved critical Tailwind infrastructure issues!
+
+## What We Previously Accomplished (September 26, 2025)
 
 ### ✅ **Commish Standings Page Enhancement**
 **Extended Season Year Range**: Updated `/commish/standings` dropdown functionality

@@ -175,6 +175,21 @@
             return;
         }
 
+        // Store original dataset order and data for reference
+        const originalDatasets = [...chartData.datasets];
+        
+        // Order datasets by final standings (last date) for static legend
+        const lastDateIndex = chartData.labels.length - 1;
+        const datasetsOrderedByFinalStandings = originalDatasets.map((dataset, i) => ({
+            datasetIndex: i,
+            teamName: dataset.label,
+            points: dataset.data[lastDateIndex] || 0,
+            dataset: dataset
+        })).sort((a, b) => b.points - a.points); // Sort by final points descending
+        
+        // Update chart data to use final standings order for static legend
+        chartData.datasets = datasetsOrderedByFinalStandings.map(item => item.dataset);
+
         // Create Chart.js chart
         window.standingsCharts[canvasId] = new Chart(ctx, {
             type: 'line',
@@ -191,7 +206,73 @@
                         position: 'bottom',
                         labels: {
                             boxWidth: 12,
-                            padding: 15
+                            padding: 15,
+                            generateLabels: function(chart) {
+                                // Generate labels in current dataset order
+                                return chart.data.datasets.map((dataset, i) => ({
+                                    text: dataset.label,
+                                    fillStyle: dataset.borderColor,
+                                    strokeStyle: dataset.borderColor,
+                                    lineWidth: 2,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    datasetIndex: i
+                                }));
+                            }
+                        },
+                        onClick: function(e, legendItem, legend) {
+                            // Handle legend click to toggle dataset visibility
+                            const chart = legend.chart;
+                            const index = legendItem.datasetIndex;
+                            chart.toggleDataVisibility(index);
+                            chart.update();
+                        }
+                    },
+                    tooltip: {
+                        displayColors: true,
+                        itemSort: function(a, b) {
+                            // Get all teams' standings at this date, sorted by points
+                            const dateIndex = a.dataIndex;
+                            const standingsAtDate = chartData.datasets.map((dataset, i) => ({
+                                team: dataset.label,
+                                points: dataset.data[dateIndex] || 0,
+                                color: dataset.borderColor,
+                                datasetIndex: i
+                            })).sort((x, y) => y.points - x.points);
+                            
+                            // Get rankings for both teams
+                            const aRank = standingsAtDate.findIndex(s => s.team === a.dataset.label);
+                            const bRank = standingsAtDate.findIndex(s => s.team === b.dataset.label);
+                            
+                            return aRank - bRank; // Sort by ranking (ascending)
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                const dateIndex = context[0].dataIndex;
+                                return `Standings for ${chartData.labels[dateIndex]}`;
+                            },
+                            label: function(context) {
+                                // Get all teams' standings at this date, sorted by points
+                                const dateIndex = context.dataIndex;
+                                const standingsAtDate = chartData.datasets.map((dataset, i) => ({
+                                    team: dataset.label,
+                                    points: dataset.data[dateIndex] || 0,
+                                    color: dataset.borderColor,
+                                    datasetIndex: i
+                                })).sort((a, b) => b.points - a.points);
+                                
+                                // Find this team's ranking for this date
+                                const teamName = context.dataset.label;
+                                const teamRank = standingsAtDate.findIndex(s => s.team === teamName) + 1;
+                                const teamPoints = standingsAtDate.find(s => s.team === teamName)?.points || 0;
+                                
+                                return `${teamRank}. ${teamName}: ${teamPoints} pts`;
+                            },
+                            labelColor: function(context) {
+                                return {
+                                    borderColor: context.dataset.borderColor,
+                                    backgroundColor: context.dataset.borderColor
+                                };
+                            }
                         }
                     }
                 },
