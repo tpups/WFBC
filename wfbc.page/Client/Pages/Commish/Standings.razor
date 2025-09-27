@@ -3,17 +3,17 @@
 @using WFBC.Client.Shared.Components.Buttons;
 @inherits StandingsModel
 
-<div class="flex flex-col m-3 lg:m-6 max-w-full">
-    <div class="flex p-4 mb-2 border rounded-xl shadow-sm">
+<div class="flex flex-col m-3 lg:m-6 max-w-4xl">
+    <div class="flex p-4 mb-2 border rounded-xl shadow-sm w-full">
         <Button ButtonText="Build Standings" Href="/commish/build_standings" Role="button" AriaLabel="build standings link" />
     </div>
 
     <!-- Season Settings Section -->
-    <div class="flex flex-col p-4 mb-2 border rounded-xl shadow-sm">
+    <div class="flex flex-col p-4 mb-2 border rounded-xl shadow-sm w-full">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-semibold">Season Date Settings</h3>
             <button @onclick="ToggleEditSeasonSettings" 
-                    class="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors">
+                    class="ml-4 px-4 py-2 text-sm bg-wfbc-blue-1 text-wfbc-white-1 rounded hover:bg-wfbc-blue-2 transition-colors">
                 @(isEditingSeasonSettings ? "Cancel" : "Edit Season Dates")
             </button>
         </div>
@@ -22,7 +22,7 @@
         <div class="mb-4">
             <label class="block text-sm font-medium mb-2">Season Year:</label>
             <select @onchange="OnYearChanged" value="@selectedYear" 
-                    class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    class="px-3 py-2 pr-8 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wfbc-blue-1">
                 @for (int year = 2011; year <= DateTime.Now.Year; year++)
                 {
                     <option value="@year">@year</option>
@@ -39,18 +39,18 @@
                     <div>
                         <label class="block text-sm font-medium mb-2">Season Start Date:</label>
                         <input type="date" @bind="seasonSettings.SeasonStartDate" @bind:format="yyyy-MM-dd"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wfbc-blue-1" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-2">Season End Date:</label>
                         <input type="date" @bind="seasonSettings.SeasonEndDate" @bind:format="yyyy-MM-dd"
-                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-wfbc-blue-1" />
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-4">
                     <button @onclick="SaveSeasonSettings" disabled="@isSavingSettings"
-                            class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-gray-400 transition-colors">
+                            class="px-4 py-2 bg-wfbc-yellow-1 text-wfbc-black-1 rounded hover:bg-wfbc-grey-1 disabled:bg-wfbc-grey-2 transition-colors">
                         @(isSavingSettings ? "Saving..." : "Save Settings")
                     </button>
                 </div>

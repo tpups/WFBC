@@ -1,17 +1,37 @@
 @using WFBC.Shared.Models
 
-<div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700">
+<div class="border rounded-xl shadow-sm bg-wfbc-white-1 overflow-hidden">
     @if (Standings?.Count > 0)
     {
+        <!-- Title and Toggle Button -->
+        <div class="flex justify-between items-center p-3 bg-wfbc-grey-1 border-b border-wfbc-grey-2">
+            @if (!string.IsNullOrEmpty(Title))
+            {
+                <h2 class="text-lg font-semibold text-wfbc-blue-2">@Title</h2>
+            }
+            else
+            {
+                <div></div>
+            }
+            <div class="flex items-center gap-2">
+                <span class="text-xs text-wfbc-blue-2 font-medium">View:</span>
+                <button @onclick="CycleDisplayMode" 
+                        class="px-3 py-1 text-xs bg-wfbc-blue-1 text-wfbc-white-1 rounded hover:bg-wfbc-blue-2 transition-colors flex items-center gap-1">
+                    <span>@GetDisplayModeText()</span>
+                    <span class="text-xs">🔄</span>
+                </button>
+            </div>
+        </div>
+        
         <div class="overflow-x-auto">
-            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                <thead class="bg-wfbc-grey-1 dark:bg-gray-700">
+            <table class="min-w-full divide-y divide-wfbc-grey-1">
+                <thead class="bg-wfbc-grey-1">
                     <tr>
                         <!-- Team Info -->
-                        <th scope="col" class="sticky left-0 z-10 bg-wfbc-grey-1 dark:bg-gray-700 px-4 py-3 text-left text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r border-gray-300">
+                        <th scope="col" rowspan="2" class="sticky left-0 z-10 bg-wfbc-grey-1 px-4 py-3 text-left text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r border-wfbc-grey-2">
                             Team
                         </th>
-                        <th scope="col" class="px-4 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r-2 border-wfbc-blue-1">
+                        <th scope="col" rowspan="2" class="px-4 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r-2 border-wfbc-blue-1">
                             Total Points
                         </th>
                         
@@ -26,82 +46,67 @@
                         </th>
                     </tr>
                     <tr>
-                        <!-- Spacers for team and total -->
-                        <th class="sticky left-0 z-10 bg-wfbc-grey-1 dark:bg-gray-700"></th>
-                        <th class="border-r-2 border-wfbc-blue-1"></th>
                         
                         <!-- Hitting Category Headers -->
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>AVG</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            AVG
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>OPS</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            OPS
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>R</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            R
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>RBI</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            RBI
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>SB</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            SB
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider border-r-2 border-wfbc-blue-1">
-                            <div>HR</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            HR
                         </th>
                         
                         <!-- Pitching Category Headers -->
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>ERA</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            ERA
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>WHIP</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            WHIP
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>K</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            K
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>IP</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            IP
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>QS</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            QS
                         </th>
                         <th scope="col" class="px-2 py-3 text-center text-xs font-medium text-wfbc-blue-2 uppercase tracking-wider">
-                            <div>S</div>
-                            <div class="text-xs text-gray-500 normal-case">Points</div>
+                            S
                         </th>
                     </tr>
                 </thead>
-                <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
+                <tbody class="bg-wfbc-white-1 divide-y divide-wfbc-grey-1">
                     @for (int i = 0; i < Standings.Count; i++)
                     {
                         var standing = Standings[i];
                         var rank = i + 1;
-                        var rowClass = rank <= 3 ? "bg-wfbc-yellow-1 bg-opacity-20" : (rank % 2 == 0 ? "bg-gray-50 dark:bg-gray-900" : "bg-white dark:bg-gray-800");
+                        var rowClass = rank <= 3 ? "bg-wfbc-yellow-1 bg-opacity-20" : (rank % 2 == 0 ? "bg-wfbc-grey-1 bg-opacity-30" : "bg-wfbc-white-1");
                         
-                        <tr class="@rowClass hover:bg-wfbc-blue-1 hover:bg-opacity-10">
+                        <tr class="group @rowClass hover:bg-wfbc-blue-1 hover:bg-opacity-10">
                             <!-- Team Info (Sticky) -->
-                            <td class="sticky left-0 z-10 @rowClass px-4 py-4 border-r border-gray-300">
+                            <td class="sticky left-0 z-10 px-4 py-3 border-r border-wfbc-grey-2 @(rank <= 3 ? "bg-wfbc-yellow-1 bg-opacity-20" : (rank % 2 == 0 ? "bg-wfbc-grey-1 bg-opacity-30" : "bg-wfbc-white-1")) group-hover:!bg-wfbc-blue-1 group-hover:!bg-opacity-10">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 w-8 h-8 bg-wfbc-blue-1 text-white rounded-full flex items-center justify-center text-sm font-bold">
                                         @rank
                                     </div>
                                     <div class="ml-3">
-                                        <div class="text-sm font-medium text-wfbc-blue-2 dark:text-white">
+                                        <div class="text-sm font-medium text-wfbc-blue-2">
                                             @standing.TeamName
                                         </div>
-                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                        <div class="text-sm text-wfbc-red-1">
                                             @standing.Manager
                                         </div>
                                     </div>
@@ -109,65 +114,257 @@
                             </td>
                             
                             <!-- Total Points -->
-                            <td class="px-4 py-4 text-center border-r-2 border-wfbc-blue-1">
-                                <div class="text-lg font-bold text-wfbc-blue-2 dark:text-white">
+                            <td class="px-4 py-3 text-center border-r-2 border-wfbc-blue-1">
+                                <div class="text-lg font-bold text-wfbc-blue-2">
                                     @standing.TotalPoints.ToString("F1")
                                 </div>
-                                <div class="text-xs text-gray-500">
+                                <div class="text-xs text-wfbc-blue-2">
                                     H: @standing.TotalHittingPoints.ToString("F1") | P: @standing.TotalPitchingPoints.ToString("F1")
                                 </div>
                             </td>
                             
                             <!-- Hitting Categories -->
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.AVG.ToString("F3")</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.AVG_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.AVG.ToString("F3")</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.AVG_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.AVG_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.AVG.ToString("F3")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.AVG.ToString("F3")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.AVG_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.OPS.ToString("F3")</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.OPS_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.OPS.ToString("F3")</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.OPS_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.OPS_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.OPS.ToString("F3")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.OPS.ToString("F3")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.OPS_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.R</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.R_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.R</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.R_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.R_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.R</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.R</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.R_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.RBI</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.RBI_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.RBI</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.RBI_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.RBI_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.RBI</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.RBI</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.RBI_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.SB</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.SB_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.SB</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.SB_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.SB_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.SB</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.SB</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.SB_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm border-r-2 border-wfbc-blue-1">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.HR</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.HR_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm border-r-2 border-wfbc-blue-1">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.HR</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.HR_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.HR_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.HR</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.HR</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.HR_Points.ToString("F1")</div>
+                                }
                             </td>
                             
                             <!-- Pitching Categories -->
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.ERA.ToString("F2")</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.ERA_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.ERA.ToString("F2")</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.ERA_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.ERA_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.ERA.ToString("F2")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.ERA.ToString("F2")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.ERA_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.WHIP.ToString("F2")</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.WHIP_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.WHIP.ToString("F2")</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.WHIP_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.WHIP_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.WHIP.ToString("F2")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.WHIP.ToString("F2")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.WHIP_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.K</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.K_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.K</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.K_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.K_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.K</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.K</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.K_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.IP.ToString("F1")</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.IP_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.IP.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.IP_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.IP_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.IP.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.IP.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.IP_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.QS</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.QS_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.QS</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.QS_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.QS_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.QS</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.QS</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.QS_Points.ToString("F1")</div>
+                                }
                             </td>
-                            <td class="px-2 py-4 text-center text-sm">
-                                <div class="font-medium text-gray-900 dark:text-white">@standing.S</div>
-                                <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.S_Points.ToString("F1")</div>
+                            <td class="px-2 py-3 text-center text-sm">
+                                @if (currentDisplayMode == DisplayMode.Default)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.S</div>
+                                    <div class="text-xs text-wfbc-blue-1 font-semibold">@standing.S_Points.ToString("F1")</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.Switched)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.S_Points.ToString("F1")</div>
+                                    <div class="text-xs text-wfbc-black-1">@standing.S</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.RawOnly)
+                                {
+                                    <div class="font-medium text-wfbc-black-1">@standing.S</div>
+                                }
+                                else if (currentDisplayMode == DisplayMode.PointsOnly)
+                                {
+                                    <div class="font-medium text-wfbc-blue-1 font-semibold">@standing.S_Points.ToString("F1")</div>
+                                }
                             </td>
                         </tr>
                     }
@@ -177,7 +374,7 @@
     }
     else
     {
-        <div class="p-8 text-center text-gray-500">
+        <div class="p-8 text-center text-wfbc-grey-2">
             <p>No standings data available.</p>
         </div>
     }
@@ -185,4 +382,39 @@
 
 @code {
     [Parameter] public List<Standings> Standings { get; set; } = new();
+    [Parameter] public string? Title { get; set; }
+
+    public enum DisplayMode
+    {
+        Default,    // Raw stats on top, points below
+        Switched,   // Points on top, raw stats below  
+        RawOnly,    // Raw stats only
+        PointsOnly  // Points only
+    }
+
+    private DisplayMode currentDisplayMode = DisplayMode.Default;
+
+    private void CycleDisplayMode()
+    {
+        currentDisplayMode = currentDisplayMode switch
+        {
+            DisplayMode.Default => DisplayMode.Switched,
+            DisplayMode.Switched => DisplayMode.RawOnly,
+            DisplayMode.RawOnly => DisplayMode.PointsOnly,
+            DisplayMode.PointsOnly => DisplayMode.Default,
+            _ => DisplayMode.Default
+        };
+    }
+
+    private string GetDisplayModeText()
+    {
+        return currentDisplayMode switch
+        {
+            DisplayMode.Default => "Stats/Points",
+            DisplayMode.Switched => "Points/Stats",
+            DisplayMode.RawOnly => "Stats",
+            DisplayMode.PointsOnly => "Points",
+            _ => "Stats/Points"
+        };
+    }
 }

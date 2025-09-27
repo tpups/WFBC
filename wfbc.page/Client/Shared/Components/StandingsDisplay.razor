@@ -1,25 +1,35 @@
 @using WFBC.Shared.Models
 @using WFBC.Client.Services
+@using WFBC.Client.Shared.Components.Buttons
 @using System.Threading
 @inject StandingsCacheService CacheService
 
 <div class="flex flex-col m-3 lg:m-6">
     
-    @if (ShowTitle)
+    @if (ShowTitle && activeTab != "table")
     {
-        <h2 class="text-2xl font-bold text-wfbc-blue-2 mb-4">World Fantasy Baseball Classic @Year Standings</h2>
+        <h2 class="text-2xl font-bold text-wfbc-blue-2 mb-4">@Year World Fantasy Baseball Classic Standings</h2>
     }
 
     <!-- Tab Navigation -->
-    <div class="flex mb-6">
-        <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "table" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
-                @onclick="@(() => SetActiveTab("table"))">
-            Standings Table
-        </button>
-        <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "graph" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
-                @onclick="@(() => SetActiveTab("graph"))">
-            Points Over Time
-        </button>
+    <div class="flex justify-between items-center mb-6">
+        <div class="flex">
+            <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "table" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
+                    @onclick="@(() => SetActiveTab("table"))">
+                Standings Table
+            </button>
+            <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "graph" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
+                    @onclick="@(() => SetActiveTab("graph"))">
+                Points Over Time
+            </button>
+        </div>
+        
+        @if (!string.IsNullOrEmpty(RotowireUrl))
+        {
+            <div class="mb-0">
+                <Button ButtonText="Rotowire League" Href="@RotowireUrl" AriaLabel="view rotowire league" MaxWidth="max-w-fit" Target="_blank" />
+            </div>
+        }
     </div>
 
     <!-- Loading State -->
@@ -57,7 +67,7 @@
     @if (!isLoading && string.IsNullOrEmpty(errorMessage))
     {
         <div class="@(activeTab == "table" ? "" : "hidden")">
-            <StandingsTable Standings="finalStandings" />
+            <StandingsTable Standings="finalStandings" Title="@(ShowTitle ? $"{Year} World Fantasy Baseball Classic Standings" : null)" />
         </div>
 
         <div class="@(activeTab == "graph" ? "" : "hidden")">
@@ -89,6 +99,7 @@
     [Parameter] public bool ShowTitle { get; set; } = true;
     [Parameter] public bool ShowCacheInfo { get; set; } = false; // For debugging
     [Parameter] public string InitialTab { get; set; } = "table";
+    [Parameter] public string? RotowireUrl { get; set; }
 
     private string activeTab = "table";
     private bool isLoading = true;

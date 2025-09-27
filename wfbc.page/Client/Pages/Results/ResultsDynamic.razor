@@ -4,15 +4,8 @@
 @inject NavigationManager NavigationManager
 
 <div class="flex flex-col m-3 lg:m-6">
-    @if (!string.IsNullOrEmpty(rotowireUrl))
-    {
-        <div class="mb-0">
-            <Button ButtonText="Rotowire League" Href="@rotowireUrl" AriaLabel="view managers" MaxWidth="max-w-full" Target="_blank" />
-        </div>
-    }
-    
     <!-- Dynamic Standings Display -->
-    <StandingsDisplay Year="@Year.ToString()" ShowTitle="true" ShowCacheInfo="false" InitialTab="table" />
+    <StandingsDisplay Year="@Year.ToString()" ShowTitle="true" ShowCacheInfo="false" InitialTab="table" RotowireUrl="@rotowireUrl" />
 </div>
 
 @code {
