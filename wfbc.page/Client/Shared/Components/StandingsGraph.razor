@@ -4,12 +4,6 @@
 <div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
     @if (ProgressionData?.Count > 0)
     {
-        <!-- Graph Container -->
-        <div class="mb-4">
-            <h3 class="text-lg font-semibold text-wfbc-blue-2 mb-2">Points Progression Over Time - @Year</h3>
-            <p class="text-sm text-gray-600 mb-4">Track each team's total points throughout the season</p>
-        </div>
-
         <!-- Chart Canvas -->
         <div class="relative" style="height: 400px;">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
@@ -18,8 +12,7 @@
         <!-- Legend and Controls (Future Enhancement) -->
         <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
             <p class="text-xs text-gray-500 dark:text-gray-400">
-                <strong>Note:</strong> Interactive features (team filtering, date hover details) will be added in future updates.
-                Currently showing @teamCount teams with @dataPointCount total data points.
+                @teamCount teams with @dataPointCount total data points.
             </p>
         </div>
     }

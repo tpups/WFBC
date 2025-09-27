@@ -2,7 +2,9 @@
 module.exports = {
   content: [
     '../../Shared/**/*.{razor,js}',
-    '../../Pages/**/*.{razor,js}'
+    '../../Pages/**/*.{razor,js}',
+    '../../Shared/Components/**/*.{razor,js}',
+    '../../../Shared/**/*.{razor,js}'
   ],
   theme: {
     colors: {
@@ -50,11 +52,9 @@ module.exports = {
       '2xl': '1536px',
       // => @media (min-width: 1536px) { ... }
     },
-    plugins: [
-      require('@tailwindcss/forms')
-    ],
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms')
+  ],
 }
-

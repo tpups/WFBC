@@ -23,7 +23,7 @@
             <label class="block text-sm font-medium mb-2">Season Year:</label>
             <select @onchange="OnYearChanged" value="@selectedYear" 
                     class="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
-                @for (int year = DateTime.Now.Year - 5; year <= DateTime.Now.Year + 2; year++)
+                @for (int year = 2011; year <= DateTime.Now.Year; year++)
                 {
                     <option value="@year">@year</option>
                 }

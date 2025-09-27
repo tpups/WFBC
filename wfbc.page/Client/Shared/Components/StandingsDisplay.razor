@@ -11,12 +11,12 @@
     }
 
     <!-- Tab Navigation -->
-    <div class="flex mb-6 border-b border-wfbc-grey-1">
-        <button class="px-6 py-3 font-medium border-b-2 @(activeTab == "table" ? "border-wfbc-blue-1 text-wfbc-blue-1" : "border-transparent text-wfbc-grey-2 hover:text-wfbc-blue-2")"
+    <div class="flex mb-6">
+        <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "table" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
                 @onclick="@(() => SetActiveTab("table"))">
             Standings Table
         </button>
-        <button class="px-6 py-3 font-medium border-b-2 @(activeTab == "graph" ? "border-wfbc-blue-1 text-wfbc-blue-1" : "border-transparent text-wfbc-grey-2 hover:text-wfbc-blue-2")"
+        <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "graph" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
                 @onclick="@(() => SetActiveTab("graph"))">
             Points Over Time
         </button>
