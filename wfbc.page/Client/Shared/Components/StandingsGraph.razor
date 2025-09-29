@@ -4,8 +4,8 @@
 <div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
     @if (ProgressionData?.Count > 0)
     {
-        <!-- Chart Canvas -->
-        <div class="relative" style="height: 400px;">
+        <!-- Chart Canvas - Responsive Height -->
+        <div class="relative chart-container" id="chartContainer-@Year">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
         </div>
 
@@ -131,8 +131,9 @@
                 backgroundColor = color,
                 fill = false,
                 tension = 0.1,
-                pointRadius = 2,
-                pointHoverRadius = 5
+                borderWidth = 2, // Thinner lines for better mobile viewing
+                pointRadius = 1.5, // Smaller points
+                pointHoverRadius = 4
             });
 
             colorIndex++;
@@ -146,57 +147,99 @@
     }
 }
 
+<style>
+    .chart-container {
+        height: 300px;
+        position: relative;
+    }
+
+    .chart-container canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
+</style>
+
 <script>
+    let resizeTimeout;
+    let resizeListenerAttached = false;
+
+    function getResponsiveChartHeight() {
+        const width = window.innerWidth;
+        if (width >= 2560) return 900;
+        if (width >= 1920) return 800;
+        if (width >= 1536) return 700;
+        if (width >= 1280) return 600;
+        if (width >= 1024) return 500;
+        if (width >= 640) return 400;
+        return 300;
+    }
+
+    function setResponsiveChartHeight(containerId) {
+        const container = document.getElementById(containerId);
+        if (container) {
+            const height = getResponsiveChartHeight();
+            container.style.height = height + 'px';
+        }
+    }
+
     window.renderStandingsChart = function(canvasId, chartData) {
-        // Destroy existing chart if it exists
+        const containerId = canvasId.replace('standingsChart-', 'chartContainer-');
+        setResponsiveChartHeight(containerId);
+
         if (window.standingsCharts && window.standingsCharts[canvasId]) {
             window.standingsCharts[canvasId].destroy();
         }
 
-        // Initialize charts storage
         if (!window.standingsCharts) {
             window.standingsCharts = {};
         }
 
-        // Get canvas element
         const canvas = document.getElementById(canvasId);
         if (!canvas) {
             console.error('Canvas not found:', canvasId);
             return;
         }
 
+        if (!resizeListenerAttached) {
+            window.addEventListener('resize', function() {
+                clearTimeout(resizeTimeout);
+                resizeTimeout = setTimeout(function() {
+                    Object.keys(window.standingsCharts || {}).forEach(function(chartCanvasId) {
+                        const chartContainerId = chartCanvasId.replace('standingsChart-', 'chartContainer-');
+                        setResponsiveChartHeight(chartContainerId);
+                    });
+                }, 250);
+            });
+            resizeListenerAttached = true;
+        }
+
         const ctx = canvas.getContext('2d');
 
-        // Check if Chart.js is available
         if (typeof Chart === 'undefined') {
-            // Fallback: Create a simple text-based chart or load Chart.js dynamically
             console.warn('Chart.js not available. Implementing fallback...');
             renderFallbackChart(canvas, chartData);
             return;
         }
 
-        // Store original dataset order and data for reference
         const originalDatasets = [...chartData.datasets];
-        
-        // Order datasets by final standings (last date) for static legend
         const lastDateIndex = chartData.labels.length - 1;
         const datasetsOrderedByFinalStandings = originalDatasets.map((dataset, i) => ({
             datasetIndex: i,
             teamName: dataset.label,
             points: dataset.data[lastDateIndex] || 0,
             dataset: dataset
-        })).sort((a, b) => b.points - a.points); // Sort by final points descending
+        })).sort((a, b) => b.points - a.points);
         
-        // Update chart data to use final standings order for static legend
         chartData.datasets = datasetsOrderedByFinalStandings.map(item => item.dataset);
 
-        // Create Chart.js chart
         window.standingsCharts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: chartData,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                resizeDelay: 0,
                 plugins: {
                     title: {
                         display: false
@@ -205,22 +248,24 @@
                         display: true,
                         position: 'bottom',
                         labels: {
-                            boxWidth: 12,
-                            padding: 15,
+                            boxWidth: 10,
+                            padding: 8,
+                            font: {
+                                size: 11
+                            },
+                            usePointStyle: true,
                             generateLabels: function(chart) {
-                                // Generate labels in current dataset order
                                 return chart.data.datasets.map((dataset, i) => ({
                                     text: dataset.label,
                                     fillStyle: dataset.borderColor,
                                     strokeStyle: dataset.borderColor,
-                                    lineWidth: 2,
+                                    lineWidth: 1,
                                     hidden: !chart.isDatasetVisible(i),
                                     datasetIndex: i
                                 }));
                             }
                         },
                         onClick: function(e, legendItem, legend) {
-                            // Handle legend click to toggle dataset visibility
                             const chart = legend.chart;
                             const index = legendItem.datasetIndex;
                             chart.toggleDataVisibility(index);
@@ -230,7 +275,6 @@
                     tooltip: {
                         displayColors: true,
                         itemSort: function(a, b) {
-                            // Get all teams' standings at this date, sorted by points
                             const dateIndex = a.dataIndex;
                             const standingsAtDate = chartData.datasets.map((dataset, i) => ({
                                 team: dataset.label,
@@ -239,11 +283,10 @@
                                 datasetIndex: i
                             })).sort((x, y) => y.points - x.points);
                             
-                            // Get rankings for both teams
                             const aRank = standingsAtDate.findIndex(s => s.team === a.dataset.label);
                             const bRank = standingsAtDate.findIndex(s => s.team === b.dataset.label);
                             
-                            return aRank - bRank; // Sort by ranking (ascending)
+                            return aRank - bRank;
                         },
                         callbacks: {
                             title: function(context) {
@@ -251,7 +294,6 @@
                                 return `Standings for ${chartData.labels[dateIndex]}`;
                             },
                             label: function(context) {
-                                // Get all teams' standings at this date, sorted by points
                                 const dateIndex = context.dataIndex;
                                 const standingsAtDate = chartData.datasets.map((dataset, i) => ({
                                     team: dataset.label,
@@ -260,7 +302,6 @@
                                     datasetIndex: i
                                 })).sort((a, b) => b.points - a.points);
                                 
-                                // Find this team's ranking for this date
                                 const teamName = context.dataset.label;
                                 const teamRank = standingsAtDate.findIndex(s => s.team === teamName) + 1;
                                 const teamPoints = standingsAtDate.find(s => s.team === teamName)?.points || 0;
@@ -315,21 +356,14 @@
         const width = canvas.width;
         const height = canvas.height;
 
-        // Clear canvas
         ctx.clearRect(0, 0, width, height);
-        
-        // Set background
         ctx.fillStyle = '#f9fafb';
         ctx.fillRect(0, 0, width, height);
-
-        // Draw message
         ctx.fillStyle = '#6b7280';
         ctx.font = '16px sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText('Chart.js not loaded', width / 2, height / 2 - 20);
         ctx.fillText('Graph functionality requires Chart.js library', width / 2, height / 2 + 10);
-        
-        // Draw basic stats
         ctx.font = '12px sans-serif';
         ctx.fillText(`${chartData.datasets.length} teams • ${chartData.labels.length} data points`, width / 2, height / 2 + 40);
     }

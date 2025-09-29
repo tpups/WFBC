@@ -3,7 +3,7 @@
 @using WFBC.Client.Shared.Components
 @inject NavigationManager NavigationManager
 
-<div class="flex flex-col m-3 lg:m-6">
+<div class="block sm:flex sm:flex-col m-3 lg:m-6">
     <!-- Dynamic Standings Display -->
     <StandingsDisplay Year="@Year.ToString()" ShowTitle="true" ShowCacheInfo="false" InitialTab="table" RotowireUrl="@rotowireUrl" />
 </div>

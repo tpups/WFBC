@@ -4,21 +4,21 @@
 @using System.Threading
 @inject StandingsCacheService CacheService
 
-<div class="flex flex-col m-3 lg:m-6">
+<div class="block mx-0 my-2 sm:m-3 lg:m-6">
     
     @if (ShowTitle && activeTab != "table")
     {
-        <h2 class="text-2xl font-bold text-wfbc-blue-2 mb-4">@Year World Fantasy Baseball Classic Standings</h2>
+        <h2 class="text-xl sm:text-2xl font-bold text-wfbc-blue-2 mb-4">@Year World Fantasy Baseball Classic Standings</h2>
     }
 
-    <!-- Tab Navigation -->
-    <div class="flex justify-between items-center mb-6">
-        <div class="flex">
-            <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "table" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
+    <!-- Tab Navigation - Responsive Design -->
+    <div class="flex flex-row justify-between items-center mb-4 sm:mb-6 gap-2">
+        <div class="flex flex-col sm:flex-row flex-shrink-0">
+            <button class="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium rounded-t-lg sm:rounded-t-lg transition-colors @(activeTab == "table" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
                     @onclick="@(() => SetActiveTab("table"))">
                 Standings Table
             </button>
-            <button class="px-6 py-3 font-medium rounded-t-lg transition-colors @(activeTab == "graph" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
+            <button class="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium rounded-b-lg sm:rounded-t-lg sm:rounded-b-none transition-colors @(activeTab == "graph" ? "bg-wfbc-yellow-1 text-wfbc-black-1" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2")"
                     @onclick="@(() => SetActiveTab("graph"))">
                 Points Over Time
             </button>
@@ -26,8 +26,8 @@
         
         @if (!string.IsNullOrEmpty(RotowireUrl))
         {
-            <div class="mb-0">
-                <Button ButtonText="Rotowire League" Href="@RotowireUrl" AriaLabel="view rotowire league" MaxWidth="max-w-fit" Target="_blank" />
+            <div class="w-full sm:w-auto">
+                <Button ButtonText="🔗 Rotowire League" Href="@RotowireUrl" AriaLabel="view rotowire league" MaxWidth="w-full sm:max-w-fit" Target="_blank" />
             </div>
         }
     </div>

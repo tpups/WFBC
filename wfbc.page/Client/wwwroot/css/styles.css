@@ -18,7 +18,7 @@ body {
   display: inline-block;
   background-color: #13293d;
   overflow: hidden;
-  z-index: 2;
+  z-index: 25;
   flex: none;
 }
 
