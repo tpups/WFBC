@@ -1,9 +1,165 @@
 # Active Context
 
-## Current Task: Responsive Chart & Table Implementation - COMPLETE ✅
+## Current Task: Standings Table Responsive Design - NEARLY COMPLETE ✅
+**Status**: 🟡 **NEARLY COMPLETE** - Successfully implemented responsive container solution for standings table mobile/tablet display. One small tablet width issue remains.
+
+## Latest Accomplishments (September 29, 2025)
+
+### ✅ **Drawer Navigation Visibility Fix - COMPLETE**
+**Root Cause Resolution**: Successfully identified and fixed the core drawer navigation issue that prevented proper hiding when drawer was closed.
+
+#### **🔍 Root Cause Discovery**
+- **Original Issue**: Navigation items remained visible when drawer was closed on screen sizes 576px and above
+- **Investigative Process**: Compared current implementation with working GitHub repository
+- **Key Finding**: Drawer z-index was incorrectly set to `25` instead of original working value of `2`
+
+#### **⚡ Technical Solution**
+- **Z-Index Correction**: Reverted drawer z-index from `25` back to `2` in `_drawer.scss`
+- **Sticky Column Compatibility**: Lowered sticky teams column z-index from `10` to `1` in `StandingsTable.razor`
+- **Perfect Hierarchy**: Achieved proper layering: Main content (z-10) > Drawer nav (z-2) > Sticky column (z-1)
+
+#### **🎯 Results**
+- **Navigation Hidden**: Drawer navigation properly hidden when drawer closed on all screen sizes
+- **Sticky Columns Work**: Team column still functions correctly for horizontal scrolling
+- **Animation Preserved**: All smooth drawer transitions maintained
+- **Cross-Screen Compatibility**: Works uniformly across mobile, tablet, and desktop
+
+### ✅ **Responsive Standings Table Implementation - COMPLETE**
+**Mobile/Tablet Container Solution**: Successfully resolved table cutoff issues on devices narrower than 906px.
+
+#### **🐛 Problem Identified**
+- **Issue**: Standings table getting cut off on left side on mobile/tablet widths
+- **Root Cause**: Table minimum width of 900px exceeding device viewport width
+- **Affected Range**: All devices with width < 906.458px (mobile and tablet)
+
+#### **⚡ Technical Solution**
+- **Responsive Container**: Added `max-w-[calc(100vw-2rem)] lg:max-w-none` to table container
+- **Mobile/Tablet**: Container limited to viewport width minus margins, enables horizontal scroll
+- **Large Screens**: Unrestricted width for normal full-table display
+- **Smooth Scrolling**: Enhanced with `-webkit-overflow-scrolling: touch` for mobile
+
+#### **🎯 Results**
+- **No Content Loss**: All table data accessible via horizontal scroll on small devices
+- **Large Screen Optimized**: Normal layout when sufficient space available
+- **Sticky Column Preserved**: Team column remains visible during horizontal scroll
+- **Professional UX**: Smooth, intuitive scrolling experience across all devices
+
+### 🟡 **Remaining Issue: Tablet Width Drawer Interaction**
+**Status**: **IDENTIFIED** - One small issue remains on tablet widths where standings table is both compressed and covered when drawer expands.
+
+#### **Next Steps**
+1. Investigate tablet-specific drawer expansion behavior
+2. Ensure proper main content width calculation at tablet breakpoints
+3. Test drawer expansion/collapse on tablet widths (768px-1024px)
+4. Verify main content reflow when drawer state changes
+
+## Previous Task: Mobile Overscroll Prevention - COMPLETE ✅
+**Status**: ✅ **COMPLETE** - Successfully eliminated rubber banding (overscroll bounce) effect on mobile devices while maintaining smooth scrolling performance!
+
+## What We Just Accomplished (September 29, 2025)
+
+### ✅ **Mobile Overscroll Prevention - COMPLETE**
+**User Experience Enhancement**: Eliminated the rubber banding effect that occurs when users scroll past the edge of content on mobile devices.
+
+#### **🎯 Problem Addressed**
+- **Issue**: Mobile devices showed rubber banding/bounce effect when users scrolled beyond content boundaries
+- **Impact**: Created inconsistent, unprofessional user experience on mobile platforms
+- **User Request**: Stop the app from rubber banding on mobile devices
+
+#### **⚡ Technical Solution**
+- **CSS Implementation**: Added comprehensive overscroll prevention rules to `styles.scss`
+- **Global Prevention**: Applied `overscroll-behavior: none` to `html`, `body`, and `.main` elements
+- **Cross-Browser Support**: Included webkit-specific fallbacks for older iOS devices
+- **Mobile-Specific Rules**: Added media query targeting devices under 768px width
+
+#### **🔧 Implementation Details**
+**File Modified**: `wfbc.page/Client/styles/styles.scss`
+```css
+/* Prevent rubber banding/overscroll behavior on mobile devices */
+html, body {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overscroll-behavior: none;
+  -webkit-overscroll-behavior-y: none;
+}
+
+.main {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overscroll-behavior: none;
+  -webkit-overscroll-behavior-y: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  * {
+    overscroll-behavior: none;
+    -webkit-overscroll-behavior: none;
+  }
+  
+  body {
+    touch-action: pan-x pan-y;
+  }
+}
+```
+
+#### **📱 Enhanced Mobile Experience**
+- **No Rubber Banding**: Completely eliminates overscroll bounce effect
+- **Smooth Scrolling**: Maintains iOS smooth scrolling with `-webkit-overflow-scrolling: touch`
+- **Touch Optimization**: Enhanced touch responsiveness with `touch-action` properties
+- **Performance**: Lightweight CSS-only solution with no JavaScript overhead
+- **Compatibility**: Works across all modern mobile browsers (iOS Safari, Chrome Mobile, etc.)
+
+#### **🎨 User Experience Benefits**
+- **Professional Feel**: App behaves like native mobile applications
+- **Consistent Interaction**: Uniform scrolling behavior across all content areas
+- **No Distraction**: Users can focus on content without unwanted bounce effects
+- **Improved Accessibility**: More predictable scrolling behavior for all users
+
+### **Previous Task: Drawer Visibility Bug Fix - COMPLETE ✅**
+**Status**: ✅ **COMPLETE** - Successfully fixed drawer visibility issue at tablet landscape width (844px) while preserving mobile sticky column functionality!
+
+## What We Previously Accomplished (September 29, 2025)
+
+### ✅ **Drawer Visibility Bug Fix - COMPLETE**
+**Root Cause Resolution**: Fixed critical responsive layout issue where drawer navigation items remained visible when collapsed at 844px width (landscape mobile/tablet).
+
+#### **🐛 Problem Identified**
+- **Issue**: At 844px width (landscape mobile), drawer items remained visible despite drawer being collapsed to mini-drawer (128px width)
+- **Scope**: Only affected landscape mobile devices; portrait mobile (390px) worked correctly
+- **Timing**: Introduced during previous sticky column positioning fixes
+
+#### **🔍 Root Cause Analysis**
+- **Source**: Recent layout changes to fix sticky table columns inadvertently broke drawer behavior
+- **Technical Issue**: Changed main content div from `block sm:flex sm:flex-col lg:flex-row` where `block` display prevented proper drawer content constraint
+- **Impact**: At tablet breakpoint (640px-1024px), `block` layout caused navigation items to overflow mini-drawer boundaries
+
+#### **⚡ Technical Solution**
+- **Initial Fix**: Updated responsive breakpoints from `sm:flex` (640px+) to `md:flex` (768px+)
+- **Refined Fix**: Adjusted back to `sm:flex` (640px+) to accommodate iPhone SE landscape (667px)
+- **Files Modified**:
+  - `wfbc.page/Client/Shared/MainLayout.razor`: Changed to `block sm:flex sm:flex-col lg:flex-row`  
+  - `wfbc.page/Client/Pages/Results/ResultsDynamic.razor`: Changed to `block sm:flex sm:flex-col m-3 lg:m-6`
+- **Strategy**: Maintained `block` layout only for true mobile portrait (under 640px) where sticky column fix is needed
+- **Result**: Drawer properly constrains content on all landscape devices including iPhone SE (667px) while preserving sticky column functionality on mobile portrait
+
+#### **🎯 Comprehensive Testing Results**
+- **Mobile Portrait (390px)**: ✅ Drawer hidden, sticky columns work correctly
+- **Mobile Landscape (844px)**: ✅ Mini-drawer properly constrains navigation items
+- **Tablet (768px+)**: ✅ Mini-drawer functions as expected
+- **Desktop (1024px+)**: ✅ Full drawer maintains normal functionality
+- **Sticky Columns**: ✅ Continue to work correctly on mobile devices
+
+#### **🔧 Technical Architecture Impact**
+- **Responsive Design**: More precise breakpoint targeting for layout systems
+- **Layout Isolation**: Successfully separated drawer constraint logic from sticky positioning needs
+- **Cross-Feature Compatibility**: Maintained both mobile table scrolling and drawer functionality
+- **Future-Proof**: Solution accommodates various device orientations and screen sizes
+
+### **Previous Major Accomplishment: Responsive Chart & Table Implementation - COMPLETE ✅**
 **Status**: ✅ **COMPLETE** - Successfully implemented comprehensive responsive design for charts and tables with mobile sticky column functionality!
 
-## What We Just Accomplished (September 28-29, 2025)
+## What We Previously Accomplished (September 28-29, 2025)
 
 ### ✅ **Comprehensive Responsive Chart & Table Implementation - COMPLETE**
 **Full-Scale Responsive Design Enhancement**: Transformed standings charts and tables to be fully responsive across all device sizes with intelligent scaling and mobile-optimized interactions.

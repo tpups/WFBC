@@ -1,7 +1,7 @@
 @using WFBC.Shared.Models
 @inject IJSRuntime JSRuntime
 
-<div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 p-6">
+<div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 px-3 pt-6 pb-6 sm:p-6">
     @if (ProgressionData?.Count > 0)
     {
         <!-- Chart Canvas - Responsive Height -->
@@ -74,7 +74,7 @@
             var canvasId = $"standingsChart-{Year}";
 
             // Call JavaScript function to render the chart
-            await JSRuntime.InvokeVoidAsync("renderStandingsChart", canvasId, chartData);
+            await JSRuntime.InvokeVoidAsync("renderStandingsChart", canvasId, chartData, Year);
         }
         catch (Exception ex)
         {
@@ -172,7 +172,7 @@
         if (width >= 1280) return 600;
         if (width >= 1024) return 500;
         if (width >= 640) return 400;
-        return 300;
+        return 450; // Increased from 300 to 450 for better mobile experience
     }
 
     function setResponsiveChartHeight(containerId) {
@@ -183,7 +183,7 @@
         }
     }
 
-    window.renderStandingsChart = function(canvasId, chartData) {
+    window.renderStandingsChart = function(canvasId, chartData, year) {
         const containerId = canvasId.replace('standingsChart-', 'chartContainer-');
         setResponsiveChartHeight(containerId);
 
@@ -222,6 +222,17 @@
             return;
         }
 
+        // Mobile-specific adjustments
+        const isMobile = window.innerWidth < 640;
+        const borderWidth = isMobile ? 1.5 : 2; // Thinner lines on mobile
+        const pointRadius = isMobile ? 1 : 1.5; // Smaller points on mobile
+
+        // Update datasets with mobile-responsive styling
+        chartData.datasets.forEach(dataset => {
+            dataset.borderWidth = borderWidth;
+            dataset.pointRadius = pointRadius;
+        });
+
         const originalDatasets = [...chartData.datasets];
         const lastDateIndex = chartData.labels.length - 1;
         const datasetsOrderedByFinalStandings = originalDatasets.map((dataset, i) => ({
@@ -242,16 +253,25 @@
                 resizeDelay: 0,
                 plugins: {
                     title: {
-                        display: false
+                        display: true,
+                        text: year + ' World Fantasy Baseball Classic Standings',
+                        font: {
+                            size: isMobile ? 14 : 16,
+                            weight: 'bold'
+                        },
+                        color: '#1e40af', // WFBC blue
+                        padding: {
+                            bottom: isMobile ? 10 : 15
+                        }
                     },
                     legend: {
                         display: true,
                         position: 'bottom',
                         labels: {
-                            boxWidth: 10,
-                            padding: 8,
+                            boxWidth: isMobile ? 8 : 10,
+                            padding: isMobile ? 6 : 8,
                             font: {
-                                size: 11
+                                size: isMobile ? 10 : 11
                             },
                             usePointStyle: true,
                             generateLabels: function(chart) {
@@ -332,7 +352,7 @@
                         display: true,
                         title: {
                             display: true,
-                            text: 'Total Points'
+                            text: isMobile ? 'Points' : 'Total Points'
                         },
                         grid: {
                             color: '#e5e7eb'
