@@ -28,22 +28,25 @@ namespace WFBC.Client
         }
         // <992px landscape phones, tablets, small desktop windows
         public bool IsMedium { get; private set; }
-        public void SetIsMedium(bool tablet)
-        {
-            if (tablet == true)
-            {
-                IsMedium = true;
-                IsXSmall = false;
-                IsLarge = false;
-                DrawerClosed = false;
-                DrawerMinified = true;
-                DrawerCssClass = "drawer-mini";
-                SideMenuCssClass = "slide-out";
-                DrawerActive = "active";
-                Minified = "minified";
-                NotifyStateChanged();
-            }
-        }
+        
+        // COMMENTED OUT - Using mobile behavior up to 900px instead of tablet logic
+        // public void SetIsMedium(bool tablet)
+        // {
+        //     if (tablet == true)
+        //     {
+        //         IsMedium = true;
+        //         IsXSmall = false;
+        //         IsLarge = false;
+        //         DrawerClosed = false;
+        //         DrawerMinified = true;
+        //         DrawerCssClass = "drawer-mini";
+        //         SideMenuCssClass = "slide-out";
+        //         MobileCssClass = "tablet";
+        //         DrawerActive = "active";
+        //         Minified = "minified";
+        //         NotifyStateChanged();
+        //     }
+        // }
         public bool IsLarge { get; private set; }
         public void SetIsLarge(bool large)
         {

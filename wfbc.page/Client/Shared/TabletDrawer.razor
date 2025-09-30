@@ -2,11 +2,12 @@
 
 @* the only purpose here is to set state *@
 @* was not working in MainLayout - issue w/ infinite loops *@
+@* COMMENTED OUT - Using mobile behavior up to 900px instead of tablet logic *@
 
 @code {
     protected override void OnInitialized()
     {
-        AppState.SetIsMedium(true);
+        // AppState.SetIsMedium(true);  // Commented out - removed tablet logic
         AppState.OnChange += StateHasChanged;
     }
 
