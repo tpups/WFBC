@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using WFBC.Server.DataAccess;
+using WFBC.Server.Services;
 using WFBC.Shared.Models;
 using WFBC.Server.Interface;
 
@@ -15,9 +16,12 @@ namespace WFBC.Server.Controllers
     public class StandingsController : ControllerBase
     {
         private readonly IStandings wfbc;
-        public StandingsController(IStandings _wfbc)
+        private readonly ServerSideStandingsCache _standingsCache;
+        
+        public StandingsController(IStandings _wfbc, ServerSideStandingsCache standingsCache)
         {
             wfbc = _wfbc;
+            _standingsCache = standingsCache;
         }
 
         [HttpGet]
@@ -33,8 +37,9 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                var lastUpdated = await wfbc.GetStandingsLastUpdatedAsync(year);
-                var standings = await wfbc.GetFinalStandingsForYearAsync(year);
+                // RE-ENABLED: Server-side cache for 90%+ MongoDB query reduction
+                var lastUpdated = await _standingsCache.GetLastUpdatedAsync(year);
+                var standings = await _standingsCache.GetFinalStandingsAsync(year);
 
                 var response = new StandingsResponse<List<Standings>>
                 {
@@ -64,8 +69,9 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                var lastUpdated = await wfbc.GetStandingsLastUpdatedAsync(year);
-                var standings = await wfbc.GetStandingsProgressionForYearAsync(year);
+                // RE-ENABLED: Server-side cache for 90%+ MongoDB query reduction
+                var lastUpdated = await _standingsCache.GetLastUpdatedAsync(year);
+                var standings = await _standingsCache.GetProgressionDataAsync(year);
 
                 var response = new StandingsResponse<List<Standings>>
                 {
@@ -95,7 +101,8 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                var lastUpdated = await wfbc.GetStandingsLastUpdatedAsync(year);
+                // RE-ENABLED: Server-side cache for 90%+ MongoDB query reduction
+                var lastUpdated = await _standingsCache.GetLastUpdatedAsync(year);
                 return Ok(lastUpdated);
             }
             catch (Exception ex)

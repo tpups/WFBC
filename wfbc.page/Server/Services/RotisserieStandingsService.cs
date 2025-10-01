@@ -17,12 +17,14 @@ namespace WFBC.Server.Services
         private readonly WfbcDBContext _db;
         private readonly IHubContext<ProgressHub> _hubContext;
         private readonly ISeasonSettings _seasonSettings;
+        private readonly ServerSideStandingsCache _standingsCache;
 
-        public RotisserieStandingsService(WfbcDBContext db, IHubContext<ProgressHub> hubContext, ISeasonSettings seasonSettings)
+        public RotisserieStandingsService(WfbcDBContext db, IHubContext<ProgressHub> hubContext, ISeasonSettings seasonSettings, ServerSideStandingsCache standingsCache)
         {
             _db = db;
             _hubContext = hubContext;
             _seasonSettings = seasonSettings;
+            _standingsCache = standingsCache;
         }
 
         public async Task<List<Standings>> CalculateStandingsForDate(string year, DateTime date, List<SeasonTeam> teams)
@@ -102,6 +104,20 @@ namespace WFBC.Server.Services
                 await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", completedMessage);
             }
             progress?.Report(completedMessage);
+            
+            // CRITICAL: Invalidate server-side cache after standings calculation
+            // This ensures fresh data is served on the next request
+            _standingsCache.InvalidateYearCache(year);
+            
+            // Generate compiled documents for optimized performance
+            var compilationMessage = "Generating compiled standings documents for optimized performance...";
+            if (!string.IsNullOrEmpty(progressGroupId))
+            {
+                await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", compilationMessage);
+            }
+            progress?.Report(compilationMessage);
+            
+            await GenerateCompiledDocumentsAsync(year, allStandings, cancellationToken);
             
             return allStandings;
         }
@@ -890,6 +906,142 @@ namespace WFBC.Server.Services
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Generate compiled documents for optimized performance
+        /// Replaces thousands of individual documents with 2 optimized documents
+        /// </summary>
+        private async Task GenerateCompiledDocumentsAsync(string year, List<Standings> allStandings, CancellationToken cancellationToken)
+        {
+            var compilationStart = DateTime.UtcNow;
+            
+            try
+            {
+                Console.WriteLine($"[CompiledStandings] Starting compilation for year {year} with {allStandings.Count} standings records");
+                
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Extract final standings (latest date for each team)
+                var finalStandings = allStandings
+                    .GroupBy(s => s.TeamId)
+                    .Select(g => g.OrderByDescending(s => s.Date).First())
+                    .OrderByDescending(s => s.TotalPoints)
+                    .ToList();
+
+                // Create compiled final standings document
+                var compiledFinal = new CompiledFinalStandings
+                {
+                    Year = year,
+                    Type = "final_standings",
+                    CompiledAt = DateTime.UtcNow,
+                    SourceLastUpdated = allStandings.Max(s => s.LastUpdatedAt),
+                    FinalStandings = finalStandings,
+                    Metadata = new CompilationMetadata
+                    {
+                        SourceDocumentsProcessed = allStandings.Count,
+                        TeamsCount = finalStandings.Count,
+                        DateRangeStart = allStandings.Min(s => s.Date),
+                        DateRangeEnd = allStandings.Max(s => s.Date),
+                        CompilationDurationMs = 0, // Will be set after completion
+                        CompilationVersion = "1.0"
+                    }
+                };
+
+                // Create compiled progression data document
+                var progressionData = allStandings
+                    .OrderBy(s => s.Date)
+                    .ThenBy(s => s.TeamId)
+                    .ToList();
+
+                var compiledProgression = new CompiledProgressionData
+                {
+                    Year = year,
+                    Type = "progression_data",
+                    CompiledAt = DateTime.UtcNow,
+                    SourceLastUpdated = allStandings.Max(s => s.LastUpdatedAt),
+                    ProgressionData = progressionData,
+                    Metadata = new CompilationMetadata
+                    {
+                        SourceDocumentsProcessed = allStandings.Count,
+                        TeamsCount = finalStandings.Count,
+                        DateRangeStart = allStandings.Min(s => s.Date),
+                        DateRangeEnd = allStandings.Max(s => s.Date),
+                        CompilationDurationMs = 0, // Will be set after completion
+                        CompilationVersion = "1.0"
+                    }
+                };
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Save compiled final standings
+                var finalCollection = _db.CompiledFinalStandings[year];
+                var finalFilter = Builders<CompiledFinalStandings>.Filter.And(
+                    Builders<CompiledFinalStandings>.Filter.Eq("year", year),
+                    Builders<CompiledFinalStandings>.Filter.Eq("type", "final_standings")
+                );
+
+                var existingFinal = await finalCollection.Find(finalFilter).FirstOrDefaultAsync(cancellationToken);
+                if (existingFinal != null)
+                {
+                    // Update existing document
+                    compiledFinal.Id = existingFinal.Id;
+                    await finalCollection.ReplaceOneAsync(f => f.Id == compiledFinal.Id, compiledFinal, cancellationToken: cancellationToken);
+                    Console.WriteLine($"[CompiledStandings] Updated existing final standings document for {year}");
+                }
+                else
+                {
+                    // Insert new document
+                    await finalCollection.InsertOneAsync(compiledFinal, cancellationToken: cancellationToken);
+                    Console.WriteLine($"[CompiledStandings] Created new final standings document for {year}");
+                }
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                // Save compiled progression data
+                var progressionCollection = _db.CompiledProgressionData[year];
+                var progressionFilter = Builders<CompiledProgressionData>.Filter.And(
+                    Builders<CompiledProgressionData>.Filter.Eq("year", year),
+                    Builders<CompiledProgressionData>.Filter.Eq("type", "progression_data")
+                );
+
+                var existingProgression = await progressionCollection.Find(progressionFilter).FirstOrDefaultAsync(cancellationToken);
+                if (existingProgression != null)
+                {
+                    // Update existing document
+                    compiledProgression.Id = existingProgression.Id;
+                    await progressionCollection.ReplaceOneAsync(p => p.Id == compiledProgression.Id, compiledProgression, cancellationToken: cancellationToken);
+                    Console.WriteLine($"[CompiledStandings] Updated existing progression data document for {year}");
+                }
+                else
+                {
+                    // Insert new document
+                    await progressionCollection.InsertOneAsync(compiledProgression, cancellationToken: cancellationToken);
+                    Console.WriteLine($"[CompiledStandings] Created new progression data document for {year}");
+                }
+
+                var compilationEnd = DateTime.UtcNow;
+                var duration = (compilationEnd - compilationStart).TotalMilliseconds;
+
+                Console.WriteLine($"[CompiledStandings] Successfully compiled standings for {year}:");
+                Console.WriteLine($"  - Final standings: {finalStandings.Count} teams");
+                Console.WriteLine($"  - Progression data: {progressionData.Count} records");
+                Console.WriteLine($"  - Source documents: {allStandings.Count} → 2 compiled documents");
+                Console.WriteLine($"  - Compilation time: {duration:F0}ms");
+                Console.WriteLine($"  - Performance improvement: {(allStandings.Count / 2.0):F0}x fewer documents to query");
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"[CompiledStandings] Compilation cancelled for year {year}");
+                throw;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CompiledStandings] Error compiling standings for year {year}: {ex.Message}");
+                Console.WriteLine($"[CompiledStandings] Stack trace: {ex.StackTrace}");
+                // Don't throw - compilation failure shouldn't break standings calculation
+                // The system will fall back to individual document queries
             }
         }
     }

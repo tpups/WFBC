@@ -59,7 +59,8 @@ namespace WFBC.Client
             builder.Services.AddSingleton<AppState>();
 
             // Register StandingsCacheService with PublicClient for standings data
-            builder.Services.AddScoped<StandingsCacheService>(sp => 
+            // Use Singleton for performance - cache is now properly isolated by year
+            builder.Services.AddSingleton<StandingsCacheService>(sp => 
                 new StandingsCacheService(sp.GetRequiredService<PublicClient>().Client));
 
             builder.Services.AddMediaQueryService();

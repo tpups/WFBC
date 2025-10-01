@@ -83,8 +83,12 @@ namespace WFBC.Server
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
             services.AddTransient<ISeasonSettings, SeasonSettingsDataAccessLayer>();
+            // Memory Cache
+            services.AddMemoryCache();
+            
             // Services
             services.AddTransient<RotisserieStandingsService>();
+            services.AddTransient<ServerSideStandingsCache>();
 
             // SignalR
             services.AddSignalR();

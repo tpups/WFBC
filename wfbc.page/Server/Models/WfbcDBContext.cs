@@ -104,5 +104,31 @@ namespace WFBC.Server.Models
                 return _boxScores;
             }
         }
+        public Dictionary<string, IMongoCollection<CompiledFinalStandings>> CompiledFinalStandings
+        {
+            get
+            {
+                Dictionary<string, IMongoCollection<CompiledFinalStandings>> _compiledFinal = new Dictionary<string, IMongoCollection<CompiledFinalStandings>>();
+                for (int i = _settings.StartYear; i <= _settings.EndYear; i++)
+                {
+                    string year = i.ToString();
+                    _compiledFinal.Add(year, _dbs[year].GetCollection<CompiledFinalStandings>("compiled_standings"));
+                }
+                return _compiledFinal;
+            }
+        }
+        public Dictionary<string, IMongoCollection<CompiledProgressionData>> CompiledProgressionData
+        {
+            get
+            {
+                Dictionary<string, IMongoCollection<CompiledProgressionData>> _compiledProgression = new Dictionary<string, IMongoCollection<CompiledProgressionData>>();
+                for (int i = _settings.StartYear; i <= _settings.EndYear; i++)
+                {
+                    string year = i.ToString();
+                    _compiledProgression.Add(year, _dbs[year].GetCollection<CompiledProgressionData>("compiled_standings"));
+                }
+                return _compiledProgression;
+            }
+        }
     }
 }
