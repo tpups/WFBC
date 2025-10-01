@@ -5,6 +5,7 @@ using WFBC.Shared.Models;
 using WFBC.Server.Models;
 using WFBC.Server.Interface;
 using MongoDB.Driver;
+using MongoDB.Bson;
 
 namespace WFBC.Server.DataAccess
 {
@@ -48,6 +49,8 @@ namespace WFBC.Server.DataAccess
         {
             try
             {
+                // Generate a new ObjectId for new documents
+                seasonSettings.Id = ObjectId.GenerateNewId().ToString();
                 seasonSettings.CreatedAt = DateTime.UtcNow;
                 seasonSettings.UpdatedAt = DateTime.UtcNow;
                 _db.Settings.InsertOne(seasonSettings);
@@ -64,7 +67,24 @@ namespace WFBC.Server.DataAccess
             try
             {
                 seasonSettings.UpdatedAt = DateTime.UtcNow;
-                _db.Settings.ReplaceOne(filter: s => s.Year == seasonSettings.Year, replacement: seasonSettings);
+                
+                // Check if this is an existing document or a new one
+                var existingSettings = GetSeasonSettings(seasonSettings.Year);
+                
+                if (existingSettings != null)
+                {
+                    // Update existing document - preserve the existing Id
+                    seasonSettings.Id = existingSettings.Id;
+                    seasonSettings.CreatedAt = existingSettings.CreatedAt; // Preserve original creation date
+                    _db.Settings.ReplaceOne(filter: s => s.Year == seasonSettings.Year, replacement: seasonSettings);
+                }
+                else
+                {
+                    // Create new document - generate a new ObjectId
+                    seasonSettings.Id = ObjectId.GenerateNewId().ToString();
+                    seasonSettings.CreatedAt = DateTime.UtcNow;
+                    _db.Settings.ReplaceOne(filter: s => s.Year == seasonSettings.Year, replacement: seasonSettings, options: new ReplaceOptions { IsUpsert = true });
+                }
             }
             catch
             {

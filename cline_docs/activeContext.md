@@ -1,6 +1,45 @@
 # Active Context
 
-## Current Task: Complete Performance Optimization System - ULTIMATE SUCCESS ✅
+## Current Task: Season Dates Saving Bug Fix - COMPLETE ✅
+**Status**: ✅ **COMPLETE** - Successfully fixed critical season settings persistence bug that prevented new year settings from saving to database!
+
+## Latest Accomplishment (September 30, 2025)
+
+### ✅ **Season Dates Saving Bug Fix - COMPLETE**
+**Critical Database Persistence Issue Resolved**: Fixed the bug where season date settings would show "saved successfully" but not persist to the database for new years.
+
+#### **🐛 Problem Identified**
+- **Issue**: Season settings for years like 2019 would show "Season settings saved successfully!" but not save to database
+- **Root Cause**: `UpdateSeasonSettings()` used MongoDB's `ReplaceOne()` without upsert option
+- **Impact**: `ReplaceOne()` only replaces existing documents, silently fails when no document exists for that year
+- **User Experience**: Misleading success message with settings reverting to defaults on reload
+
+#### **⚡ Technical Solution**
+- **File Modified**: `wfbc.page/Server/DataAccess/SeasonSettingsDataAccessLayer.cs`
+- **Primary Fix**: Added `options: new ReplaceOptions { IsUpsert = true }` to `ReplaceOne()` method
+- **Secondary Fix**: Added proper ObjectId generation for new documents to prevent duplicate key errors
+- **Final Fix**: Both `AddSeasonSettings` and `UpdateSeasonSettings` now generate unique ObjectIds
+- **Result**: MongoDB creates new documents with proper ObjectIds when they don't exist, updates existing ones when they do
+- **Backward Compatibility**: Existing functionality for years like 2023 unchanged
+
+#### **🎯 Implementation Details**
+**Before**:
+```csharp
+_db.Settings.ReplaceOne(filter: s => s.Year == seasonSettings.Year, replacement: seasonSettings);
+```
+
+**After**:
+```csharp
+_db.Settings.ReplaceOne(filter: s => s.Year == seasonSettings.Year, replacement: seasonSettings, options: new ReplaceOptions { IsUpsert = true });
+```
+
+#### **🏅 User Experience Impact**
+- **Reliable Persistence**: Season settings now save correctly for all years (new and existing)
+- **Consistent Behavior**: Success message now accurately reflects actual database operations
+- **Commissioner Confidence**: No more confusion about settings that appear to save but don't persist
+- **Future-Proof**: Works for any year without requiring separate Add/Update logic
+
+### **Previous Task: Complete Performance Optimization System - ULTIMATE SUCCESS ✅**
 **Status**: ✅ **ULTIMATE SUCCESS** - Successfully implemented enterprise-grade performance optimization system with bulletproof caching architecture and instant user experience!
 
 ## Latest Accomplishments (September 30, 2025)
