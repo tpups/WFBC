@@ -52,7 +52,8 @@ namespace WFBC.Client.Pages.Commish
             try
             {
                 availableYears = await AuthorizedClient.Client.GetFromJsonAsync<List<string>>("/api/RotisserieStandings/years");
-                selectedYear = availableYears.LastOrDefault() ?? "";
+                // Don't auto-select - let user choose
+                // selectedYear = availableYears.LastOrDefault() ?? "";
             }
             catch (Exception ex)
             {
@@ -258,11 +259,22 @@ namespace WFBC.Client.Pages.Commish
             }
         }
 
-        protected void OnYearChanged(ChangeEventArgs e)
+
+        protected void OnYearSelectionChanged(ChangeEventArgs e)
         {
-            selectedYear = e.Value?.ToString() ?? "";
+            var newValue = e.Value?.ToString() ?? "";
+            
+            // Debug logging
+            Console.WriteLine($"[DEBUG] Year selection changed: '{selectedYear}' -> '{newValue}'");
+            
+            selectedYear = newValue;
             calculationMessage = "";
             errorMessage = "";
+            
+            // Force component refresh
+            StateHasChanged();
+            
+            Console.WriteLine($"[DEBUG] After StateHasChanged: selectedYear = '{selectedYear}'");
         }
 
         protected async Task CancelCalculation()

@@ -94,11 +94,22 @@
                         {
                             var standing = Standings[i];
                             var rank = i + 1;
-                            var rowClass = rank <= 3 ? "bg-wfbc-yellow-1 bg-opacity-20" : (rank % 2 == 0 ? "bg-wfbc-grey-1 bg-opacity-30" : "bg-wfbc-white-1");
+                            var rowClass = rank switch {
+                                1 => "bg-gold",           // Gold
+                                2 => "bg-silver",         // Silver  
+                                3 => "bg-bronze",         // Bronze
+                                _ => "bg-wfbc-grey-1 bg-opacity-20"  // Consistent for 4+
+                            };
+                            var stickyColumnClass = rank switch {
+                                1 => "bg-gold",           // Gold
+                                2 => "bg-silver",         // Silver
+                                3 => "bg-bronze",         // Bronze
+                                _ => "bg-wfbc-grey-1 bg-opacity-20"  // Consistent for 4+
+                            };
                             
                             <tr class="group @rowClass">
                                 <!-- Team Info (Enhanced Sticky) -->
-                                <td class="sticky left-0 z-1 px-2 sm:px-4 py-2 sm:py-3 border-r border-wfbc-grey-2 shadow-md w-[120px] sm:w-[140px] @(rank <= 3 ? "bg-wfbc-yellow-1" : (rank % 2 == 0 ? "bg-wfbc-grey-1" : "bg-wfbc-white-1"))" style="min-width: 120px; left: 0; position: sticky; touch-action: pan-y;">
+                                <td class="sticky left-0 z-1 px-2 sm:px-4 py-2 sm:py-3 border-r border-wfbc-grey-2 shadow-md w-[120px] sm:w-[140px] @stickyColumnClass" style="min-width: 120px; left: 0; position: sticky; touch-action: pan-y;">
                                     <div class="flex items-center">
                                         <div class="flex-shrink-0 w-6 h-6 sm:w-8 sm:h-8 bg-wfbc-blue-1 text-white rounded-full flex items-center justify-center text-xs sm:text-sm font-bold">
                                             @rank
