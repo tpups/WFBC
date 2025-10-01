@@ -12,8 +12,15 @@
         <div class="relative col-start-1 col-end-5">
             <h2 class="text-3xl lg:text-4xl xl:text-5xl text-center align-middle text-wfbc-yellow-1 relative top-1 md:top-1.5 lg:top-1 xl:top-0">WFBC Champions</h2>
         </div>
+        
+        <NavLink @onclick="ChangeNavSection" class="col-start-1" href="/results/2025">
+            <div class="border rounded-md relative bg-wfbc-blue-2 hover:bg-wfbc-blue-1 border-wfbc-white-1">
+                <h2 class="text-xs md:text-sm text-center text-wfbc-yellow-1">2025</h2>
+                <h3 class="text-xl md:text-3xl text-center text-wfbc-white-1 relative bottom-1 md:bottom-2">Tyler</h3>
+            </div>
+        </NavLink>
 
-        <NavLink @onclick="ChangeNavSection" class="col-start-1" href="/results/2024">
+        <NavLink @onclick="ChangeNavSection" href="/results/2024">
             <div class="border rounded-md relative bg-wfbc-blue-2 hover:bg-wfbc-blue-1 border-wfbc-white-1">
                 <h2 class="text-xs md:text-sm text-center text-wfbc-yellow-1">2024</h2>
                 <h3 class="text-xl md:text-3xl text-center text-wfbc-white-1 relative bottom-1 md:bottom-2">Mark</h3>

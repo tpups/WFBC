@@ -17,7 +17,7 @@
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2011">2011 Rulebook</NavLink></li>
                 break;
             case "results":
-                for (int year = 2024; year >= 2011; year--)
+                for (int year = 2025; year >= 2011; year--)
                 {
                     string yearString = year.ToString();
                     <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href=@("/results/" + yearString)>@yearString Results</NavLink></li>

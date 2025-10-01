@@ -1,9 +1,67 @@
 # Active Context
 
-## Current Task: 2019 Standings Calculator Case Sensitivity Fix - COMPLETE ✅
-**Status**: ✅ **COMPLETE** - Successfully fixed MongoDB field name case sensitivity issues preventing 2019 standings calculation!
+## Current Task: Saves Field Mapping Fix - COMPLETE ✅
+**Status**: ✅ **COMPLETE** - Successfully fixed saves field mapping issue causing both 2019 and 2022 to show 0 saves for all teams!
 
 ## Latest Accomplishment (September 30, 2025)
+
+### ✅ **Saves Field Mapping Fix - COMPLETE**
+**Critical Field Mapping Correction**: Fixed reversed saves field mappings that caused both 2019 and 2022 standings calculations to show 0 saves for all teams.
+
+#### **🐛 Problem Identified**
+- **Issue**: Both 2019 and 2022 standings showed 0 saves for all teams after calculation
+- **Root Cause**: Field mappings were completely backwards from actual MongoDB data structure
+  - **Previous (Incorrect)**: 2019 → "SV" field, 2020+ → "S" field
+  - **Actual MongoDB Data**: 2019 → "S" field, 2020+ → "SV" field
+- **Impact**: Complete failure of saves statistics across all affected years
+
+#### **⚡ Technical Solution**
+- **Box Model Correction**: Fixed BSON element mappings in `wfbc.page/Shared/Models/Box.cs`
+  - Swapped field mappings: `Saves` property now maps to "SV" (2020+), `SavesAlternate` maps to "S" (2019)
+- **Service Logic Updates**: Updated all saves processing in `wfbc.page/Server/Services/RotisserieStandingsService.cs`
+  - Fixed `GetPitchingStatValue` method to correctly map "S" → `SavesAlternate` (2019), "SV" → `Saves` (2020+)
+  - Updated all pitching categories arrays across multiple methods to use correct field names
+
+#### **🎯 Implementation Details**
+**Before (Incorrect)**:
+```csharp
+[BsonElement("S")]
+public object? Saves { get; set; } // For 2020+
+[BsonElement("SV")]  
+public object? SavesAlternate { get; set; } // For 2019
+
+"S" => box.Saves, // For 2020+
+"SV" => box.SavesAlternate, // For 2019
+```
+
+**After (Correct)**:
+```csharp
+[BsonElement("SV")]
+public object? Saves { get; set; } // For 2020+
+[BsonElement("S")]
+public object? SavesAlternate { get; set; } // For 2019
+
+"S" => box.SavesAlternate, // For 2019
+"SV" => box.Saves, // For 2020+
+```
+
+#### **🔧 Methods Updated**
+- `GetPitchingStatValue`: Fixed stat-to-property mapping logic
+- `CalculateStandingsForDate`: Updated pitching categories arrays
+- `ProcessIncrementalStandings`: Fixed year-specific field name handling
+- `GetTeamTotals`: Corrected pStats arrays for proper aggregation
+- `ProcessDailyPitchingData`: Fixed daily processing field mappings
+
+#### **🏅 User Experience Impact**
+- **Restored Saves Statistics**: Both 2019 and 2022 now correctly process and display saves totals
+- **Accurate Points Calculation**: Saves category now contributes proper points to team standings
+- **Cross-Year Consistency**: Field mapping logic now correctly handles different data structures by year
+- **Data Integrity**: All historical and current year calculations now process saves accurately
+
+### **Previous Task: 2019 Standings Calculator Case Sensitivity Fix - COMPLETE ✅**
+**Status**: ✅ **COMPLETE** - Successfully fixed MongoDB field name case sensitivity issues preventing 2019 standings calculation!
+
+## Previous Accomplishment (September 30, 2025)
 
 ### ✅ **2019 Standings Calculator Case Sensitivity Fix - COMPLETE**
 **MongoDB Field Name Mismatch Resolution**: Fixed critical case sensitivity issues that caused "Element 'Avg' does not match any field" errors when calculating 2019 standings.

@@ -139,10 +139,10 @@ namespace WFBC.Shared.Models
         [BsonElement("QS")]
         public object? QualityStarts { get; set; }
 
-        [BsonElement("S")]
+        [BsonElement("SV")]
         public object? Saves { get; set; } // For 2020+
 
-        [BsonElement("SV")]
+        [BsonElement("S")]
         public object? SavesAlternate { get; set; } // For 2019
 
         [BsonElement("HB")]

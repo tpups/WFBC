@@ -38,8 +38,8 @@ namespace WFBC.Server.Services
 
             var hittingCategories = new[] { "AVG", "OPS", "R", "SB", "HR", "RBI" };
             var pitchingCategories = year == "2019" 
-                ? new[] { "ERA", "WHIP", "IP", "K", "SV", "QS" }
-                : new[] { "ERA", "WHIP", "IP", "K", "S", "QS" };
+                ? new[] { "ERA", "WHIP", "IP", "K", "S", "QS" }
+                : new[] { "ERA", "WHIP", "IP", "K", "SV", "QS" };
 
             var hittingPoints = CalculateHittingPoints(teamTotals, hittingCategories, teams.Count);
             var pitchingPoints = CalculatePitchingPoints(teamTotals, pitchingCategories, teams.Count);
@@ -187,8 +187,8 @@ namespace WFBC.Server.Services
 
                 // Aggregate pitching stats - using same field names as Python script
                 var pStats = year == "2019" 
-                    ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" }
-                    : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" };
+                    ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" }
+                    : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" };
 
                 foreach (var score in pitchBoxScores)
                 {
@@ -332,8 +332,8 @@ namespace WFBC.Server.Services
                 "HB" => box.HitBatters,
                 "K" => box.Strikeouts,
                 "QS" => box.QualityStarts,
-                "S" => box.Saves, // For 2020+
-                "SV" => box.SavesAlternate, // For 2019
+                "S" => box.SavesAlternate, // For 2019
+                "SV" => box.Saves, // For 2020+
                 _ => null
             };
 
@@ -733,8 +733,8 @@ namespace WFBC.Server.Services
 
             var hittingCategories = new[] { "AVG", "OPS", "R", "SB", "HR", "RBI" };
             var pitchingCategories = year == "2019" 
-                ? new[] { "ERA", "WHIP", "IP", "K", "SV", "QS" }
-                : new[] { "ERA", "WHIP", "IP", "K", "S", "QS" };
+                ? new[] { "ERA", "WHIP", "IP", "K", "S", "QS" }
+                : new[] { "ERA", "WHIP", "IP", "K", "SV", "QS" };
 
             // Process each day incrementally
             for (var date = startDate; date <= endDate; date = date.AddDays(1))
@@ -816,8 +816,8 @@ namespace WFBC.Server.Services
             Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals, string year)
         {
             var pStats = year == "2019" 
-                ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" }
-                : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" };
+                ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" }
+                : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" };
 
             foreach (var score in dailyBoxScores)
             {

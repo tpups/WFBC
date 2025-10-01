@@ -22,7 +22,7 @@
         { 2022, 4 },
         { 2023, 13 },
         { 2024, 62 },
-        { 2025, 62 } // Assuming same pattern continues
+        { 2025, 177 } // Assuming same pattern continues
     };
 
     protected override void OnParametersSet()
@@ -41,7 +41,7 @@
             var leagueId = LeagueIds[Year];
             
             // Handle different URL patterns
-            if (Year == 2024)
+            if (Year >= 2024)
             {
                 rotowireUrl = $"https://www.rotowire.com/mlbcommish24/league.php?leagueID={leagueId}";
             }
