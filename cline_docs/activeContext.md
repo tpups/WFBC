@@ -1,9 +1,65 @@
 # Active Context
 
-## Current Task: Season Dates Saving Bug Fix - COMPLETE ✅
-**Status**: ✅ **COMPLETE** - Successfully fixed critical season settings persistence bug that prevented new year settings from saving to database!
+## Current Task: 2019 Standings Calculator Case Sensitivity Fix - COMPLETE ✅
+**Status**: ✅ **COMPLETE** - Successfully fixed MongoDB field name case sensitivity issues preventing 2019 standings calculation!
 
 ## Latest Accomplishment (September 30, 2025)
+
+### ✅ **2019 Standings Calculator Case Sensitivity Fix - COMPLETE**
+**MongoDB Field Name Mismatch Resolution**: Fixed critical case sensitivity issues that caused "Element 'Avg' does not match any field" errors when calculating 2019 standings.
+
+#### **🐛 Problem Identified**
+- **Issue**: 2019 standings calculator failed with MongoDB deserialization error during "Preview Data"
+- **Root Cause**: Case sensitivity mismatches in MongoDB field names between 2019 and later years
+  - **Batting Average**: 2019 uses "Avg" (mixed case) vs 2020+ using "AVG" (uppercase)
+  - **Saves**: 2019 uses "SV" vs 2020+ using "S" 
+- **Impact**: Complete failure of 2019 standings calculation functionality
+
+#### **⚡ Technical Solution**
+- **Box Model Enhancement**: Added targeted property mappings in `wfbc.page/Shared/Models/Box.cs`
+  - Added `Average2019` property with `[BsonElement("Avg")]` for case-insensitive batting average handling
+  - Corrected saves field mappings: `Saves` → "S" (2020+), `SavesAlternate` → "SV" (2019)
+- **Service Logic Updates**: Updated `wfbc.page/Server/Services/RotisserieStandingsService.cs`
+  - Fixed `GetPitchingStatValue` method to correctly map saves fields by year
+  - Updated all pitching categories arrays to use "SV" for 2019, "S" for 2020+
+  - Corrected field mappings in `GetTeamTotals`, `ProcessIncrementalStandings`, and `ProcessDailyPitchingData` methods
+
+#### **🎯 Implementation Details**
+**Before**:
+```csharp
+[BsonElement("SV")]
+public object? Saves { get; set; }
+[BsonElement("S")]
+public object? SavesAlternate { get; set; } // For 2019
+```
+
+**After**:
+```csharp
+[BsonElement("S")]
+public object? Saves { get; set; } // For 2020+
+[BsonElement("SV")]
+public object? SavesAlternate { get; set; } // For 2019
+
+// Handle 2019 case sensitivity issue where batting average is stored as "Avg" instead of "AVG"
+[BsonElement("Avg")]
+[BsonIgnoreIfNull]
+public string? Average2019 
+{ 
+    get => Average; 
+    set => Average = value ?? Average; 
+}
+```
+
+#### **🏅 User Experience Impact**
+- **Restored Functionality**: 2019 standings calculation now works without MongoDB deserialization errors
+- **Year-Specific Handling**: Proper field mapping for both 2019 and 2020+ data structures
+- **Backwards Compatible**: All existing years (2020+) continue to function correctly
+- **Clean Architecture**: Targeted solution without complex global MongoDB configuration changes
+
+### **Previous Task: Season Dates Saving Bug Fix - COMPLETE ✅**
+**Status**: ✅ **COMPLETE** - Successfully fixed critical season settings persistence bug that prevented new year settings from saving to database!
+
+## Previous Accomplishment (September 30, 2025)
 
 ### ✅ **Season Dates Saving Bug Fix - COMPLETE**
 **Critical Database Persistence Issue Resolved**: Fixed the bug where season date settings would show "saved successfully" but not persist to the database for new years.

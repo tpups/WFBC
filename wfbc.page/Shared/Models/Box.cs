@@ -117,6 +117,15 @@ namespace WFBC.Shared.Models
         [BsonElement("AVG")]
         public string? Average { get; set; }
 
+        // Handle 2019 case sensitivity issue where batting average is stored as "Avg" instead of "AVG"
+        [BsonElement("Avg")]
+        [BsonIgnoreIfNull]
+        public string? Average2019 
+        { 
+            get => Average; 
+            set => Average = value ?? Average; 
+        }
+
         [BsonElement("OPS")]
         public string? OnBasePlusSlugging { get; set; }
 
@@ -130,10 +139,10 @@ namespace WFBC.Shared.Models
         [BsonElement("QS")]
         public object? QualityStarts { get; set; }
 
-        [BsonElement("SV")]
-        public object? Saves { get; set; }
-
         [BsonElement("S")]
+        public object? Saves { get; set; } // For 2020+
+
+        [BsonElement("SV")]
         public object? SavesAlternate { get; set; } // For 2019
 
         [BsonElement("HB")]
