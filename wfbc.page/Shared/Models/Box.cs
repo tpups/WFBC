@@ -1,7 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices;
 
 namespace WFBC.Shared.Models
 {
@@ -11,60 +10,175 @@ namespace WFBC.Shared.Models
         [BsonRepresentation(BsonType.ObjectId)]
         public string? Id { get; set; }
 
-        [Required]
-        public DateTime? CreatedAt { get; set; }
+        // Team and player identification
+        [BsonElement("teamID")]
+        public string? TeamId { get; set; }
 
-        [Required]
-        public DateTime? LastUpdatedAt { get; set; }
+        [BsonElement("player")]
+        public string? Player { get; set; }
 
-        public string? ManagerId { get; set; }
+        [BsonElement("firstname")]
+        public string? FirstName { get; set; }
 
-        public DateOnly Date { get; set; }
+        [BsonElement("lastname")]
+        public string? LastName { get; set; }
 
+        [BsonElement("newsID")]
+        public string? NewsId { get; set; }
 
-        public class HittingBox
-        {
-            //Hitting
-            public int? GamesPlayed { get; set; }
-            public int? PlateAppearances { get; set; }
-            public int? AtBats { get; set; }
-            public int? Hits { get; set; }
-            public int? Doubles { get; set; }
-            public int? Triples { get; set; }
-            public int? HomeRuns { get; set; }
-            public int? Walks { get; set; }
-            public int? Strikeouts { get; set; }
-            public int? HitByPitch { get; set; }
-            public int? StolenBases { get; set; }
-            public int? CaughtStealing { get; set; }
-            public int? Runs { get; set; }
-            public int? RunsBattedIn { get; set; }
-            public int? SacrificeFlies { get; set; }
+        [BsonElement("injury")]
+        public string? Injury { get; set; }
 
-            //public decimal? Average { get; set; }
-            //public decimal? OnBasePlusSlugging { get; set; }
+        [BsonElement("slot")]
+        public string? Slot { get; set; }
+
+        [BsonElement("team")]
+        public string? Team { get; set; }
+
+        [BsonElement("position")]
+        public string? Position { get; set; }
+
+        [BsonElement("dnp")]
+        public string? DidNotPlay { get; set; }
+
+        [BsonElement("opponent")]
+        public string? Opponent { get; set; }
+
+        [BsonElement("result")]
+        public string? Result { get; set; }
+
+        [BsonElement("gameID")]
+        public string? GameId { get; set; }
+
+        [BsonElement("gameDate")]
+        public string? GameDate { get; set; }
+
+        [BsonElement("currentlyBatting")]
+        public string? CurrentlyBatting { get; set; }
+
+        [BsonElement("currentlyPitching")]
+        public string? CurrentlyPitching { get; set; }
+
+        [BsonElement("onBase")]
+        public string? OnBase { get; set; }
+
+        [BsonElement("confirmed")]
+        public string? Confirmed { get; set; }
+
+        [BsonElement("stats_date")]
+        public string? StatsDate { get; set; }
+
+        [BsonElement("download_date")]
+        public string? DownloadDate { get; set; }
+
+        // Hitting stats (for team_box_hitting collection)
+        [BsonElement("PA")]
+        public object? PlateAppearances { get; set; }
+
+        [BsonElement("AB")]
+        public object? AtBats { get; set; }
+
+        [BsonElement("H")]
+        public object? Hits { get; set; }
+
+        [BsonElement("2B")]
+        public object? Doubles { get; set; }
+
+        [BsonElement("3B")]
+        public object? Triples { get; set; }
+
+        [BsonElement("HR")]
+        public object? HomeRuns { get; set; }
+
+        [BsonElement("R")]
+        public object? Runs { get; set; }
+
+        [BsonElement("RBI")]
+        public object? RunsBattedIn { get; set; }
+
+        [BsonElement("SB")]
+        public object? StolenBases { get; set; }
+
+        [BsonElement("CS")]
+        public object? CaughtStealing { get; set; }
+
+        [BsonElement("BB")]
+        public object? Walks { get; set; }
+
+        [BsonElement("K")]
+        public object? Strikeouts { get; set; }
+
+        [BsonElement("HBP")]
+        public object? HitByPitch { get; set; }
+
+        [BsonElement("SF")]
+        public object? SacrificeFlies { get; set; }
+
+        [BsonElement("AVG")]
+        public string? Average { get; set; }
+
+        // Handle 2019 case sensitivity issue where batting average is stored as "Avg" instead of "AVG"
+        [BsonElement("Avg")]
+        [BsonIgnoreIfNull]
+        public string? Average2019 
+        { 
+            get => Average; 
+            set => Average = value ?? Average; 
         }
 
-        public class PitchingBox
-        {
-            public int? GamesPlayed { get; set; }
-            public int? InningsPitched { get; set; }
-            public int? Hits { get; set; }
-            public int? Strikeouts { get; set; }
-            public int? Walks { get; set; }
-            public int? HitBatters { get; set; }
-            public int? Runs { get; set; }
-            public int? EarnedRuns { get; set; }
-            public int? HomeRuns { get; set; }
-            public int? WildPitches { get; set; }
-            public int? QualityStarts { get; set; }
-            public int? Saves { get; set; }
-            public int? BlownSaves { get; set; }
-            public int? Wins { get; set; }
-            public int? Losses { get; set; }
+        [BsonElement("OPS")]
+        public string? OnBasePlusSlugging { get; set; }
 
-            //public decimal? EarnedRunAverage { get; set; }
-            //public decimal? WalksAndHitsPerInningPitched { get; set; }
-        }
+        // Pitching stats (for team_box_pitching collection)
+        [BsonElement("IP")]
+        public string? InningsPitched { get; set; }
+
+        [BsonElement("ER")]
+        public object? EarnedRuns { get; set; }
+
+        [BsonElement("QS")]
+        public object? QualityStarts { get; set; }
+
+        [BsonElement("SV")]
+        public object? Saves { get; set; } // For 2020+
+
+        [BsonElement("S")]
+        public object? SavesAlternate { get; set; } // For 2019
+
+        [BsonElement("HB")]
+        public object? HitBatters { get; set; }
+
+        [BsonElement("GP")]
+        public object? GamesPlayed { get; set; }
+
+        [BsonElement("GS")]
+        public object? GamesStarted { get; set; }
+
+        [BsonElement("W")]
+        public object? Wins { get; set; }
+
+        [BsonElement("L")]
+        public object? Losses { get; set; }
+
+        [BsonElement("BS")]
+        public object? BlownSaves { get; set; }
+
+        [BsonElement("WP")]
+        public object? WildPitches { get; set; }
+
+        [BsonElement("ERA")]
+        public string? EarnedRunAverage { get; set; }
+
+        [BsonElement("WHIP")]
+        public string? WalksAndHitsPerInningPitched { get; set; }
+
+        [BsonElement("points")]
+        public object? Points { get; set; }
+
+        [BsonElement("updates")]
+        public List<string>? Updates { get; set; }
+
+        [BsonElement("pitches")]
+        public object? Pitches { get; set; }
     }
 }

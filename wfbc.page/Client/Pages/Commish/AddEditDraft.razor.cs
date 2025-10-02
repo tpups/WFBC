@@ -6,11 +6,6 @@ using WFBC.Shared.Models;
 using Microsoft.AspNetCore.Components;
 using System.Net.Http;
 using System.Net.Http.Json;
-using Amazon.Runtime.Internal.Transform;
-using MongoDB.Bson.IO;
-using System.Text.Json.Serialization;
-using System.Text.Json;
-using MongoDB.Bson;
 
 namespace WFBC.Client.Pages.Commish
 {
@@ -45,6 +40,13 @@ namespace WFBC.Client.Pages.Commish
                 draft.CreatedAt = DateTime.Now;
                 draft.LastUpdatedAt = draft.CreatedAt;
                 HttpResponseMessage draftResponse = await AuthorizedClient.Client.PostAsJsonAsync("/api/draft/", draft);
+                
+                if (!draftResponse.IsSuccessStatusCode)
+                {
+                    string errorContent = await draftResponse.Content.ReadAsStringAsync();
+                    return $"Error creating draft: {draftResponse.StatusCode} - {errorContent}";
+                }
+                
                 string newDraftID = await draftResponse.Content.ReadAsStringAsync();
 
                 List<Manager> _managers = managers.FindAll(m => m.Status == "Active");
@@ -74,8 +76,21 @@ namespace WFBC.Client.Pages.Commish
                 }
 
                 HttpResponseMessage picksResponse = await AuthorizedClient.Client.PostAsJsonAsync("/api/pick/", picks);
-                string _newPickIDs = await picksResponse.Content.ReadAsStringAsync();
-                List<string> newPickIDs = JsonSerializer.Deserialize<string[]>(_newPickIDs).ToList();
+                
+                if (!picksResponse.IsSuccessStatusCode)
+                {
+                    string errorContent = await picksResponse.Content.ReadAsStringAsync();
+                    return $"Error creating picks: {picksResponse.StatusCode} - {errorContent}";
+                }
+                
+                string[] _newPickIDs = await picksResponse.Content.ReadFromJsonAsync<string[]>();
+                
+                if (_newPickIDs == null || _newPickIDs.Length == 0)
+                {
+                    return "Error: No pick IDs returned from server";
+                }
+                
+                List<string> newPickIDs = _newPickIDs.ToList();
 
                 draft = await AuthorizedClient.Client.GetFromJsonAsync<Draft>("/api/draft/" + newDraftID);
                 draft.Picks = newPickIDs;

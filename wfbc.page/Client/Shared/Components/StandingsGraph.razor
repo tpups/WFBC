@@ -1,0 +1,539 @@
+@using WFBC.Shared.Models
+@inject IJSRuntime JSRuntime
+@inject AppState AppState
+
+<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-6 sm:p-6">
+    @if (ProgressionData?.Count > 0)
+    {
+        <!-- Chart Canvas - Desktop Contained -->
+        <div class="w-full max-w-[calc(100vw-0.5rem)] h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
+            <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
+        </div>
+
+        <!-- Legend and Controls (Future Enhancement) -->
+        <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
+            <p class="text-xs text-gray-500 dark:text-gray-400">
+                @teamCount teams with @dataPointCount total data points.
+            </p>
+        </div>
+    }
+    else
+    {
+        <div class="p-8 text-center text-gray-500">
+            <div class="mb-4">
+                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+            </div>
+            <p class="text-lg font-medium">No progression data available</p>
+            <p class="text-sm">Ensure standings have been calculated with daily data.</p>
+        </div>
+    }
+</div>
+
+@implements IDisposable
+
+@code {
+    [Parameter] public List<Standings> ProgressionData { get; set; } = new();
+    [Parameter] public string Year { get; set; } = "2023";
+
+    private int teamCount = 0;
+    private int dataPointCount = 0;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to AppState changes for drawer state
+        AppState.OnChange += OnDrawerStateChanged;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && ProgressionData?.Count > 0)
+        {
+            await RenderChart();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (ProgressionData?.Count > 0)
+        {
+            UpdateDataStats();
+            
+            // Re-render chart if data changed
+            await Task.Delay(100); // Small delay to ensure DOM is ready
+            await RenderChart();
+        }
+    }
+
+    private async void OnDrawerStateChanged()
+    {
+        // Re-render chart when drawer state changes to adjust sizing
+        if (ProgressionData?.Count > 0)
+        {
+            await Task.Delay(300); // Wait for drawer animation to complete
+            await RenderChart();
+        }
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from AppState changes
+        AppState.OnChange -= OnDrawerStateChanged;
+    }
+
+    private void UpdateDataStats()
+    {
+        teamCount = ProgressionData.Select(s => s.TeamId).Distinct().Count();
+        dataPointCount = ProgressionData.Count;
+    }
+
+    private async Task RenderChart()
+    {
+        try
+        {
+            if (ProgressionData?.Count == 0) return;
+
+            // Prepare data for Chart.js
+            var chartData = PrepareChartData();
+            var canvasId = $"standingsChart-{Year}";
+
+            // Prepare drawer state info for JavaScript
+            var drawerState = new
+            {
+                IsClosed = AppState.DrawerClosed,
+                IsMinified = AppState.DrawerMinified,
+                IsDesktop = AppState.IsLarge, // Use IsLarge for desktop detection
+                IsXSmall = AppState.IsXSmall,
+                IsMedium = AppState.IsMedium,
+                DrawerCssClass = AppState.DrawerCssClass
+            };
+
+            // Debug logging
+            Console.WriteLine($"Chart render - DrawerClosed: {AppState.DrawerClosed}, DrawerMinified: {AppState.DrawerMinified}, IsLarge: {AppState.IsLarge}");
+            Console.WriteLine($"DrawerCssClass: {AppState.DrawerCssClass}");
+
+            // Call JavaScript function to render the chart with drawer state
+            await JSRuntime.InvokeVoidAsync("renderStandingsChart", canvasId, chartData, Year, drawerState);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering chart: {ex.Message}");
+        }
+    }
+
+    private object PrepareChartData()
+    {
+        // Group data by team and sort by date
+        var teamData = ProgressionData
+            .GroupBy(s => s.TeamId)
+            .ToDictionary(
+                g => g.Key,
+                g => g.OrderBy(s => s.Date).ToList()
+            );
+
+        // Get all unique dates and sort them
+        var allDates = ProgressionData
+            .Select(s => s.Date)
+            .Distinct()
+            .OrderBy(d => d)
+            .ToList();
+
+        // Define colors for teams using the chart palette
+        var colors = new[]
+        {
+            "#ffcb51", "#a188ff", "#c2ff48", "#e41973", "#c199bc", "#da5fce",
+            "#de704b", "#baba00", "#008eab", "#74c664", "#bba775", "#89cbb3"
+        };
+
+        // Create datasets for each team
+        var datasets = new List<object>();
+        int colorIndex = 0;
+
+        foreach (var team in teamData)
+        {
+            var teamStandings = team.Value;
+            var teamName = teamStandings.FirstOrDefault()?.TeamName ?? $"Team {team.Key}";
+            var color = colors[colorIndex % colors.Length];
+
+            // Create data points for each date
+            var dataPoints = allDates.Select(date =>
+            {
+                var standing = teamStandings.FirstOrDefault(s => s.Date.Date == date.Date);
+                return standing?.TotalPoints ?? 0;
+            }).ToArray();
+
+            datasets.Add(new
+            {
+                label = teamName,
+                data = dataPoints,
+                borderColor = color,
+                backgroundColor = color,
+                fill = false,
+                tension = 0.1,
+                borderWidth = 2, // Thinner lines for better mobile viewing
+                pointRadius = 1.5, // Smaller points
+                pointHoverRadius = 4
+            });
+
+            colorIndex++;
+        }
+
+        return new
+        {
+            labels = allDates.Select(d => d.ToString("MM/dd")).ToArray(),
+            datasets = datasets
+        };
+    }
+}
+
+<style>
+    .chart-container {
+        position: relative;
+        /* Remove fixed height - let JavaScript handle all sizing */
+    }
+
+    .chart-container canvas {
+        display: block;
+        width: 100% !important;
+        height: 100% !important;
+    }
+
+    /* Portrait mode optimizations for narrow devices - ID-based override */
+    @@media screen and (orientation: portrait) and (max-width: 400px) {
+        div[id^="chartContainer-"] {
+            max-width: calc(100vw - 2rem) !important;
+            width: calc(100vw - 2rem) !important;
+        }
+    }
+
+    /* Desktop containment - 992px and above */
+    @@media screen and (min-width: 992px) {
+        div[id^="chartContainer-"] {
+            max-width: calc(100vw - 6rem) !important;
+            width: calc(100vw - 6rem) !important;
+        }
+    }
+
+    /* Universal landscape mode optimizations - All devices */
+    @@media screen and (orientation: landscape) {
+        div[id^="chartContainer-"] {
+            height: 90vh !important;
+            max-width: calc(100vw - 3rem) !important;
+            width: calc(100vw - 3rem) !important;
+        }
+        
+        /* Apply padding only to chart component in landscape mode */
+        .chart-component-container.border-2.border-wfbc-blue-2 {
+            padding: 0.5rem !important;
+            margin: 0 !important;
+        }
+        
+        /* Ensure table component has no padding in landscape mode */
+        .border-2.border-wfbc-blue-2:not(.chart-component-container) {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        /* Hide the info section in landscape to save space */
+        .mt-4.p-3.bg-gray-50,
+        .mt-4.p-3.bg-gray-700 {
+            display: none !important;
+        }
+    }
+
+    /* Desktop landscape mode - override universal landscape for larger margins */
+    @@media screen and (orientation: landscape) and (min-width: 992px) {
+        div[id^="chartContainer-"] {
+            max-width: calc(100vw - 6rem) !important;
+            width: calc(100vw - 6rem) !important;
+        }
+    }
+</style>
+
+<script>
+    window.renderStandingsChart = function(canvasId, chartData, year, drawerState) {
+        if (window.standingsCharts && window.standingsCharts[canvasId]) {
+            window.standingsCharts[canvasId].destroy();
+        }
+
+        if (!window.standingsCharts) {
+            window.standingsCharts = {};
+        }
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error('Canvas not found:', canvasId);
+            return;
+        }
+
+        const containerId = canvasId.replace('standingsChart-', 'chartContainer-');
+        const container = document.getElementById(containerId);
+
+        const ctx = canvas.getContext('2d');
+
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js not available. Implementing fallback...');
+            renderFallbackChart(canvas, chartData);
+            return;
+        }
+
+        // Mobile, desktop, and orientation-specific adjustments
+        const isMobile = window.innerWidth < 640;
+        const isLandscape = window.innerWidth > window.innerHeight;
+        const borderWidth = isMobile ? 1.5 : 2; // Thinner lines on mobile
+        const pointRadius = isMobile ? 1 : 1.5; // Smaller points on mobile
+        
+        // Mobile-first container width adjustments (restore original perfect mobile logic)
+        if (container) {
+            if (isMobile) {
+                // Mobile mode: restore original perfect logic (drawer doesn't affect mobile)
+                if (window.innerWidth <= 400) {
+                    // For narrow devices up to 400px, provide margin for border visibility
+                    const chartWidth = Math.max(window.innerWidth - 32, 300); // Minimum 300px, with 32px total margin
+                    container.style.minWidth = chartWidth + 'px';
+                    container.style.width = 'calc(100vw - 2rem)';
+                } else {
+                    // Set a minimum width that gives us the extra ~22px needed
+                    container.style.minWidth = '400px';
+                    container.style.width = 'calc(100vw - 0.25rem)';
+                }
+            } else if (drawerState && drawerState.isDesktop) {
+                // Desktop: Calculate margin based on actual drawer state
+                let totalMargin = 0;
+                if (drawerState.isClosed) {
+                    totalMargin = 128; // More conservative margin to ensure no horizontal scroll when closed
+                } else if (drawerState.isMinified) {
+                    totalMargin = 128 + 128; // 128px drawer + 128px safety = 256px
+                } else {
+                    totalMargin = 256 + 128; // 256px drawer + 128px safety = 384px
+                }
+                
+                const maxWidth = Math.max(window.innerWidth - totalMargin, 300); // Minimum 300px
+                
+                container.style.setProperty('max-width', maxWidth + 'px', 'important');
+                container.style.setProperty('width', `calc(100vw - ${totalMargin}px)`, 'important');
+                container.style.setProperty('min-width', 'auto', 'important'); // Remove any conflicting minWidth
+                
+                console.log(`🖥️ Desktop mode: Total margin=${totalMargin}px, Chart width=${maxWidth}px`);
+            } else {
+                // Tablet mode: standard margins
+                const maxWidth = Math.max(window.innerWidth - 48, 300); // 48px total margin (3rem), minimum 300px
+                container.style.maxWidth = maxWidth + 'px';
+                container.style.width = 'calc(100vw - 3rem)';
+                container.style.minWidth = 'auto'; // Remove any conflicting minWidth
+            }
+        }
+
+        // Update datasets with mobile-responsive styling
+        chartData.datasets.forEach(dataset => {
+            dataset.borderWidth = borderWidth;
+            dataset.pointRadius = pointRadius;
+        });
+
+        const originalDatasets = [...chartData.datasets];
+        const lastDateIndex = chartData.labels.length - 1;
+        const datasetsOrderedByFinalStandings = originalDatasets.map((dataset, i) => ({
+            datasetIndex: i,
+            teamName: dataset.label,
+            points: dataset.data[lastDateIndex] || 0,
+            dataset: dataset
+        })).sort((a, b) => b.points - a.points);
+        
+        chartData.datasets = datasetsOrderedByFinalStandings.map(item => item.dataset);
+
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                resizeDelay: 0,
+                layout: {
+                    padding: {
+                        left: isMobile ? 5 : 20,
+                        right: isMobile ? 5 : 20,
+                        top: isLandscape ? 2 : (isMobile ? 5 : 20),     // Minimal top padding in landscape
+                        bottom: isLandscape ? 2 : (isMobile ? 5 : 20)   // Minimal bottom padding in landscape
+                    }
+                },
+                plugins: {
+                    title: {
+                        display: true,
+                        text: year + ' World Fantasy Baseball Classic Standings',
+                        font: {
+                            size: isLandscape ? 12 : (isMobile ? 14 : 16),  // Smaller title in landscape
+                            weight: 'bold'
+                        },
+                        color: '#1e40af', // WFBC blue
+                        padding: {
+                            bottom: isLandscape ? 5 : (isMobile ? 10 : 15)  // Minimal title padding in landscape
+                        }
+                    },
+                    legend: {
+                        display: true,
+                        position: 'bottom',
+                        labels: {
+                            boxWidth: isMobile ? 8 : 10,
+                            padding: isLandscape ? 4 : (isMobile ? 6 : 8),  // Compact legend in landscape
+                            font: {
+                                size: isLandscape ? 9 : (isMobile ? 10 : 11),  // Smaller legend text in landscape
+                            },
+                            usePointStyle: true,
+                            generateLabels: function(chart) {
+                                return chart.data.datasets.map((dataset, i) => ({
+                                    text: dataset.label,
+                                    fillStyle: dataset.borderColor,
+                                    strokeStyle: dataset.borderColor,
+                                    lineWidth: 1,
+                                    hidden: !chart.isDatasetVisible(i),
+                                    datasetIndex: i
+                                }));
+                            }
+                        },
+                        onClick: function(e, legendItem, legend) {
+                            const chart = legend.chart;
+                            const index = legendItem.datasetIndex;
+                            chart.toggleDataVisibility(index);
+                            chart.update();
+                        }
+                    },
+                    tooltip: {
+                        displayColors: true,
+                        itemSort: function(a, b) {
+                            const dateIndex = a.dataIndex;
+                            const standingsAtDate = chartData.datasets.map((dataset, i) => ({
+                                team: dataset.label,
+                                points: dataset.data[dateIndex] || 0,
+                                color: dataset.borderColor,
+                                datasetIndex: i
+                            })).sort((x, y) => y.points - x.points);
+                            
+                            const aRank = standingsAtDate.findIndex(s => s.team === a.dataset.label);
+                            const bRank = standingsAtDate.findIndex(s => s.team === b.dataset.label);
+                            
+                            return aRank - bRank;
+                        },
+                        callbacks: {
+                            title: function(context) {
+                                const dateIndex = context[0].dataIndex;
+                                return `Standings for ${chartData.labels[dateIndex]}`;
+                            },
+                            label: function(context) {
+                                const dateIndex = context.dataIndex;
+                                const standingsAtDate = chartData.datasets.map((dataset, i) => ({
+                                    team: dataset.label,
+                                    points: dataset.data[dateIndex] || 0,
+                                    color: dataset.borderColor,
+                                    datasetIndex: i
+                                })).sort((a, b) => b.points - a.points);
+                                
+                                const teamName = context.dataset.label;
+                                const teamRank = standingsAtDate.findIndex(s => s.team === teamName) + 1;
+                                const teamPoints = standingsAtDate.find(s => s.team === teamName)?.points || 0;
+                                
+                                return `${teamRank}. ${teamName}: ${teamPoints} pts`;
+                            },
+                            labelColor: function(context) {
+                                return {
+                                    borderColor: context.dataset.borderColor,
+                                    backgroundColor: context.dataset.borderColor
+                                };
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: !isMobile, // Hide y-axis title on mobile to save space
+                            text: 'Total Points',
+                            padding: { left: 15, right: 15 },
+                            font: {
+                                size: 12
+                            }
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        },
+                        ticks: {
+                            padding: isMobile ? 2 : 10, // Minimal padding on mobile
+                            font: {
+                                size: isMobile ? 9 : 11 // Even smaller font on mobile
+                            },
+                            maxTicksLimit: isMobile ? 6 : 8 // Fewer ticks on mobile
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                hover: {
+                    mode: 'index',
+                    intersect: false
+                }
+            }
+        });
+
+        // Store the chart
+        window.standingsCharts[canvasId] = chart;
+
+        // More aggressive approach: recreate chart on orientation change (like tab click does)
+        let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+        
+        function handleOrientationChange() {
+            const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            
+            if (currentOrientation !== lastOrientation) {
+                lastOrientation = currentOrientation;
+                
+                // Completely recreate chart (like tab click does)
+                setTimeout(function() {
+                    if (chart && !chart.destroyed) {
+                        chart.destroy();
+                    }
+                    
+                    // Wait for CSS to settle, then recreate
+                    setTimeout(function() {
+                        window.renderStandingsChart(canvasId, chartData, year);
+                    }, 100);
+                }, 200);
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', handleOrientationChange);
+        window.addEventListener('resize', function() {
+            setTimeout(handleOrientationChange, 300);
+        });
+    };
+
+    function renderFallbackChart(canvas, chartData) {
+        const ctx = canvas.getContext('2d');
+        const width = canvas.width;
+        const height = canvas.height;
+
+        ctx.clearRect(0, 0, width, height);
+        ctx.fillStyle = '#f9fafb';
+        ctx.fillRect(0, 0, width, height);
+        ctx.fillStyle = '#6b7280';
+        ctx.font = '16px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText('Chart.js not loaded', width / 2, height / 2 - 20);
+        ctx.fillText('Graph functionality requires Chart.js library', width / 2, height / 2 + 10);
+        ctx.font = '12px sans-serif';
+        ctx.fillText(`${chartData.datasets.length} teams • ${chartData.labels.length} data points`, width / 2, height / 2 + 40);
+    }
+</script>

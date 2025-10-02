@@ -2,7 +2,9 @@
 module.exports = {
   content: [
     '../../Shared/**/*.{razor,js}',
-    '../../Pages/**/*.{razor,js}'
+    '../../Pages/**/*.{razor,js}',
+    '../../Shared/Components/**/*.{razor,js}',
+    '../../../Shared/**/*.{razor,js}'
   ],
   theme: {
     colors: {
@@ -17,6 +19,10 @@ module.exports = {
       'wfbc-yellow-1': '#ffc93c',
       'wfbc-grey-1': '#b9cdda',
       'wfbc-grey-2': '#9db5b2',
+      // Medal colors for podium positions
+      'gold': '#ffd700',
+      'silver': '#c0c0c0',
+      'bronze': '#cd7f32',
       'chart-palette-a-0': '#ffcb51',
       'chart-palette-a-1': '#a188ff',
       'chart-palette-a-2': '#c2ff48',
@@ -50,11 +56,9 @@ module.exports = {
       '2xl': '1536px',
       // => @media (min-width: 1536px) { ... }
     },
-    plugins: [
-      require('@tailwindcss/forms')
-    ],
     extend: {},
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/forms')
+  ],
 }
-

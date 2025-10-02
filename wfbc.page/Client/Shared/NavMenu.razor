@@ -6,15 +6,18 @@
         switch (NavMenuSection)
         {
             case "rulebook":
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2025">2025 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2024">2024 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2023">2023 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2022">2022 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2021">2021 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2020">2020 Rulebook</NavLink></li>
                 <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2016">2016 Rulebook</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2014">2014 Rulebook</NavLink></li>
+                <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href="/rulebook/2011">2011 Rulebook</NavLink></li>
                 break;
             case "results":
-                for (int year = 2024; year >= 2011; year--)
+                for (int year = 2025; year >= 2011; year--)
                 {
                     string yearString = year.ToString();
                     <li class="nav-menu-item right-column-item"><NavLink @onclick="CloseOnMobile" href=@("/results/" + yearString)>@yearString Results</NavLink></li>

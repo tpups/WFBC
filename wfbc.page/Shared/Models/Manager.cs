@@ -1,7 +1,6 @@
 ﻿using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using System.ComponentModel.DataAnnotations;
-using static MongoDB.Driver.WriteConcern;
 
 namespace WFBC.Shared.Models
 {

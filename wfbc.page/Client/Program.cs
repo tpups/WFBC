@@ -11,6 +11,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WFBC.Shared.Models;
+using WFBC.Client.Services;
 using BlazorPro.BlazorSize;
 using Microsoft.AspNetCore.Components.Authorization;
 
@@ -25,7 +26,11 @@ namespace WFBC.Client
 
             builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) });
 
-            builder.Services.AddHttpClient<AuthorizedClient>(client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress))
+            builder.Services.AddHttpClient<AuthorizedClient>(client => 
+                {
+                    client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress);
+                    client.Timeout = TimeSpan.FromMinutes(15); // Extended timeout for long-running operations
+                })
                 .AddHttpMessageHandler(sp => sp.GetRequiredService<AuthorizationMessageHandler>()
                     .ConfigureHandler(
                         authorizedUrls: new[] { builder.HostEnvironment.BaseAddress }));
@@ -52,6 +57,11 @@ namespace WFBC.Client
             builder.Services.AddApiAuthorization();
 
             builder.Services.AddSingleton<AppState>();
+
+            // Register StandingsCacheService with PublicClient for standings data
+            // Use Singleton for performance - cache is now properly isolated by year
+            builder.Services.AddSingleton<StandingsCacheService>(sp => 
+                new StandingsCacheService(sp.GetRequiredService<PublicClient>().Client));
 
             builder.Services.AddMediaQueryService();
 

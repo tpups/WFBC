@@ -56,9 +56,10 @@
 @code {
     public string Hidden { get; set; } 
 
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
         Hidden = "hidden";
+        await base.OnInitializedAsync();
     }
 
     public void OpenDeleteTeamModal(string teamID)

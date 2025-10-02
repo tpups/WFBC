@@ -7,7 +7,6 @@ using Microsoft.AspNetCore.Mvc;
 using WFBC.Server.DataAccess;
 using WFBC.Shared.Models;
 using WFBC.Server.Interface;
-using Amazon.Auth.AccessControlPolicy;
 using Microsoft.AspNetCore.Authorization;
 
 namespace WFBC.Server.Controllers
@@ -35,15 +34,9 @@ namespace WFBC.Server.Controllers
             return _pick.GetPick(id);
         }
         [HttpPost]
-        public string[] Post([FromBody] List<Pick> picks)
+        public async Task<string[]> Post([FromBody] List<Pick> picks)
         {
-            _pick.AddPicks(picks);
-            var pickIDs = new List<string>();
-            foreach (var pick in picks)
-            {
-                pickIDs.Add(pick.Id);
-            }
-            return pickIDs.ToArray();
+            return await _pick.AddPicks(picks);
         }
         [HttpDelete("{id}")]
         public void Delete(string id)

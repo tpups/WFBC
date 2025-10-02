@@ -11,3 +11,35 @@
 @import '_tabs';
 //@import '_modals';
 //@import '_buttons';
+
+/* Prevent rubber banding/overscroll behavior on mobile devices */
+html, body {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  /* Webkit fallback for older iOS devices */
+  -webkit-overscroll-behavior: none;
+  -webkit-overscroll-behavior-y: none;
+}
+
+/* Target the main scrollable container */
+.main {
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
+  -webkit-overscroll-behavior: none;
+  -webkit-overscroll-behavior-y: none;
+  /* Enhanced touch scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Additional mobile-specific prevention */
+@media (max-width: 768px) {
+  * {
+    overscroll-behavior: none;
+    -webkit-overscroll-behavior: none;
+  }
+  
+  /* Enhance touch responsiveness */
+  body {
+    touch-action: pan-x pan-y;
+  }
+}

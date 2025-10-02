@@ -42,9 +42,12 @@ namespace WFBC.Client.Pages.Commish
             }
             else
             {
-                manager = await AuthorizedClient.Client.GetFromJsonAsync<Manager>("/api/manager/" + team.ManagerId);
-                manager.TeamId = team.Id;
-                await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", manager);
+                if (!string.IsNullOrEmpty(team.ManagerId))
+                {
+                    manager = await AuthorizedClient.Client.GetFromJsonAsync<Manager>("/api/manager/" + team.ManagerId);
+                    manager.TeamId = team.Id;
+                    await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", manager);
+                }
             }
 
             if (team.Id != null)
