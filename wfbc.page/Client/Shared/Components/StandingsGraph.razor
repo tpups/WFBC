@@ -1,11 +1,12 @@
 @using WFBC.Shared.Models
 @inject IJSRuntime JSRuntime
+@inject AppState AppState
 
 <div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-6 sm:p-6">
     @if (ProgressionData?.Count > 0)
     {
-        <!-- Chart Canvas - Copy Table's Space Optimization -->
-        <div class="w-full max-w-[calc(100vw-0.5rem)] xl:max-w-none h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
+        <!-- Chart Canvas - Desktop Contained -->
+        <div class="w-full max-w-[calc(100vw-0.5rem)] h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
         </div>
 
@@ -30,12 +31,20 @@
     }
 </div>
 
+@implements IDisposable
+
 @code {
     [Parameter] public List<Standings> ProgressionData { get; set; } = new();
     [Parameter] public string Year { get; set; } = "2023";
 
     private int teamCount = 0;
     private int dataPointCount = 0;
+
+    protected override void OnInitialized()
+    {
+        // Subscribe to AppState changes for drawer state
+        AppState.OnChange += OnDrawerStateChanged;
+    }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -57,6 +66,22 @@
         }
     }
 
+    private async void OnDrawerStateChanged()
+    {
+        // Re-render chart when drawer state changes to adjust sizing
+        if (ProgressionData?.Count > 0)
+        {
+            await Task.Delay(300); // Wait for drawer animation to complete
+            await RenderChart();
+        }
+    }
+
+    public void Dispose()
+    {
+        // Unsubscribe from AppState changes
+        AppState.OnChange -= OnDrawerStateChanged;
+    }
+
     private void UpdateDataStats()
     {
         teamCount = ProgressionData.Select(s => s.TeamId).Distinct().Count();
@@ -73,8 +98,23 @@
             var chartData = PrepareChartData();
             var canvasId = $"standingsChart-{Year}";
 
-            // Call JavaScript function to render the chart
-            await JSRuntime.InvokeVoidAsync("renderStandingsChart", canvasId, chartData, Year);
+            // Prepare drawer state info for JavaScript
+            var drawerState = new
+            {
+                IsClosed = AppState.DrawerClosed,
+                IsMinified = AppState.DrawerMinified,
+                IsDesktop = AppState.IsLarge, // Use IsLarge for desktop detection
+                IsXSmall = AppState.IsXSmall,
+                IsMedium = AppState.IsMedium,
+                DrawerCssClass = AppState.DrawerCssClass
+            };
+
+            // Debug logging
+            Console.WriteLine($"Chart render - DrawerClosed: {AppState.DrawerClosed}, DrawerMinified: {AppState.DrawerMinified}, IsLarge: {AppState.IsLarge}");
+            Console.WriteLine($"DrawerCssClass: {AppState.DrawerCssClass}");
+
+            // Call JavaScript function to render the chart with drawer state
+            await JSRuntime.InvokeVoidAsync("renderStandingsChart", canvasId, chartData, Year, drawerState);
         }
         catch (Exception ex)
         {
@@ -167,6 +207,14 @@
         }
     }
 
+    /* Desktop containment - 992px and above */
+    @@media screen and (min-width: 992px) {
+        div[id^="chartContainer-"] {
+            max-width: calc(100vw - 6rem) !important;
+            width: calc(100vw - 6rem) !important;
+        }
+    }
+
     /* Universal landscape mode optimizations - All devices */
     @@media screen and (orientation: landscape) {
         div[id^="chartContainer-"] {
@@ -193,10 +241,18 @@
             display: none !important;
         }
     }
+
+    /* Desktop landscape mode - override universal landscape for larger margins */
+    @@media screen and (orientation: landscape) and (min-width: 992px) {
+        div[id^="chartContainer-"] {
+            max-width: calc(100vw - 6rem) !important;
+            width: calc(100vw - 6rem) !important;
+        }
+    }
 </style>
 
 <script>
-    window.renderStandingsChart = function(canvasId, chartData, year) {
+    window.renderStandingsChart = function(canvasId, chartData, year, drawerState) {
         if (window.standingsCharts && window.standingsCharts[canvasId]) {
             window.standingsCharts[canvasId].destroy();
         }
@@ -222,22 +278,16 @@
             return;
         }
 
-        // Mobile and orientation-specific adjustments
+        // Mobile, desktop, and orientation-specific adjustments
         const isMobile = window.innerWidth < 640;
         const isLandscape = window.innerWidth > window.innerHeight;
         const borderWidth = isMobile ? 1.5 : 2; // Thinner lines on mobile
         const pointRadius = isMobile ? 1 : 1.5; // Smaller points on mobile
         
-        // Viewport-aware container width adjustments
+        // Mobile-first container width adjustments (restore original perfect mobile logic)
         if (container) {
-            if (isLandscape) {
-                // Landscape mode: ensure container never exceeds viewport width
-                const maxWidth = Math.max(window.innerWidth - 48, 300); // 48px total margin (3rem), minimum 300px
-                container.style.maxWidth = maxWidth + 'px';
-                container.style.width = 'calc(100vw - 3rem)';
-                container.style.minWidth = 'auto'; // Remove any conflicting minWidth
-            } else if (isMobile) {
-                // Portrait mobile mode: existing logic
+            if (isMobile) {
+                // Mobile mode: restore original perfect logic (drawer doesn't affect mobile)
                 if (window.innerWidth <= 400) {
                     // For narrow devices up to 400px, provide margin for border visibility
                     const chartWidth = Math.max(window.innerWidth - 32, 300); // Minimum 300px, with 32px total margin
@@ -248,6 +298,30 @@
                     container.style.minWidth = '400px';
                     container.style.width = 'calc(100vw - 0.25rem)';
                 }
+            } else if (drawerState && drawerState.isDesktop) {
+                // Desktop: Calculate margin based on actual drawer state
+                let totalMargin = 0;
+                if (drawerState.isClosed) {
+                    totalMargin = 128; // More conservative margin to ensure no horizontal scroll when closed
+                } else if (drawerState.isMinified) {
+                    totalMargin = 128 + 128; // 128px drawer + 128px safety = 256px
+                } else {
+                    totalMargin = 256 + 128; // 256px drawer + 128px safety = 384px
+                }
+                
+                const maxWidth = Math.max(window.innerWidth - totalMargin, 300); // Minimum 300px
+                
+                container.style.setProperty('max-width', maxWidth + 'px', 'important');
+                container.style.setProperty('width', `calc(100vw - ${totalMargin}px)`, 'important');
+                container.style.setProperty('min-width', 'auto', 'important'); // Remove any conflicting minWidth
+                
+                console.log(`🖥️ Desktop mode: Total margin=${totalMargin}px, Chart width=${maxWidth}px`);
+            } else {
+                // Tablet mode: standard margins
+                const maxWidth = Math.max(window.innerWidth - 48, 300); // 48px total margin (3rem), minimum 300px
+                container.style.maxWidth = maxWidth + 'px';
+                container.style.width = 'calc(100vw - 3rem)';
+                container.style.minWidth = 'auto'; // Remove any conflicting minWidth
             }
         }
 
