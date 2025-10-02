@@ -1,11 +1,11 @@
 @using WFBC.Shared.Models
 @inject IJSRuntime JSRuntime
 
-<div class="border rounded-xl shadow-sm bg-white dark:bg-gray-800 dark:border-gray-700 px-3 pt-6 pb-6 sm:p-6">
+<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-6 sm:p-6">
     @if (ProgressionData?.Count > 0)
     {
-        <!-- Chart Canvas - Responsive Height -->
-        <div class="relative chart-container" id="chartContainer-@Year">
+        <!-- Chart Canvas - Copy Table's Space Optimization -->
+        <div class="w-full max-w-[calc(100vw-0.5rem)] xl:max-w-none h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
         </div>
 
@@ -149,8 +149,8 @@
 
 <style>
     .chart-container {
-        height: 300px;
         position: relative;
+        /* Remove fixed height - let JavaScript handle all sizing */
     }
 
     .chart-container canvas {
@@ -158,35 +158,45 @@
         width: 100% !important;
         height: 100% !important;
     }
-</style>
 
-<script>
-    let resizeTimeout;
-    let resizeListenerAttached = false;
-
-    function getResponsiveChartHeight() {
-        const width = window.innerWidth;
-        if (width >= 2560) return 900;
-        if (width >= 1920) return 800;
-        if (width >= 1536) return 700;
-        if (width >= 1280) return 600;
-        if (width >= 1024) return 500;
-        if (width >= 640) return 400;
-        return 450; // Increased from 300 to 450 for better mobile experience
-    }
-
-    function setResponsiveChartHeight(containerId) {
-        const container = document.getElementById(containerId);
-        if (container) {
-            const height = getResponsiveChartHeight();
-            container.style.height = height + 'px';
+    /* Portrait mode optimizations for narrow devices - ID-based override */
+    @@media screen and (orientation: portrait) and (max-width: 400px) {
+        div[id^="chartContainer-"] {
+            max-width: calc(100vw - 2rem) !important;
+            width: calc(100vw - 2rem) !important;
         }
     }
 
-    window.renderStandingsChart = function(canvasId, chartData, year) {
-        const containerId = canvasId.replace('standingsChart-', 'chartContainer-');
-        setResponsiveChartHeight(containerId);
+    /* Universal landscape mode optimizations - All devices */
+    @@media screen and (orientation: landscape) {
+        div[id^="chartContainer-"] {
+            height: 90vh !important;
+            max-width: calc(100vw - 3rem) !important;
+            width: calc(100vw - 3rem) !important;
+        }
+        
+        /* Apply padding only to chart component in landscape mode */
+        .chart-component-container.border-2.border-wfbc-blue-2 {
+            padding: 0.5rem !important;
+            margin: 0 !important;
+        }
+        
+        /* Ensure table component has no padding in landscape mode */
+        .border-2.border-wfbc-blue-2:not(.chart-component-container) {
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        
+        /* Hide the info section in landscape to save space */
+        .mt-4.p-3.bg-gray-50,
+        .mt-4.p-3.bg-gray-700 {
+            display: none !important;
+        }
+    }
+</style>
 
+<script>
+    window.renderStandingsChart = function(canvasId, chartData, year) {
         if (window.standingsCharts && window.standingsCharts[canvasId]) {
             window.standingsCharts[canvasId].destroy();
         }
@@ -201,18 +211,8 @@
             return;
         }
 
-        if (!resizeListenerAttached) {
-            window.addEventListener('resize', function() {
-                clearTimeout(resizeTimeout);
-                resizeTimeout = setTimeout(function() {
-                    Object.keys(window.standingsCharts || {}).forEach(function(chartCanvasId) {
-                        const chartContainerId = chartCanvasId.replace('standingsChart-', 'chartContainer-');
-                        setResponsiveChartHeight(chartContainerId);
-                    });
-                }, 250);
-            });
-            resizeListenerAttached = true;
-        }
+        const containerId = canvasId.replace('standingsChart-', 'chartContainer-');
+        const container = document.getElementById(containerId);
 
         const ctx = canvas.getContext('2d');
 
@@ -222,10 +222,34 @@
             return;
         }
 
-        // Mobile-specific adjustments
+        // Mobile and orientation-specific adjustments
         const isMobile = window.innerWidth < 640;
+        const isLandscape = window.innerWidth > window.innerHeight;
         const borderWidth = isMobile ? 1.5 : 2; // Thinner lines on mobile
         const pointRadius = isMobile ? 1 : 1.5; // Smaller points on mobile
+        
+        // Viewport-aware container width adjustments
+        if (container) {
+            if (isLandscape) {
+                // Landscape mode: ensure container never exceeds viewport width
+                const maxWidth = Math.max(window.innerWidth - 48, 300); // 48px total margin (3rem), minimum 300px
+                container.style.maxWidth = maxWidth + 'px';
+                container.style.width = 'calc(100vw - 3rem)';
+                container.style.minWidth = 'auto'; // Remove any conflicting minWidth
+            } else if (isMobile) {
+                // Portrait mobile mode: existing logic
+                if (window.innerWidth <= 400) {
+                    // For narrow devices up to 400px, provide margin for border visibility
+                    const chartWidth = Math.max(window.innerWidth - 32, 300); // Minimum 300px, with 32px total margin
+                    container.style.minWidth = chartWidth + 'px';
+                    container.style.width = 'calc(100vw - 2rem)';
+                } else {
+                    // Set a minimum width that gives us the extra ~22px needed
+                    container.style.minWidth = '400px';
+                    container.style.width = 'calc(100vw - 0.25rem)';
+                }
+            }
+        }
 
         // Update datasets with mobile-responsive styling
         chartData.datasets.forEach(dataset => {
@@ -244,24 +268,32 @@
         
         chartData.datasets = datasetsOrderedByFinalStandings.map(item => item.dataset);
 
-        window.standingsCharts[canvasId] = new Chart(ctx, {
+        const chart = new Chart(ctx, {
             type: 'line',
             data: chartData,
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 resizeDelay: 0,
+                layout: {
+                    padding: {
+                        left: isMobile ? 5 : 20,
+                        right: isMobile ? 5 : 20,
+                        top: isLandscape ? 2 : (isMobile ? 5 : 20),     // Minimal top padding in landscape
+                        bottom: isLandscape ? 2 : (isMobile ? 5 : 20)   // Minimal bottom padding in landscape
+                    }
+                },
                 plugins: {
                     title: {
                         display: true,
                         text: year + ' World Fantasy Baseball Classic Standings',
                         font: {
-                            size: isMobile ? 14 : 16,
+                            size: isLandscape ? 12 : (isMobile ? 14 : 16),  // Smaller title in landscape
                             weight: 'bold'
                         },
                         color: '#1e40af', // WFBC blue
                         padding: {
-                            bottom: isMobile ? 10 : 15
+                            bottom: isLandscape ? 5 : (isMobile ? 10 : 15)  // Minimal title padding in landscape
                         }
                     },
                     legend: {
@@ -269,9 +301,9 @@
                         position: 'bottom',
                         labels: {
                             boxWidth: isMobile ? 8 : 10,
-                            padding: isMobile ? 6 : 8,
+                            padding: isLandscape ? 4 : (isMobile ? 6 : 8),  // Compact legend in landscape
                             font: {
-                                size: isMobile ? 10 : 11
+                                size: isLandscape ? 9 : (isMobile ? 10 : 11),  // Smaller legend text in landscape
                             },
                             usePointStyle: true,
                             generateLabels: function(chart) {
@@ -351,11 +383,22 @@
                     y: {
                         display: true,
                         title: {
-                            display: true,
-                            text: isMobile ? 'Points' : 'Total Points'
+                            display: !isMobile, // Hide y-axis title on mobile to save space
+                            text: 'Total Points',
+                            padding: { left: 15, right: 15 },
+                            font: {
+                                size: 12
+                            }
                         },
                         grid: {
                             color: '#e5e7eb'
+                        },
+                        ticks: {
+                            padding: isMobile ? 2 : 10, // Minimal padding on mobile
+                            font: {
+                                size: isMobile ? 9 : 11 // Even smaller font on mobile
+                            },
+                            maxTicksLimit: isMobile ? 6 : 8 // Fewer ticks on mobile
                         }
                     }
                 },
@@ -368,6 +411,38 @@
                     intersect: false
                 }
             }
+        });
+
+        // Store the chart
+        window.standingsCharts[canvasId] = chart;
+
+        // More aggressive approach: recreate chart on orientation change (like tab click does)
+        let lastOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+        
+        function handleOrientationChange() {
+            const currentOrientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            
+            if (currentOrientation !== lastOrientation) {
+                lastOrientation = currentOrientation;
+                
+                // Completely recreate chart (like tab click does)
+                setTimeout(function() {
+                    if (chart && !chart.destroyed) {
+                        chart.destroy();
+                    }
+                    
+                    // Wait for CSS to settle, then recreate
+                    setTimeout(function() {
+                        window.renderStandingsChart(canvasId, chartData, year);
+                    }, 100);
+                }, 200);
+            }
+        }
+        
+        // Listen for orientation changes
+        window.addEventListener('orientationchange', handleOrientationChange);
+        window.addEventListener('resize', function() {
+            setTimeout(handleOrientationChange, 300);
         });
     };
 
