@@ -347,3 +347,4 @@ healthchecksdb
 /sass-workspace.code-workspace
 *.appsettings.json
 .vscode
+.DS_Store
