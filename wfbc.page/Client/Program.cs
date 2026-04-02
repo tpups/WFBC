@@ -40,9 +40,13 @@ namespace WFBC.Client
 
             builder.Services.AddOidcAuthentication(options =>
             {
-                builder.Configuration.Bind("Okta", options.ProviderOptions);
+                builder.Configuration.Bind("Zitadel", options.ProviderOptions);
                 options.ProviderOptions.ResponseType = "code";
-                options.UserOptions.RoleClaim = "role";
+                options.ProviderOptions.DefaultScopes.Add("openid");
+                options.ProviderOptions.DefaultScopes.Add("profile");
+                options.ProviderOptions.DefaultScopes.Add("email");
+                options.ProviderOptions.DefaultScopes.Add("urn:zitadel:iam:org:project:roles");
+                options.UserOptions.RoleClaim = "urn:zitadel:iam:org:project:roles";
             }).AddAccountClaimsPrincipalFactory<GroupsClaimsPrincipalFactory>();
 
             builder.Services.AddAuthorizationCore(options =>

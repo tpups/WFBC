@@ -13,8 +13,10 @@ using WFBC.Server.Models;
 using WFBC.Server.Services;
 using WFBC.Shared.Models;
 using WFBC.Shared;
-using Okta.AspNetCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.IdentityModel.Tokens;
+using System.Text.Json;
 
 namespace WFBC.Server
 {
@@ -47,18 +49,49 @@ namespace WFBC.Server
                 });
             });
 
-            // Okta Authentication
-            services.AddAuthentication(options =>
+            // Zitadel Authentication (JWT Bearer)
+            services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
             {
-                options.DefaultAuthenticateScheme = OktaDefaults.ApiAuthenticationScheme;
-                options.DefaultChallengeScheme = OktaDefaults.ApiAuthenticationScheme;
-                options.DefaultSignInScheme = OktaDefaults.ApiAuthenticationScheme;
-            })
-            .AddOktaWebApi(new OktaWebApiOptions()
-            {
-                OktaDomain = Configuration["Okta:OktaDomain"],
-                AuthorizationServerId = Configuration["Okta:AuthorizationServerId"],
-                Audience = Configuration["Okta:Audience"]
+                options.Authority = Configuration["Zitadel:Authority"];
+                options.Audience = Configuration["Zitadel:ClientId"];
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidIssuer = Configuration["Zitadel:Authority"],
+                    ValidateAudience = true,
+                    ValidAudience = Configuration["Zitadel:ClientId"],
+                    ValidateLifetime = true
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = context =>
+                    {
+                        // Map Zitadel project roles to flat claims for policy evaluation
+                        // Zitadel embeds the project ID in the claim name:
+                        //   urn:zitadel:iam:org:project:{projectId}:roles
+                        var identity = context.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
+                        if (identity == null) return System.Threading.Tasks.Task.CompletedTask;
+
+                        var rolesClaim = identity.Claims
+                            .FirstOrDefault(c => c.Type.StartsWith("urn:zitadel:iam:org:project:") && c.Type.EndsWith(":roles"));
+                        if (rolesClaim != null)
+                        {
+                            try
+                            {
+                                using var doc = JsonDocument.Parse(rolesClaim.Value);
+                                foreach (var property in doc.RootElement.EnumerateObject())
+                                {
+                                    // Add each role key as its own claim: e.g., Claim("Commish", "Commish")
+                                    identity.AddClaim(new System.Security.Claims.Claim(property.Name, property.Name));
+                                }
+                            }
+                            catch { }
+                        }
+
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    }
+                };
             });
 
             // Authorization Policies
@@ -73,9 +106,6 @@ namespace WFBC.Server
             services.Configure<DatabaseSettings>(Configuration.GetSection(nameof(DatabaseSettings)));
             services.AddSingleton<IDatabaseSettings>(x => x.GetRequiredService<IOptions<DatabaseSettings>>().Value);
             services.AddSingleton<WfbcDBContext>();
-            // Okta
-            services.Configure<OktaSettings>(Configuration.GetSection(nameof(OktaSettings)));
-            services.AddSingleton<IOktaSettings>(x => x.GetRequiredService<IOptions<OktaSettings>>().Value);
             // Interfaces
             services.AddTransient<ITeam, TeamDataAccessLayer>();
             services.AddTransient<IManager, ManagerDataAccessLayer>();

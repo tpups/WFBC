@@ -1,0 +1,58 @@
+name: wfbc-stack
+
+services:
+  # --- WEB APP (.NET) ---
+  web:
+    image: tpups/wfbc-page-api:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 400M
+    environment:
+      - DatabaseSettings__ConnectionString=mongodb://mongodb:27017
+      - DatabaseSettings__DatabaseName=${DATABASE_NAME}
+      - DatabaseSettings__StartYear=${START_YEAR:-2011}
+      - DatabaseSettings__EndYear=${END_YEAR:-2025}
+      - Zitadel__Authority=${ZITADEL_AUTHORITY}
+      - Zitadel__ClientId=${ZITADEL_CLIENT_ID}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+
+  # --- REVERSE PROXY: CADDY (handles SSL automatically) ---
+  caddy:
+    image: caddy:latest
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+  # --- DATABASE: MONGODB ---
+  mongodb:
+    image: mongo:6.0
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      retries: 5
+    deploy:
+      resources:
+        limits:
+          memory: 500M
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:
+  caddy_data:
+  caddy_config:

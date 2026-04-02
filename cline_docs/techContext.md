@@ -15,20 +15,23 @@
 - **Framework**: ASP.NET Core (.NET 8.0)
 - **API**: REST API with Swagger documentation
 - **Language**: C#
-- **Authentication**: Okta SSO with PKCE-enhanced authorization code flow
-- **Authorization**: Policy-based with role claims
+- **Authentication**: Zitadel Cloud OIDC with PKCE-enhanced authorization code flow (JWT Bearer)
+- **Authorization**: Policy-based with role claims from Zitadel project roles
 
 ### Database
-- **Primary**: MongoDB Atlas (Cloud-hosted)
+- **Primary**: MongoDB (self-hosted in Docker container, migrating from Atlas)
 - **Driver**: MongoDB.Driver for .NET
 - **Attributes**: MongoDB.Bson for model mapping
 - **Connection**: Connection string managed via environment variables
+- **Cache**: WiredTiger cache constrained to 0.25GB for 2GB droplet
 
 ### Infrastructure
-- **Containerization**: Docker
-- **Hosting**: Digital Ocean Ubuntu Droplet
+- **Containerization**: Docker Compose (3 services: web, mongodb, caddy)
+- **Hosting**: Digital Ocean Ubuntu Droplet (2GB RAM)
 - **Domain**: wfbc.page
-- **SSL**: Let's Encrypt certificates
+- **SSL**: Caddy automatic SSL (replaces Let's Encrypt/certbot)
+- **Reverse Proxy**: Caddy (replaces nginx)
+- **Auth Provider**: Zitadel Cloud (external, free tier)
 - **Deployment**: GitHub → Docker Hub → Digital Ocean
 
 ## Development Environment
@@ -84,15 +87,18 @@ docker buildx build --platform linux/amd64 -t tpups/wfbc-page-api:latest .
 ## Technical Constraints
 
 ### Authentication Requirements
-- **Okta Configuration**:
-  - PKCE-enhanced authorization code flow
-  - Group-based claims mapping
+- **Zitadel Cloud Configuration**:
+  - PKCE-enhanced authorization code flow (User Agent/SPA type)
+  - Project role-based claims mapping (claim includes project ID)
   - Custom GroupsClaimsPrincipalFactory for client-side policies
+  - Pattern matching for `urn:zitadel:iam:org:project:{projectId}:roles` claims
 
 ### Database Constraints
-- **MongoDB Atlas**: Cloud-hosted, requires internet connectivity
+- **MongoDB**: Self-hosted in Docker container (migrating from Atlas)
+- **WiredTiger Cache**: Constrained to 0.25GB for memory-limited droplet
 - **Model Requirements**: All entities must have CreatedAt/LastUpdatedAt
 - **ObjectId**: String representation for cross-layer compatibility
+- **Backups**: Must be handled manually (mongodump to external storage)
 
 ### Styling Constraints
 - **Dual CSS Systems**: Sass for layout, Tailwind for components
@@ -100,26 +106,28 @@ docker buildx build --platform linux/amd64 -t tpups/wfbc-page-api:latest .
 - **Mobile Responsiveness**: AppState service tracks screen size
 
 ### Deployment Constraints
-- **Single Container**: Entire application in one Docker container
+- **Docker Compose**: 3-service stack (web, mongodb, caddy)
 - **Manual Build**: Docker Hub automated builds no longer available for free accounts
-- **Certificate Management**: Let's Encrypt renewal required
+- **Certificate Management**: Handled automatically by Caddy
+- **Memory Budget**: ~950M for containers on 2GB droplet (~1GB headroom)
 
 ## Performance Considerations
 - **Blazor WebAssembly**: Client-side execution, initial load time considerations
 - **MongoDB Queries**: Efficient indexing for historical data access
+- **MongoDB Memory**: WiredTiger cache constrained for shared hosting
 - **Image Optimization**: Docker image size management
 - **CSS Bundling**: Separate files for layout vs. component styles
 
 ## Security Considerations
-- **HTTPS Only**: SSL certificate management via Let's Encrypt
-- **Token-based Authentication**: Access tokens for API requests
-- **Role-based Authorization**: Server-side policy enforcement
+- **HTTPS Only**: Automatic SSL via Caddy
+- **Token-based Authentication**: JWT Bearer access tokens from Zitadel Cloud
+- **Role-based Authorization**: Server-side policy enforcement + client-side claim mapping
 - **SSH Key Management**: Key-based server access only
+- **No secrets in repo**: Zitadel authority/client ID in user secrets (dev) and .env (prod)
 
 ## Integration Points
-- **Okta SSO**: Authentication and authorization provider
+- **Zitadel Cloud**: Authentication and authorization provider (OIDC)
 - **Rotowire**: External fantasy sports data (team IDs stored in Manager model)
-- **MongoDB Atlas**: Cloud database service
 - **Docker Hub**: Container image registry
 - **Digital Ocean**: Infrastructure hosting
 

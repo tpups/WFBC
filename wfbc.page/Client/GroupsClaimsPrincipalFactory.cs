@@ -7,7 +7,10 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication.Internal;
 
 namespace WFBC.Client
 {
-    // This is required because multiple roles arrive in json string array format ["",""]
+    // Parses Zitadel project role claims into flat claims for policy evaluation.
+    // Zitadel embeds the project ID in the claim name, so the actual claim looks like:
+    //   "urn:zitadel:iam:org:project:366760786435015572:roles": { "Commish": {...}, "Managers": {...} }
+    // This factory finds claims matching the pattern and extracts role keys as individual claims.
     public class GroupsClaimsPrincipalFactory : AccountClaimsPrincipalFactory<RemoteUserAccount>
     {
         public GroupsClaimsPrincipalFactory(IAccessTokenProviderAccessor accessor) : base(accessor) { }
@@ -21,9 +24,9 @@ namespace WFBC.Client
             if (user.Identity.IsAuthenticated)
             {
                 var identity = (ClaimsIdentity)user.Identity;
-                Claim[] roleClaims = identity.FindAll(identity.RoleClaimType).ToArray();
-                var userClaims = user.Claims;
 
+                // Remove existing role claims to avoid duplicates
+                Claim[] roleClaims = identity.FindAll(identity.RoleClaimType).ToArray();
                 if (roleClaims != null && roleClaims.Any())
                 {
                     foreach (Claim existingClaim in roleClaims)
@@ -31,32 +34,29 @@ namespace WFBC.Client
                         identity.RemoveClaim(existingClaim);
                     }
                 }
+
                 try
                 {
-                    if (userClaims != null && userClaims.Any())
+                    // Find Zitadel role claim by pattern match (project ID is embedded in claim name)
+                    // Pattern: urn:zitadel:iam:org:project:{projectId}:roles
+                    var zitadelRolesClaim = identity.Claims
+                        .FirstOrDefault(c => c.Type.StartsWith("urn:zitadel:iam:org:project:") && c.Type.EndsWith(":roles"));
+
+                    if (zitadelRolesClaim != null && !string.IsNullOrEmpty(zitadelRolesClaim.Value))
                     {
-                        foreach (Claim userClaim in userClaims)
+                        // Parse the JSON object: { "Commish": { "orgId": "orgDomain" }, "Managers": { ... } }
+                        using var doc = JsonDocument.Parse(zitadelRolesClaim.Value);
+                        foreach (var property in doc.RootElement.EnumerateObject())
                         {
-                            if (userClaim.Type == "groups" && userClaim.Value != null)
-                            {
-                                string groups = userClaim.Value;
-                                if (!string.IsNullOrEmpty(groups))
-                                {
-                                    string[] userGroups = JsonSerializer.Deserialize<string[]>(userClaim.Value);
-                                    foreach (string userGroup in userGroups)
-                                    {
-                                        identity.AddClaim(claim: new Claim(userGroup, userGroup));
-                                    }
-                                }
-                            }
+                            // Add each role key as its own claim: e.g., Claim("Commish", "Commish")
+                            identity.AddClaim(new Claim(property.Name, property.Name));
                         }
                     }
                 }
                 catch
                 {
-
+                    // Silently handle parsing errors
                 }
-
             }
             return user;
         }
