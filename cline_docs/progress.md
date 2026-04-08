@@ -1,86 +1,72 @@
 # Progress Status
 
-## Recent Accomplishments ✅
+## ✅ Infrastructure Migration COMPLETE (April 7, 2026)
 
-### JSON Deserialization Error Fix (COMPLETED)
-- **Issue**: "The input does not contain any JSON tokens" error when creating drafts and teams
-- **Root Cause**: Okta authorization issuer validation failure
-- **Solution**: Fixed `AuthorizationServerId` configuration in user secrets
-- **Impact**: Commissioner interface now fully functional with proper authorization
+### What Was Migrated
+| Component | Before | After |
+|-----------|--------|-------|
+| Auth | Okta SSO | Zitadel Cloud OIDC |
+| Database | MongoDB Atlas (external) | MongoDB 6.0 (Docker container) |
+| SSL/Proxy | nginx + certbot | Caddy (automatic SSL) |
+| Container Registry | Docker Hub | GitHub Container Registry |
+| Compose | Old docker-compose with Zitadel self-hosted | Clean 3-service compose (web, caddy, mongodb) |
 
-### Commissioner Interface (FULLY FUNCTIONAL)
-- ✅ **Authentication & Authorization**: Okta integration working perfectly
-- ✅ **Teams Management**: Create, edit, and manage teams with proper manager assignments
-- ✅ **Draft Creation**: Complete draft setup with automatic pick generation
-- ✅ **Managers Management**: Full CRUD operations for league managers
-- ✅ **Standings Management**: View and manage season standings
-- ✅ **Security**: All endpoints properly secured with clean configuration
+### What's Working ✅
+1. **Production site live** at https://wfbc.page
+2. **Zitadel Cloud auth** — OIDC with PKCE, role-based policies
+3. **MongoDB in Docker** — All 16 databases (wfbc + wfbc2011-2025) imported
+4. **Caddy SSL** — Automatic certificate management
+5. **GHCR** — Image at `ghcr.io/tpups/wfbc-page-api:latest`
+6. **Local dev** — Docker MongoDB + user secrets working
+7. **All pages** — Homepage, results, standings, drafts, commish pages
+8. **Server-side caching** — Standings cache with explicit invalidation
 
-### Technical Infrastructure (COMPLETED)
-- ✅ **Database**: MongoDB integration working with all CRUD operations
-- ✅ **API Controllers**: All REST endpoints functional (Draft, Pick, Team, Manager, Standings)
-- ✅ **Client-Server Communication**: Proper HTTP client configuration with authorization
-- ✅ **Error Handling**: Comprehensive error handling with specific status codes
-- ✅ **CORS**: Proper cross-origin configuration for Blazor WebAssembly
+### Files Created/Modified in Migration
+**New files:**
+- `docker-compose.yml` — 3-service production stack
+- `Caddyfile` — Reverse proxy config
+- `.env` — Production environment variables (gitignored)
 
-## Current Status
+**Modified files:**
+- `Server/WFBC.Server.csproj` — Okta → JwtBearer package
+- `Server/Startup.cs` — Okta → JWT Bearer + Zitadel claim mapping
+- `Server/appsettings.json` — Okta → Zitadel config placeholders
+- `Server/Models/AppSettings.cs` — Removed OktaSettings
+- `Client/wwwroot/appsettings.json` — Okta → Zitadel OIDC config
+- `Client/Program.cs` — Updated OIDC binding to Zitadel
+- `Client/GroupsClaimsPrincipalFactory.cs` — Pattern matching for Zitadel role claims
+- `.gitignore` — Added `.env` and `mongo_dump/`
+- `.dockerignore` — Updated exclusions
 
-### What's Working
-1. **Full Commissioner Functionality**: All league management operations
-2. **User Authentication**: Okta-based login with role-based access
-3. **Data Management**: Complete CRUD operations for all entities
-4. **Draft System**: End-to-end draft creation with pick generation
-5. **Team-Manager Relationships**: Proper association and management
+## Remaining / Future Tasks
 
-### Code Quality
-- ✅ **Clean Architecture**: Well-organized separation of concerns
-- ✅ **Error Handling**: Robust error handling and validation
-- ✅ **Security**: Proper authorization and authentication
-- ✅ **Performance**: Efficient async operations and data access
-- ✅ **Maintainability**: Clean, documented, and optimized code
+### Near-term
+- [ ] Create Zitadel user accounts for league members and assign roles
+- [ ] Verify production login with Zitadel redirect URIs
+- [ ] Set up MongoDB backup strategy (periodic mongodump)
+- [ ] Clean up old Docker images and orphan volumes on droplet
 
-## Next Potential Features
+### Nice-to-have
+- [ ] GitHub Actions for automated Docker builds on push
+- [ ] MongoDB index optimization for standings queries
+- [ ] Health check endpoint for monitoring
+- [ ] Automated backup to external storage (DO Spaces or similar)
 
-### Data Visualization & Analytics
-- **Season Performance Charts**: Historical standings over time
-- **Draft Analysis**: Pick performance and value analysis
-- **Manager Statistics**: Win/loss records and performance metrics
+## Technical Notes
 
-### Enhanced User Experience
-- **Advanced Filtering**: Better data filtering and search capabilities
-- **Bulk Operations**: Mass updates and batch processing
-- **Mobile Optimization**: Enhanced mobile responsiveness
+### Local Dev: MongoDB Port Conflict
+- Windows may have a local MongoDB service on port 27017
+- This shadows the Docker container's MongoDB
+- Fix: `net stop MongoDB` + `sc.exe config MongoDB start=disabled` (run as admin)
+- Symptom: App connects but sees empty collections
 
-### Advanced Features
-- **Automated Scoring**: Integration with external data sources
-- **Season Archives**: Historical season data management
-- **Export Capabilities**: Data export for external analysis
+### Zitadel Role Claims
+- Zitadel embeds project ID in claim names
+- Expected: `urn:zitadel:iam:org:project:roles`
+- Actual: `urn:zitadel:iam:org:project:366760786435015572:roles`
+- Solution: Pattern matching with StartsWith/EndsWith
 
-## Technical Architecture Status
-
-### Frontend (Blazor WebAssembly)
-- ✅ **Components**: All UI components functional and tested
-- ✅ **State Management**: Proper state management with AppState
-- ✅ **Routing**: Clean navigation and route management
-- ✅ **Authentication**: Client-side authentication with Okta
-
-### Backend (ASP.NET Core Web API)
-- ✅ **Controllers**: All API endpoints implemented and secured
-- ✅ **Data Access**: MongoDB integration with proper async patterns
-- ✅ **Authentication**: Server-side Okta validation
-- ✅ **CORS**: Proper cross-origin resource sharing
-
-### Database (MongoDB)
-- ✅ **Collections**: All required collections (Drafts, Picks, Teams, Managers, Standings)
-- ✅ **Relationships**: Proper document relationships and references
-- ✅ **Indexing**: Appropriate indexing for performance
-- ✅ **Data Integrity**: Validation and consistency checks
-
-## Success Metrics Met
-- ✅ **Functionality**: All core features working without errors
-- ✅ **Security**: Proper authentication and authorization throughout
-- ✅ **Performance**: Fast, responsive user interface
-- ✅ **Reliability**: Stable operation with comprehensive error handling
-- ✅ **Maintainability**: Clean, well-documented codebase
-
-The WFBC application is getting closer to a production-ready state with a fully functional commissioner interface and robust technical foundation for future enhancements.
+### Production MongoDB Security
+- MongoDB port NOT exposed on host in production
+- Only accessible via Docker internal network (`mongodb:27017`)
+- The `ports: "27017:27017"` in local compose is for dev only

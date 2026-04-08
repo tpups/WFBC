@@ -19,123 +19,135 @@
 - **Authorization**: Policy-based with role claims from Zitadel project roles
 
 ### Database
-- **Primary**: MongoDB (self-hosted in Docker container, migrating from Atlas)
+- **Primary**: MongoDB 6.0 (self-hosted in Docker container)
 - **Driver**: MongoDB.Driver for .NET
 - **Attributes**: MongoDB.Bson for model mapping
-- **Connection**: Connection string managed via environment variables
+- **Connection**: `mongodb://mongodb:27017` (Docker internal) / `mongodb://localhost:27017` (local dev)
 - **Cache**: WiredTiger cache constrained to 0.25GB for 2GB droplet
+- **Databases**: `wfbc` (main) + `wfbc2011`-`wfbc2025` (per-season standings)
 
 ### Infrastructure
 - **Containerization**: Docker Compose (3 services: web, mongodb, caddy)
 - **Hosting**: Digital Ocean Ubuntu Droplet (2GB RAM)
 - **Domain**: wfbc.page
-- **SSL**: Caddy automatic SSL (replaces Let's Encrypt/certbot)
-- **Reverse Proxy**: Caddy (replaces nginx)
+- **SSL**: Caddy automatic SSL (replaced Let's Encrypt/certbot)
+- **Reverse Proxy**: Caddy (replaced nginx)
 - **Auth Provider**: Zitadel Cloud (external, free tier)
-- **Deployment**: GitHub → Docker Hub → Digital Ocean
+- **Container Registry**: GitHub Container Registry (ghcr.io/tpups/wfbc-page-api)
+- **Source Control**: GitHub (github.com/tpups/WFBC)
 
 ## Development Environment
 
 ### Required Tools
 - .NET 8.0 SDK
 - Visual Studio or Visual Studio Code
-- Docker Desktop
+- Docker Desktop (for local MongoDB)
 - Node.js (for Tailwind CSS)
 - Sass compiler
+- MongoDB Database Tools (mongodump/mongorestore) — installed via MSI
 
 ### Development Setup
-1. **Sass Compilation**:
+1. **Docker MongoDB**: `docker compose up mongodb -d` (from project root)
+   - **IMPORTANT**: Windows MongoDB service must be STOPPED and DISABLED to avoid port 27017 conflict
+   - Disable: `sc.exe config MongoDB start=disabled` (run as admin)
+   
+2. **User Secrets** (from `wfbc.page/Server/`):
+   ```
+   dotnet user-secrets set "DatabaseSettings:ConnectionString" "mongodb://localhost:27017"
+   dotnet user-secrets set "DatabaseSettings:DatabaseName" "wfbc"
+   dotnet user-secrets set "Zitadel:Authority" "https://wfbc-edq5hx.us1.zitadel.cloud"
+   dotnet user-secrets set "Zitadel:ClientId" "366762034123100053"
+   ```
+
+3. **Sass Compilation**:
    - Use `sass_workspace.code-workspace` in VSCode
    - Enable Sass Watch for automatic compilation
    - Output: `Client/wwwroot/css/styles.css`
 
-2. **Tailwind CSS**:
+4. **Tailwind CSS**:
    - Config: `Client/styles/tailwind/tailwind.config.js`
    - Watch command: `npx tailwindcss -i input.css -o ../../wwwroot/css/app.css --watch`
    - Production: Add `--minify` flag
 
-3. **User Secrets** (Development):
-   - Visual Studio: Right-click project → Manage User Secrets
-   - CLI: `dotnet user-secrets set "DatabaseSettings:DatabaseName" "wfbc"`
-
 ### Local Development URLs
-- **Application**: https://localhost:5001
-- **API**: https://localhost:5010
-- **Swagger**: https://localhost:5010/swagger
+- **Application**: https://localhost:5003 (or check launchSettings.json)
+- **API**: https://localhost:5003/api/
 
 ## Build and Deployment
 
 ### Docker Build Process
 ```bash
-# Standard build
-docker build -t tpups/wfbc-page-api:latest .
+# Build for GHCR
+docker build -t ghcr.io/tpups/wfbc-page-api:latest .
 
-# Apple Silicon
-docker buildx build --platform linux/amd64 -t tpups/wfbc-page-api:latest .
+# Push to GHCR
+docker login ghcr.io -u tpups   # uses PAT with write:packages scope
+docker push ghcr.io/tpups/wfbc-page-api:latest
 ```
 
 ### Deployment Process
 1. Build Docker image locally
-2. Push to Docker Hub (tpups/wfbc-page-api)
-3. SSH to Digital Ocean server
-4. Pull latest image and restart container
+2. Push to GHCR (`ghcr.io/tpups/wfbc-page-api:latest`)
+3. SSH to droplet as josh (`ssh josh@64.227.100.84`)
+4. `cd /home/josh/wfbc && docker compose pull && docker compose up -d`
+5. For file updates: `scp <files> josh@64.227.100.84:/home/josh/wfbc/`
+
+### Droplet Access
+- **SSH user**: josh
+- **Root access**: Via DO console only (SSH root login disabled)
+- **Project directory**: `/home/josh/wfbc/`
+- **Files on droplet**: `docker-compose.yml`, `Caddyfile`, `.env`
 
 ### Environment Configuration
 - **Development**: appsettings.json + User Secrets
-- **Production**: appsettings.json + Environment Variables (.env file)
+- **Production**: appsettings.json + Environment Variables (`.env` file)
+
+### Production .env
+```
+DATABASE_NAME=wfbc
+START_YEAR=2011
+END_YEAR=2025
+ZITADEL_AUTHORITY=https://wfbc-edq5hx.us1.zitadel.cloud
+ZITADEL_CLIENT_ID=366762034123100053
+```
 
 ## Technical Constraints
 
-### Authentication Requirements
-- **Zitadel Cloud Configuration**:
-  - PKCE-enhanced authorization code flow (User Agent/SPA type)
-  - Project role-based claims mapping (claim includes project ID)
-  - Custom GroupsClaimsPrincipalFactory for client-side policies
-  - Pattern matching for `urn:zitadel:iam:org:project:{projectId}:roles` claims
+### Authentication
+- Zitadel Cloud OIDC with PKCE (User Agent/SPA type)
+- Project role-based claims mapping (claim includes project ID)
+- Pattern matching: `urn:zitadel:iam:org:project:{projectId}:roles`
+- Custom `GroupsClaimsPrincipalFactory` for client-side policies
 
-### Database Constraints
-- **MongoDB**: Self-hosted in Docker container (migrating from Atlas)
-- **WiredTiger Cache**: Constrained to 0.25GB for memory-limited droplet
-- **Model Requirements**: All entities must have CreatedAt/LastUpdatedAt
-- **ObjectId**: String representation for cross-layer compatibility
-- **Backups**: Must be handled manually (mongodump to external storage)
+### Database
+- MongoDB 6.0 in Docker container
+- WiredTiger cache: 0.25GB (memory-limited droplet)
+- All entities: CreatedAt/LastUpdatedAt required
+- ObjectId: String representation for cross-layer compatibility
+- Backups: Manual `mongodump` to external storage
+- Production: MongoDB NOT exposed on host port (Docker internal only)
 
-### Styling Constraints
-- **Dual CSS Systems**: Sass for layout, Tailwind for components
-- **Build Process**: Manual compilation required for Sass changes
-- **Mobile Responsiveness**: AppState service tracks screen size
+### Memory Budget (2GB Droplet)
+- web: 400M limit
+- mongodb: 500M limit
+- caddy: 50M limit
+- Total: ~950M → ~1GB headroom for OS
 
-### Deployment Constraints
-- **Docker Compose**: 3-service stack (web, mongodb, caddy)
-- **Manual Build**: Docker Hub automated builds no longer available for free accounts
-- **Certificate Management**: Handled automatically by Caddy
-- **Memory Budget**: ~950M for containers on 2GB droplet (~1GB headroom)
+### Styling
+- Dual CSS: Sass for layout, Tailwind for components
+- Manual compilation required for Sass changes
+- Mobile responsiveness via AppState screen size tracking
 
-## Performance Considerations
-- **Blazor WebAssembly**: Client-side execution, initial load time considerations
-- **MongoDB Queries**: Efficient indexing for historical data access
-- **MongoDB Memory**: WiredTiger cache constrained for shared hosting
-- **Image Optimization**: Docker image size management
-- **CSS Bundling**: Separate files for layout vs. component styles
-
-## Security Considerations
-- **HTTPS Only**: Automatic SSL via Caddy
-- **Token-based Authentication**: JWT Bearer access tokens from Zitadel Cloud
-- **Role-based Authorization**: Server-side policy enforcement + client-side claim mapping
-- **SSH Key Management**: Key-based server access only
-- **No secrets in repo**: Zitadel authority/client ID in user secrets (dev) and .env (prod)
+## Security
+- **HTTPS**: Automatic SSL via Caddy
+- **Auth**: JWT Bearer tokens from Zitadel Cloud
+- **Authorization**: Server-side policy enforcement + client-side claim mapping
+- **SSH**: Key-based (josh user), root via DO console only
+- **No secrets in repo**: Auth config in user secrets (dev) and .env (prod)
+- **MongoDB**: Not exposed to internet in production (Docker internal network only)
 
 ## Integration Points
-- **Zitadel Cloud**: Authentication and authorization provider (OIDC)
-- **Rotowire**: External fantasy sports data (team IDs stored in Manager model)
-- **Docker Hub**: Container image registry
+- **Zitadel Cloud**: Authentication and authorization (OIDC)
+- **Rotowire**: External fantasy sports data (team IDs in Manager model)
+- **GitHub Container Registry**: Docker image hosting
 - **Digital Ocean**: Infrastructure hosting
-
-## Development Workflow
-1. Feature development locally with User Secrets
-2. Sass/Tailwind compilation as needed
-3. Local testing with development database
-4. Docker build and test
-5. Push to GitHub (triggers documentation/tracking)
-6. Manual Docker Hub push
-7. Server deployment via SSH

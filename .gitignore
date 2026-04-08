@@ -348,3 +348,5 @@ healthchecksdb
 *.appsettings.json
 .vscode
 .DS_Store
+.env
+mongo_dump/

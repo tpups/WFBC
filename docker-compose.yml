@@ -3,7 +3,7 @@ name: wfbc-stack
 services:
   # --- WEB APP (.NET) ---
   web:
-    image: tpups/wfbc-page-api:latest
+    image: ghcr.io/tpups/wfbc-page-api:latest
     restart: unless-stopped
     deploy:
       resources:
@@ -40,6 +40,8 @@ services:
   mongodb:
     image: mongo:6.0
     restart: unless-stopped
+    ports:
+      - "27017:27017"
     command: ["--wiredTigerCacheSizeGB", "0.25"]
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]

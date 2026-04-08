@@ -13,13 +13,13 @@ WFBC (World Fantasy Baseball Classic) is a fantasy baseball web application that
 - **Mobile Access**: Responsive design enables league management from any device
 
 ## How It Should Work
-- **Authentication**: Users authenticate through Okta SSO using PKCE-enhanced authorization code flow with role-based access based on Okta group membership
+- **Authentication**: Users authenticate through Zitadel Cloud OIDC using PKCE-enhanced authorization code flow with role-based access based on Zitadel project roles
 - **Commissioner Functions**: Commissioners can manage all aspects of the league including adding/editing managers, teams, drafts, and standings
 - **Manager Access**: Regular managers have limited access to view league information and manage their own data
-- **Historical Access**: Users can browse historical rulebooks (2011-2025) and season results (2011-2024)
+- **Historical Access**: Users can browse historical rulebooks (2011-2025) and season results (2011-2025)
 - **Responsive Design**: Works across desktop, tablet, and mobile devices with adaptive navigation
-- **Data Management**: Persistent storage of all league data including historical records in MongoDB Atlas
-- **API Access**: REST API with Swagger documentation for development and integration
+- **Data Management**: Persistent storage of all league data including historical records in self-hosted MongoDB
+- **API Access**: REST API for development and integration
 
 ## Target Users
 - **League Commissioners**: Full administrative access to manage all league operations
@@ -30,15 +30,17 @@ WFBC (World Fantasy Baseball Classic) is a fantasy baseball web application that
 - Multi-year league management
 - Draft management and tracking
 - Manager and team administration
-- Standings calculation and display
+- Standings calculation and display with progression graphs
 - Historical record preservation
-- Role-based access control
+- Role-based access control (Zitadel Cloud)
 - Mobile-responsive design
 - Comprehensive audit trails with CreatedAt/LastUpdatedAt timestamps
+- Server-side standings caching for performance
 
-## Business Value
-- Streamlines fantasy league operations
-- Preserves league history and traditions
-- Provides secure, role-based access
-- Eliminates manual record keeping
-- Maintains data integrity across seasons
+## Infrastructure
+- **Hosting**: Digital Ocean 2GB droplet running Docker Compose
+- **Database**: Self-hosted MongoDB 6.0 (migrated from MongoDB Atlas)
+- **Auth**: Zitadel Cloud free tier (migrated from Okta)
+- **SSL**: Automatic via Caddy (replaced nginx + certbot)
+- **Container Registry**: GitHub Container Registry (replaced Docker Hub)
+- **Domain**: wfbc.page

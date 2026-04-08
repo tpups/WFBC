@@ -1,81 +1,59 @@
 # Active Context
 
-## Current Task: Okta → Zitadel Cloud Auth Migration + Infrastructure Cleanup
-**Status**: ✅ **CODE CHANGES COMPLETE** — Auth migration fully working locally, infrastructure files created
+## Current Status: ✅ Infrastructure Migration COMPLETE (April 7, 2026)
 
-## Latest Accomplishment (April 1, 2026)
+All services migrated and production site is live at https://wfbc.page
 
-### ✅ **Okta → Zitadel Cloud Auth Migration - COMPLETE**
-Successfully migrated authentication from Okta SSO to Zitadel Cloud OIDC, and created clean Docker Compose + Caddyfile for production deployment.
+## What Was Done
 
-#### **🔑 Zitadel Cloud Setup**
+### 1. Auth Migration: Okta → Zitadel Cloud
+- Replaced Okta SSO with Zitadel Cloud OIDC (PKCE-enhanced)
+- Server: JWT Bearer auth with Zitadel role claim mapping
+- Client: OIDC binding to Zitadel, pattern-based claim matching for project-ID-embedded roles
+- Key discovery: Zitadel embeds project ID in claim names, requiring pattern matching
+
+### 2. Database Migration: MongoDB Atlas → Self-hosted Docker
+- Exported all databases from Atlas via `mongodump`
+- Imported to Docker-hosted MongoDB via `mongorestore`
+- WiredTiger cache constrained to 0.25GB for 2GB droplet
+- Local dev note: Must disable Windows MongoDB service to avoid port 27017 conflict with Docker
+
+### 3. Container Registry: Docker Hub → GitHub Container Registry (GHCR)
+- Image now at `ghcr.io/tpups/wfbc-page-api:latest`
+- Free private repos, integrated with GitHub account
+- Login: `docker login ghcr.io -u tpups` (uses PAT with `write:packages` scope)
+
+### 4. SSL/Proxy: nginx + certbot → Caddy
+- Caddy handles automatic SSL and reverse proxy
+- Simple Caddyfile: `wfbc.page { reverse_proxy web:8080 }`
+
+### 5. Docker Compose Rewrite
+- 3-service stack: web, caddy, mongodb
+- Environment variables from `.env` file
+- Memory-budgeted: web 400M, mongodb 500M, caddy 50M (~950M total on 2GB droplet)
+
+## Production Deployment Details
+- **Droplet**: Digital Ocean Ubuntu (`docker-ubuntu-s-1vcpu-1gb-sfo3-01`)
+- **SSH user**: josh (`/home/josh/wfbc/`)
+- **Root access**: Via DO console only (SSH root login disabled)
+- **Files on droplet**: `docker-compose.yml`, `Caddyfile`, `.env` (no MongoDB port exposed)
+
+## Zitadel Cloud Details
 - **Instance**: https://wfbc-edq5hx.us1.zitadel.cloud
-- **Organization**: wfbc
 - **Project**: wfbc.page (ID: 366760786435015572)
-- **Application**: WFBC Web (User Agent/SPA type, PKCE auth)
 - **Client ID**: 366762034123100053
-- **Roles**: `Commish` and `Managers` created on project
-- **Token setting**: "Return user roles during authentication" enabled
+- **Roles**: `Commish` and `Managers`
+- **Redirect URIs**: Both `localhost` (dev) and `wfbc.page` (prod) configured
 
-#### **🐛 Key Discovery: Zitadel Embeds Project ID in Claim Names**
-- **Expected claim**: `urn:zitadel:iam:org:project:roles`
-- **Actual claim**: `urn:zitadel:iam:org:project:366760786435015572:roles`
-- **Solution**: Pattern matching with `StartsWith("urn:zitadel:iam:org:project:") && EndsWith(":roles")`
+## Local Development Setup
+1. Docker Desktop running with MongoDB container (`docker compose up mongodb -d`)
+2. Windows MongoDB service must be STOPPED and DISABLED (`sc.exe config MongoDB start=disabled`)
+3. User secrets for MongoDB connection: `mongodb://localhost:27017`
+4. User secrets for Zitadel auth: authority + client ID
+5. App runs via `dotnet run` from Server project
 
-#### **📁 Files Modified**
-
-**Server-side (Okta → JWT Bearer):**
-- `Server/WFBC.Server.csproj` — Replaced `Okta.AspNetCore` with `Microsoft.AspNetCore.Authentication.JwtBearer`
-- `Server/Startup.cs` — Replaced Okta auth with JWT Bearer + Zitadel role claim mapping via `OnTokenValidated`
-- `Server/appsettings.json` — Replaced Okta config with Zitadel placeholders
-- `Server/Models/AppSettings.cs` — Removed `OktaSettings`/`IOktaSettings`
-
-**Client-side (Okta → Zitadel OIDC):**
-- `Client/wwwroot/appsettings.json` — Replaced Okta config with Zitadel authority + client ID
-- `Client/Program.cs` — Updated OIDC binding to `"Zitadel"` section, added `urn:zitadel:iam:org:project:roles` scope
-- `Client/GroupsClaimsPrincipalFactory.cs` — Pattern-based claim matching for Zitadel's project-ID-embedded role claims
-
-**Infrastructure (new files):**
-- `docker-compose.yml` — Clean 3-service compose (web, caddy, mongodb) for Zitadel Cloud
-- `Caddyfile` — Reverse proxy `wfbc.page → web:8080` with automatic SSL
-
-**Files NOT changed (by design):**
-- `Shared/Models/Policies.cs` — Claim names (`Commish`, `Managers`) still match
-- All controllers — Same `[Authorize]` attributes
-- All data access layers — No auth changes needed
-- `Client/Pages/Authentication.razor` — Standard OIDC component unchanged
-
-#### **💾 User Secrets Required (Development)**
-```
-dotnet user-secrets set "Zitadel:Authority" "https://wfbc-edq5hx.us1.zitadel.cloud"
-dotnet user-secrets set "Zitadel:ClientId" "366762034123100053"
-```
-
-#### **🐳 Production .env Required**
-```
-DATABASE_NAME=wfbc
-START_YEAR=2011
-END_YEAR=2025
-ZITADEL_AUTHORITY=https://wfbc-edq5hx.us1.zitadel.cloud
-ZITADEL_CLIENT_ID=366762034123100053
-```
-
-## Next Steps: Production Deployment
-
-### Remaining Tasks
-1. **MongoDB Migration** — Export from Atlas (`mongodump`), import to local container (`mongorestore`)
-2. **Docker build** — Build new image with auth changes and push to Docker Hub
-3. **Deploy to droplet** — Upload docker-compose.yml, Caddyfile, .env; `docker compose up -d`
-4. **Clean up droplet** — Remove old containers, certbot, nginx (Caddy replaces both)
-5. **DNS verification** — Ensure `wfbc.page` A record points to droplet IP
-6. **Create user accounts** — Add league members as Zitadel users and grant roles
-
-### Architecture Change Summary
-**Before**: App → Okta (external auth) → MongoDB Atlas (external DB)
-**After**: Caddy (SSL + proxy) → App → Zitadel Cloud (external auth) → MongoDB (local container)
-
-**Droplet resources (2GB):**
-- web: 400M limit
-- mongodb: 500M limit (0.25GB WiredTiger cache)
-- caddy: 50M limit
-- Total: ~950M → ~1GB headroom
+## Next Steps
+- Create user accounts in Zitadel for league members and grant roles
+- Verify login works on production with Zitadel redirect URIs
+- Set up MongoDB backup strategy (periodic mongodump to external storage)
+- Consider GitHub Actions for automated Docker builds on push

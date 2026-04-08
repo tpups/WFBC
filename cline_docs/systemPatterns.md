@@ -4,28 +4,49 @@
 WFBC follows a clean, layered architecture with clear separation of concerns:
 
 ```
-Client (Blazor WebAssembly) → Server (REST API) → Data Access Layer → MongoDB Atlas
+Caddy (SSL + Reverse Proxy) → .NET Server (REST API) → MongoDB (Docker)
+                              ↕
+                    Blazor WebAssembly Client
+                              ↕
+                    Zitadel Cloud (OIDC Auth)
 ```
+
+## Infrastructure Pattern
+
+### Docker Compose Stack (3 services)
+- **web**: .NET 8.0 app (Blazor WASM hosted) — 400M memory limit
+- **caddy**: Automatic SSL + reverse proxy — 50M memory limit
+- **mongodb**: MongoDB 6.0 with constrained cache — 500M memory limit
+
+### Environment Configuration
+- **Development**: `appsettings.json` + User Secrets (dotnet user-secrets)
+- **Production**: `appsettings.json` + `.env` file → Docker Compose environment variables
+- **Pattern**: `appsettings.json` has placeholder values, overridden by secrets/env vars
+
+### Deployment Pipeline
+1. Build Docker image locally
+2. Push to GitHub Container Registry (`ghcr.io/tpups/wfbc-page-api`)
+3. SSH to droplet, pull image, restart containers
+4. Caddy handles SSL certificate provisioning automatically
 
 ## Key Architectural Patterns
 
 ### Repository Pattern
-- **Interfaces**: Located in `wfbc.page/Server/Interface/`
-  - `IDraft.cs`, `IManager.cs`, `IPick.cs`, `IStandings.cs`, `ITeam.cs`
-- **Implementations**: Located in `wfbc.page/Server/DataAccess/`
-  - `DraftDataAccessLayer.cs`, `ManagerDataAccessLayer.cs`, etc.
-- **Controllers**: Located in `wfbc.page/Server/Controllers/`
-  - `DraftController.cs`, `ManagerController.cs`, etc.
+- **Interfaces**: `wfbc.page/Server/Interface/` (IDraft, IManager, IPick, IStandings, ITeam)
+- **Implementations**: `wfbc.page/Server/DataAccess/` (XxxDataAccessLayer.cs)
+- **Controllers**: `wfbc.page/Server/Controllers/` (REST endpoints)
 
 ### Authentication & Authorization Pattern
-- **Okta SSO Integration**: PKCE-enhanced authorization code flow
+- **Zitadel Cloud OIDC**: PKCE-enhanced authorization code flow (SPA type)
+- **JWT Bearer**: Server validates tokens from Zitadel
 - **Claims-based Authorization**: 
-  - Okta groups → .NET Claims → Policies
-  - `groups: ["Everyone","Managers","Commish"]` → `Managers: Managers` and `Commish: Commish`
+  - Zitadel project roles → JWT claims → .NET Policies
+  - Claim name includes project ID: `urn:zitadel:iam:org:project:{projectId}:roles`
+  - Pattern matching in `GroupsClaimsPrincipalFactory` and `Startup.cs`
 - **Policy-based Access Control**:
-  - `[Authorize]` - Any authenticated user
-  - `[Authorize(Policy = Policies.IsCommish)]` - Commissioner only
-  - `[Authorize(Policy = Policies.IsManager)]` - Manager only
+  - `[Authorize]` — Any authenticated user
+  - `[Authorize(Policy = Policies.IsCommish)]` — Commissioner only
+  - `[Authorize(Policy = Policies.IsManager)]` — Manager only
 
 ### Data Model Pattern
 - **MongoDB Integration**: Using MongoDB.Bson attributes
@@ -41,16 +62,28 @@ Client (Blazor WebAssembly) → Server (REST API) → Data Access Layer → Mong
   [Required]
   public DateTime? LastUpdatedAt { get; set; }
   ```
-- **Shared Models**: Located in `wfbc.page/Shared/Models/`
+- **Shared Models**: `wfbc.page/Shared/Models/` (used by both client and server)
+
+### Multi-Database Pattern
+- **Main database** (`wfbc`): Managers, teams, drafts, picks, season settings
+- **Per-season databases** (`wfbc2011`-`wfbc2025`): Standings, compiled standings, box scores
+- **WfbcDBContext**: Manages connections to multiple databases via `Dictionary<string, IMongoCollection>`
+
+### Caching Pattern
+- **ServerSideStandingsCache**: In-memory cache for standings data
+  - Indefinite cache with explicit invalidation on recalculation
+  - Reduces MongoDB queries by 90%+
+  - Three cache keys per year: final standings, progression data, last updated timestamp
+- **Client StandingsCacheService**: Browser-side caching with `Last-Modified` headers
 
 ### Client-Side Patterns
 - **Dual HttpClient Pattern**:
-  - `PublicClient` - Unauthenticated requests
-  - `AuthenticatedClient` - Authenticated requests with access tokens
+  - `PublicClient` — Unauthenticated requests
+  - `AuthorizedClient` — Authenticated requests with access tokens
 - **Component Organization**:
   - Pages: Route-specific components
   - Shared: Reusable components
-  - Shared/Components: Generic UI components
+  - Shared/Components: Generic UI components (StandingsTable, Modal, Tooltip)
   - Shared/SVG: SVG icon components
 
 ### Styling Architecture
@@ -60,35 +93,17 @@ Client (Blazor WebAssembly) → Server (REST API) → Data Access Layer → Mong
 - **Tailwind (Secondary)**: Page and component styling
   - Config: `Client/styles/tailwind/tailwind.config.js`
   - Output: `wwwroot/css/app.css`
-  - Monitors: `Client/Shared` and `Client/Pages`
-
-## Development Patterns
-
-### Version Upgrade Pattern
-- Regular .NET version upgrades (.NET Core 3.2 → 5.0 → 7.0 → 8.0)
-- Dockerfile updates required with .NET version changes
-
-### Deployment Pattern
-- **Docker Containerization**: Single container for the full application
-- **GitHub → Docker Hub → Digital Ocean**: Automated deployment pipeline
-- **Environment Variables**: Managed via `.env` file on server
-- **Image Management**: Local build → Docker Hub push → Server pull
-
-### Configuration Pattern
-- **Development**: User Secrets in Visual Studio
-- **Production**: Environment variables via Docker/docker-compose
-- **Settings Structure**: 
-  - Client: `WFBC.Client/wwwroot/appsettings.json`
-  - Server: `WFBC.Server/appsettings.json`
 
 ## Security Patterns
-- **SSL/TLS**: Let's Encrypt certificates via certbot
-- **SSH Access**: Key-based authentication to Digital Ocean droplet
+- **SSL/TLS**: Automatic via Caddy (replaces Let's Encrypt/certbot)
+- **SSH Access**: Key-based authentication (josh user), root via DO console only
+- **MongoDB**: Not exposed to internet in production (Docker internal network only)
+- **No secrets in repo**: `.env` and user secrets excluded from git
 - **Role-based UI**: Conditional rendering based on user claims
 - **API Authorization**: Controller-level and action-level authorization
 
 ## Data Patterns
 - **Audit Trail**: CreatedAt/LastUpdatedAt on all entities
 - **External Integration**: Rotowire team ID mapping in Manager model
-- **Historical Data**: Year-based organization for results and rulebooks
+- **Historical Data**: Year-based database organization for results (2011-2025)
 - **Responsive Navigation**: Conditional menus based on section and device type
