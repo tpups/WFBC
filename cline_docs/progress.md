@@ -1,5 +1,28 @@
 # Progress Status
 
+## ✅ Zitadel Auth Fix COMPLETE (April 8, 2026)
+
+### Issues Fixed
+1. **Audience mismatch** — Server validated against Client ID, but Zitadel uses Project ID in `aud`
+2. **JSON array role claims** — Zitadel returns roles as array `[{...}]` not object `{...}`
+3. **No roles in access token** — Zitadel doesn't include roles in JWT access tokens; added userinfo endpoint fallback with 5-minute cache
+4. **Opaque tokens** — Changed Zitadel app Token Type from Opaque to JWT
+5. **Client scope** — Added `urn:zitadel:iam:org:project:id:zitadel:aud` scope
+
+### Files Modified
+- `Server/Startup.cs` — Audience validation, JSON array handling, userinfo fallback with cache
+- `Client/GroupsClaimsPrincipalFactory.cs` — JSON array handling for role claims
+- `Client/Program.cs` — Added audience scope
+- `Server/appsettings.json` — Added `Zitadel:ProjectId`
+- `docker-compose.yml` — Added `ZITADEL_PROJECT_ID` env var
+- `.env` — Added `ZITADEL_PROJECT_ID=366760786435015572`
+
+### Zitadel Console Changes Required
+- App Token Type: **JWT** (not Opaque)
+- "Return user roles during authentication": **Enabled**
+
+---
+
 ## ✅ Infrastructure Migration COMPLETE (April 7, 2026)
 
 ### What Was Migrated

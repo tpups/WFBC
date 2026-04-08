@@ -106,18 +106,25 @@ docker push ghcr.io/tpups/wfbc-page-api:latest
 ```
 DATABASE_NAME=wfbc
 START_YEAR=2011
-END_YEAR=2025
+END_YEAR=2026
 ZITADEL_AUTHORITY=https://wfbc-edq5hx.us1.zitadel.cloud
 ZITADEL_CLIENT_ID=366762034123100053
+ZITADEL_PROJECT_ID=366760786435015572
 ```
 
 ## Technical Constraints
 
 ### Authentication
 - Zitadel Cloud OIDC with PKCE (User Agent/SPA type)
+- Token Type: **JWT** (must be set in Zitadel app settings; default is opaque)
+- Audience: Project ID (`366760786435015572`) — Zitadel puts this in `aud`, not client ID
 - Project role-based claims mapping (claim includes project ID)
 - Pattern matching: `urn:zitadel:iam:org:project:{projectId}:roles`
-- Custom `GroupsClaimsPrincipalFactory` for client-side policies
+- Roles come as **JSON array** format, not object (both client and server handle this)
+- Custom `GroupsClaimsPrincipalFactory` for client-side policies (parses ID token roles)
+- Server-side: `OnTokenValidated` handler with **userinfo endpoint fallback** + 5-minute cache
+  (Zitadel doesn't include roles in JWT access tokens, only in ID tokens and userinfo)
+- Client scopes: `openid`, `profile`, `email`, `urn:zitadel:iam:org:project:roles`, `urn:zitadel:iam:org:project:id:zitadel:aud`
 
 ### Database
 - MongoDB 6.0 in Docker container

@@ -1,6 +1,6 @@
 # Active Context
 
-## Current Status: ✅ Infrastructure Migration COMPLETE (April 7, 2026)
+## Current Status: ✅ Infrastructure Migration + Auth Fix COMPLETE (April 8, 2026)
 
 All services migrated and production site is live at https://wfbc.page
 
@@ -32,6 +32,27 @@ All services migrated and production site is live at https://wfbc.page
 - Environment variables from `.env` file
 - Memory-budgeted: web 400M, mongodb 500M, caddy 50M (~950M total on 2GB droplet)
 
+### 6. Zitadel Auth Fix (April 7-8, 2026)
+Fixed 401 errors on Commish API calls (season settings, standings). Three issues found and resolved:
+
+**Issue A — Audience Mismatch**: Server validated JWT audience against Client ID, but Zitadel puts Project ID in the `aud` claim.
+- Fix: Added `Zitadel:ProjectId` config and updated `Startup.cs` to accept both Project ID and Client ID as valid audiences.
+- Files: `Startup.cs`, `appsettings.json`, `docker-compose.yml`, `.env`, user secrets
+
+**Issue B — JSON Array Role Claims**: Zitadel returns the roles claim as a JSON array `[{...}]`, not object `{...}`. Both `GroupsClaimsPrincipalFactory` and `Startup.cs OnTokenValidated` called `EnumerateObject()` which fails on arrays.
+- Fix: Updated both parsers to detect `JsonValueKind.Array` vs `JsonValueKind.Object` and handle both, with deduplication via `HashSet`.
+- Files: `GroupsClaimsPrincipalFactory.cs`, `Startup.cs`
+
+**Issue C — No Role Claims in Access Token**: Zitadel includes role claims in ID tokens but NOT in JWT access tokens. The server receives the access token, validates it, but finds no role claims → Commish policy fails.
+- Fix: Server-side `OnTokenValidated` falls back to Zitadel's `/oidc/v1/userinfo` endpoint when no role claims are in the access token. Results are cached in `IMemoryCache` for 5 minutes per user to avoid repeated calls.
+- Files: `Startup.cs`
+
+**Issue D (Prerequisite)**: Zitadel issues opaque access tokens by default for SPA apps.
+- Fix: Changed Token Type from "Opaque" to "JWT" in Zitadel console app settings.
+
+**Additional client change**: Added `urn:zitadel:iam:org:project:id:zitadel:aud` scope to request project audience in access tokens.
+- Files: `Client/Program.cs`
+
 ## Production Deployment Details
 - **Droplet**: Digital Ocean Ubuntu (`docker-ubuntu-s-1vcpu-1gb-sfo3-01`)
 - **SSH user**: josh (`/home/josh/wfbc/`)
@@ -44,16 +65,18 @@ All services migrated and production site is live at https://wfbc.page
 - **Client ID**: 366762034123100053
 - **Roles**: `Commish` and `Managers`
 - **Redirect URIs**: Both `localhost` (dev) and `wfbc.page` (prod) configured
+- **Token Type**: JWT (changed from default Opaque)
+- **"Return user roles during authentication"**: Enabled at project level
 
 ## Local Development Setup
 1. Docker Desktop running with MongoDB container (`docker compose up mongodb -d`)
 2. Windows MongoDB service must be STOPPED and DISABLED (`sc.exe config MongoDB start=disabled`)
 3. User secrets for MongoDB connection: `mongodb://localhost:27017`
-4. User secrets for Zitadel auth: authority + client ID
+4. User secrets for Zitadel auth: authority + client ID + project ID
 5. App runs via `dotnet run` from Server project
 
 ## Next Steps
+- Rebuild Docker image and deploy to production with auth fixes
 - Create user accounts in Zitadel for league members and grant roles
-- Verify login works on production with Zitadel redirect URIs
 - Set up MongoDB backup strategy (periodic mongodump to external storage)
 - Consider GitHub Actions for automated Docker builds on push

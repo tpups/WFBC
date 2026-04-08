@@ -38,11 +38,19 @@ Caddy (SSL + Reverse Proxy) → .NET Server (REST API) → MongoDB (Docker)
 
 ### Authentication & Authorization Pattern
 - **Zitadel Cloud OIDC**: PKCE-enhanced authorization code flow (SPA type)
-- **JWT Bearer**: Server validates tokens from Zitadel
+- **JWT Bearer**: Server validates JWT access tokens from Zitadel
+- **Token Type**: Must be set to "JWT" in Zitadel app settings (default is opaque)
+- **Audience Validation**: Accepts both Project ID and Client ID (Zitadel puts project ID in `aud`)
 - **Claims-based Authorization**: 
-  - Zitadel project roles → JWT claims → .NET Policies
+  - Zitadel project roles → claims → .NET Policies
   - Claim name includes project ID: `urn:zitadel:iam:org:project:{projectId}:roles`
-  - Pattern matching in `GroupsClaimsPrincipalFactory` and `Startup.cs`
+  - **Client-side**: `GroupsClaimsPrincipalFactory` parses role claims from ID token
+  - **Server-side**: `OnTokenValidated` handler in `Startup.cs` maps roles to flat claims
+  - Handles both JSON array and object formats (Zitadel returns arrays)
+  - Deduplication via `HashSet<string>` since arrays may contain duplicates
+- **Userinfo Fallback**: Zitadel doesn't include roles in JWT access tokens by default.
+  Server falls back to `/oidc/v1/userinfo` endpoint when no role claims in access token.
+  Results cached in `IMemoryCache` for 5 minutes per user (keyed by subject ID).
 - **Policy-based Access Control**:
   - `[Authorize]` — Any authenticated user
   - `[Authorize(Policy = Policies.IsCommish)]` — Commissioner only

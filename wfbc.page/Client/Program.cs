@@ -46,6 +46,8 @@ namespace WFBC.Client
                 options.ProviderOptions.DefaultScopes.Add("profile");
                 options.ProviderOptions.DefaultScopes.Add("email");
                 options.ProviderOptions.DefaultScopes.Add("urn:zitadel:iam:org:project:roles");
+                // Request project-specific audience in the access token so the server can validate it
+                options.ProviderOptions.DefaultScopes.Add("urn:zitadel:iam:org:project:id:zitadel:aud");
                 options.UserOptions.RoleClaim = "urn:zitadel:iam:org:project:roles";
             }).AddAccountClaimsPrincipalFactory<GroupsClaimsPrincipalFactory>();
 

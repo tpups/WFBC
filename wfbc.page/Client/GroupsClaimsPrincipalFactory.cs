@@ -44,12 +44,33 @@ namespace WFBC.Client
 
                     if (zitadelRolesClaim != null && !string.IsNullOrEmpty(zitadelRolesClaim.Value))
                     {
-                        // Parse the JSON object: { "Commish": { "orgId": "orgDomain" }, "Managers": { ... } }
+                        // Zitadel may return roles as a JSON object OR a JSON array of objects.
+                        // Object: { "Commish": { "orgId": "orgDomain" }, "Managers": { ... } }
+                        // Array:  [{ "Commish": { ... }, "Managers": { ... } }, { ... }]
                         using var doc = JsonDocument.Parse(zitadelRolesClaim.Value);
-                        foreach (var property in doc.RootElement.EnumerateObject())
+                        var addedRoles = new System.Collections.Generic.HashSet<string>();
+
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
                         {
-                            // Add each role key as its own claim: e.g., Claim("Commish", "Commish")
-                            identity.AddClaim(new Claim(property.Name, property.Name));
+                            foreach (var element in doc.RootElement.EnumerateArray())
+                            {
+                                if (element.ValueKind == JsonValueKind.Object)
+                                {
+                                    foreach (var property in element.EnumerateObject())
+                                    {
+                                        if (addedRoles.Add(property.Name))
+                                            identity.AddClaim(new Claim(property.Name, property.Name));
+                                    }
+                                }
+                            }
+                        }
+                        else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                        {
+                            foreach (var property in doc.RootElement.EnumerateObject())
+                            {
+                                if (addedRoles.Add(property.Name))
+                                    identity.AddClaim(new Claim(property.Name, property.Name));
+                            }
                         }
                     }
                 }

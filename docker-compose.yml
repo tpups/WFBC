@@ -16,6 +16,7 @@ services:
       - DatabaseSettings__EndYear=${END_YEAR:-2025}
       - Zitadel__Authority=${ZITADEL_AUTHORITY}
       - Zitadel__ClientId=${ZITADEL_CLIENT_ID}
+      - Zitadel__ProjectId=${ZITADEL_PROJECT_ID}
     depends_on:
       mongodb:
         condition: service_healthy

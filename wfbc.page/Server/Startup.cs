@@ -16,6 +16,8 @@ using WFBC.Shared;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging;
 using System.Text.Json;
 
 namespace WFBC.Server
@@ -54,42 +56,135 @@ namespace WFBC.Server
             .AddJwtBearer(options =>
             {
                 options.Authority = Configuration["Zitadel:Authority"];
-                options.Audience = Configuration["Zitadel:ClientId"];
+                // Zitadel puts the project ID in the 'aud' claim, not the client ID
+                var projectId = Configuration["Zitadel:ProjectId"];
+                var clientId = Configuration["Zitadel:ClientId"];
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidIssuer = Configuration["Zitadel:Authority"],
                     ValidateAudience = true,
-                    ValidAudience = Configuration["Zitadel:ClientId"],
+                    ValidAudiences = new[] { projectId, clientId },
                     ValidateLifetime = true
                 };
                 options.Events = new JwtBearerEvents
                 {
-                    OnTokenValidated = context =>
+                    OnAuthenticationFailed = context =>
                     {
-                        // Map Zitadel project roles to flat claims for policy evaluation
-                        // Zitadel embeds the project ID in the claim name:
-                        //   urn:zitadel:iam:org:project:{projectId}:roles
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("ZitadelAuth");
+                        logger.LogError("JWT authentication failed: {Error}", context.Exception?.Message);
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    },
+                    OnTokenValidated = async context =>
+                    {
+                        var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("ZitadelAuth");
                         var identity = context.Principal?.Identity as System.Security.Claims.ClaimsIdentity;
-                        if (identity == null) return System.Threading.Tasks.Task.CompletedTask;
+                        if (identity == null) return;
 
+                        // Check for role claims directly in the access token
                         var rolesClaim = identity.Claims
                             .FirstOrDefault(c => c.Type.StartsWith("urn:zitadel:iam:org:project:") && c.Type.EndsWith(":roles"));
+
+                        // Zitadel may not include role claims in JWT access tokens.
+                        // Fall back to the userinfo endpoint with caching to avoid repeated calls.
+                        if (rolesClaim == null)
+                        {
+                            var cache = context.HttpContext.RequestServices.GetRequiredService<Microsoft.Extensions.Caching.Memory.IMemoryCache>();
+                            var sub = identity.Claims.FirstOrDefault(c => 
+                                c.Type == "sub" || c.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+                            var cacheKey = $"zitadel_roles_{sub}";
+
+                            // Try cache first
+                            if (sub != null && cache.TryGetValue(cacheKey, out object cachedObj) && cachedObj is string cachedRolesJson)
+                            {
+                                rolesClaim = new System.Security.Claims.Claim("cached_roles", cachedRolesJson);
+                            }
+                            else
+                            {
+                                // Fetch from userinfo endpoint
+                                try
+                                {
+                                    var authority = context.Options.Authority?.TrimEnd('/');
+                                    var accessToken = context.SecurityToken is Microsoft.IdentityModel.JsonWebTokens.JsonWebToken jwt 
+                                        ? jwt.EncodedToken 
+                                        : (context.SecurityToken as System.IdentityModel.Tokens.Jwt.JwtSecurityToken)?.RawData;
+                                    
+                                    if (!string.IsNullOrEmpty(accessToken))
+                                    {
+                                        using var httpClient = new System.Net.Http.HttpClient();
+                                        httpClient.DefaultRequestHeaders.Authorization = 
+                                            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
+                                        var userInfoResponse = await httpClient.GetAsync($"{authority}/oidc/v1/userinfo");
+                                        
+                                        if (userInfoResponse.IsSuccessStatusCode)
+                                        {
+                                            var userInfoJson = await userInfoResponse.Content.ReadAsStringAsync();
+                                            using var userInfoDoc = JsonDocument.Parse(userInfoJson);
+                                            
+                                            foreach (var prop in userInfoDoc.RootElement.EnumerateObject())
+                                            {
+                                                if (prop.Name.StartsWith("urn:zitadel:iam:org:project:") && prop.Name.EndsWith(":roles"))
+                                                {
+                                                    var rolesJson = prop.Value.GetRawText();
+                                                    rolesClaim = new System.Security.Claims.Claim(prop.Name, rolesJson);
+                                                    // Cache roles for 5 minutes to avoid repeated userinfo calls
+                                                    if (sub != null)
+                                                    {
+                                                        cache.Set(cacheKey, rolesJson, System.TimeSpan.FromMinutes(5));
+                                                    }
+                                                    break;
+                                                }
+                                            }
+                                        }
+                                        else
+                                        {
+                                            logger.LogWarning("Zitadel userinfo request failed: {Status}", userInfoResponse.StatusCode);
+                                        }
+                                    }
+                                }
+                                catch (System.Exception ex)
+                                {
+                                    logger.LogError("Error fetching Zitadel userinfo: {Error}", ex.Message);
+                                }
+                            }
+                        }
+
+                        // Parse role claims (from token, userinfo, or cache) into flat claims
                         if (rolesClaim != null)
                         {
                             try
                             {
                                 using var doc = JsonDocument.Parse(rolesClaim.Value);
-                                foreach (var property in doc.RootElement.EnumerateObject())
+                                var addedRoles = new System.Collections.Generic.HashSet<string>();
+
+                                if (doc.RootElement.ValueKind == JsonValueKind.Array)
                                 {
-                                    // Add each role key as its own claim: e.g., Claim("Commish", "Commish")
-                                    identity.AddClaim(new System.Security.Claims.Claim(property.Name, property.Name));
+                                    foreach (var element in doc.RootElement.EnumerateArray())
+                                    {
+                                        if (element.ValueKind == JsonValueKind.Object)
+                                        {
+                                            foreach (var property in element.EnumerateObject())
+                                            {
+                                                if (addedRoles.Add(property.Name))
+                                                    identity.AddClaim(new System.Security.Claims.Claim(property.Name, property.Name));
+                                            }
+                                        }
+                                    }
+                                }
+                                else if (doc.RootElement.ValueKind == JsonValueKind.Object)
+                                {
+                                    foreach (var property in doc.RootElement.EnumerateObject())
+                                    {
+                                        if (addedRoles.Add(property.Name))
+                                            identity.AddClaim(new System.Security.Claims.Claim(property.Name, property.Name));
+                                    }
                                 }
                             }
-                            catch { }
+                            catch (System.Exception ex)
+                            {
+                                logger.LogError("Error parsing Zitadel role claims: {Error}", ex.Message);
+                            }
                         }
-
-                        return System.Threading.Tasks.Task.CompletedTask;
                     }
                 };
             });
