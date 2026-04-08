@@ -29,6 +29,8 @@ html, body {
   -webkit-overscroll-behavior-y: none;
   /* Enhanced touch scrolling on iOS */
   -webkit-overflow-scrolling: touch;
+  /* Safe area padding for notched/home-indicator devices */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Additional mobile-specific prevention */

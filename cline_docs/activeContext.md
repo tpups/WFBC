@@ -53,6 +53,18 @@ Fixed 401 errors on Commish API calls (season settings, standings). Three issues
 **Additional client change**: Added `urn:zitadel:iam:org:project:id:zitadel:aud` scope to request project audience in access tokens.
 - Files: `Client/Program.cs`
 
+### 7. Mobile Viewport Fix (April 8, 2026)
+Fixed content being cut off at the bottom on iPhone 17 Pro (and other mobile devices with browser toolbars/notches).
+
+**Root Cause**: `.drawer-container` used `height: 100vh`, which on mobile browsers includes the area behind the browser's bottom toolbar. This made the `.main` scrollable area extend behind the toolbar, cutting off the last ~50-80px of content (trophy bottom row, last-place teams in results, etc.). Chrome DevTools can't reproduce this because it doesn't simulate dynamic browser chrome.
+
+**Fixes**:
+- `_drawer.scss`: Changed `height: 100vh` → `height: 100dvh` (dynamic viewport height that accounts for mobile browser UI)
+- `index.html`: Added `viewport-fit=cover` to viewport meta tag for proper safe-area handling on notched devices
+- `styles.scss`: Added `padding-bottom: env(safe-area-inset-bottom)` to `.main` for home indicator area on iPhones
+
+**Note**: Requires Sass recompilation via VS Code Sass Watch extension before deployment.
+
 ## Production Deployment Details
 - **Droplet**: Digital Ocean Ubuntu (`docker-ubuntu-s-1vcpu-1gb-sfo3-01`)
 - **SSH user**: josh (`/home/josh/wfbc/`)
@@ -76,7 +88,20 @@ Fixed 401 errors on Commish API calls (season settings, standings). Three issues
 5. App runs via `dotnet run` from Server project
 
 ## Next Steps
-- Rebuild Docker image and deploy to production with auth fixes
+- Recompile Sass and rebuild Docker image with mobile viewport fix
+- Deploy to production with auth fixes + viewport fix
+- Create user accounts in Zitadel for league members and grant roles
+- Set up MongoDB backup strategy (periodic mongodump to external storage)
+- Consider GitHub Actions for automated Docker builds on push
+1. Docker Desktop running with MongoDB container (`docker compose up mongodb -d`)
+2. Windows MongoDB service must be STOPPED and DISABLED (`sc.exe config MongoDB start=disabled`)
+3. User secrets for MongoDB connection: `mongodb://localhost:27017`
+4. User secrets for Zitadel auth: authority + client ID + project ID
+5. App runs via `dotnet run` from Server project
+
+## Next Steps
+- Recompile Sass and rebuild Docker image with mobile viewport fix
+- Deploy to production with auth fixes + viewport fix
 - Create user accounts in Zitadel for league members and grant roles
 - Set up MongoDB backup strategy (periodic mongodump to external storage)
 - Consider GitHub Actions for automated Docker builds on push
