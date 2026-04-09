@@ -1,3 +1,4 @@
+@charset "UTF-8";
 body {
   font-family: Commissioner, Amatic SC;
 }
@@ -613,6 +614,32 @@ body {
 
 #box-one:target, #box-two:target, #box-three:target {
   z-index: 1;
+}
+
+details.rulebook-section {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+details.rulebook-section > div {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
+}
+details.rulebook-section summary {
+  list-style: none;
+}
+details.rulebook-section summary::-webkit-details-marker {
+  display: none;
+}
+details.rulebook-section summary::before {
+  content: "▸";
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+details.rulebook-section[open] summary::before {
+  transform: rotate(90deg);
 }
 
 /* Prevent rubber banding/overscroll behavior on mobile devices */

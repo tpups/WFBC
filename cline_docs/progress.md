@@ -1,5 +1,27 @@
 # Progress Status
 
+## ✅ Rulebook Accordion Conversion COMPLETE (April 8, 2026)
+
+Converted all 10 rulebook pages to collapsible accordion sections using HTML5 `<details>`/`<summary>`.
+
+### What Was Done
+- All 10 rulebook pages (2011-2026) converted from flat text to accordion format
+- Each rulebook section is a collapsible `<details>` element, all starting collapsed
+- "Expand All / Collapse All" button via JS interop (`site.js`)
+- Custom SCSS (`_accordion.scss`) for marker hiding, arrow rotation, width constraints
+- Fixed width inconsistency: added `w-full` to outer container (flex-row parent was sizing to content)
+
+### Files Created
+- `wwwroot/js/site.js` — JS interop for accordion toggle
+- `styles/_accordion.scss` — Custom accordion styles
+
+### Files Modified
+- All 10 `Rulebook*.razor` files — Accordion conversion + `w-full` on outer div
+- `styles/styles.scss` — Added `@import 'accordion'`
+- `index.html` — Added `site.js` reference, cache-busting (`styles.css?ver2.2`, `site.js?ver1.0`)
+
+---
+
 ## ✅ Zitadel Auth Fix COMPLETE (April 8, 2026)
 
 ### Issues Fixed
@@ -42,6 +64,7 @@
 5. **GHCR** — Image at `ghcr.io/tpups/wfbc-page-api:latest`
 6. **Local dev** — Docker MongoDB + user secrets working
 7. **All pages** — Homepage, results, standings, drafts, commish pages
+8. **Rulebook accordions** — All 10 rulebook pages with collapsible sections
 8. **Server-side caching** — Standings cache with explicit invalidation
 
 ### Files Created/Modified in Migration

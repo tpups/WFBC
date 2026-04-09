@@ -1,0 +1,35 @@
+// Rulebook Accordion Styles
+// Uses <details>/<summary> HTML5 elements
+// Most styling done via Tailwind classes in razor files;
+// this file handles summary marker, width consistency, and transitions.
+
+details.rulebook-section {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+
+    > div {
+        overflow-wrap: break-word;
+        word-break: break-word;
+        min-width: 0;
+    }
+
+    summary {
+        list-style: none;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::before {
+            content: '▸';
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+    }
+
+    &[open] summary::before {
+        transform: rotate(90deg);
+    }
+}
