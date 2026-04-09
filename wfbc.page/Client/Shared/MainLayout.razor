@@ -61,6 +61,11 @@
     public void ChangeNavSection(string section)
     {
         navSection = section;
+        // On mobile, close drawer for sections without sub-menus
+        if (AppState.IsXSmall && section != results && section != rulebook)
+        {
+            AppState.SetDrawerClosed(true);
+        }
         StateHasChanged();
     }
 
