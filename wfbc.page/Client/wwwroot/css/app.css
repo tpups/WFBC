@@ -810,12 +810,24 @@ select {
   top: 0.75rem;
 }
 
+.top-\[28px\] {
+  top: 28px;
+}
+
 .top-\[48px\] {
   top: 48px;
 }
 
+.isolate {
+  isolation: isolate;
+}
+
 .z-10 {
   z-index: 10;
+}
+
+.z-20 {
+  z-index: 20;
 }
 
 .z-50 {
@@ -979,8 +991,8 @@ select {
   height: 2rem;
 }
 
-.h-\[70vh\] {
-  height: 70vh;
+.h-\[60dvh\] {
+  height: 60dvh;
 }
 
 .h-\[calc\(100\%-1rem\)\] {
@@ -1406,10 +1418,6 @@ select {
   background-color: rgb(255 255 255 / var(--tw-bg-opacity));
 }
 
-.bg-opacity-10 {
-  --tw-bg-opacity: 0.1;
-}
-
 .bg-opacity-20 {
   --tw-bg-opacity: 0.2;
 }
@@ -1559,6 +1567,10 @@ select {
 .text-3xl {
   font-size: 1.875rem;
   line-height: 2.25rem;
+}
+
+.text-\[10px\] {
+  font-size: 10px;
 }
 
 .text-base {
@@ -1746,12 +1758,20 @@ select {
 }
 
 @media (min-width: 576px) {
+  .sm\:top-\[36px\] {
+    top: 36px;
+  }
+
   .sm\:m-3 {
     margin: 0.75rem;
   }
 
   .sm\:ml-3 {
     margin-left: 0.75rem;
+  }
+
+  .sm\:mt-4 {
+    margin-top: 1rem;
   }
 
   .sm\:block {
@@ -1768,6 +1788,10 @@ select {
 
   .sm\:h-8 {
     height: 2rem;
+  }
+
+  .sm\:h-\[70vh\] {
+    height: 70vh;
   }
 
   .sm\:w-8 {
@@ -1836,6 +1860,10 @@ select {
     padding-bottom: 0.75rem;
   }
 
+  .sm\:pb-6 {
+    padding-bottom: 1.5rem;
+  }
+
   .sm\:text-base {
     font-size: 1rem;
     line-height: 1.5rem;
@@ -1849,6 +1877,11 @@ select {
   .sm\:text-sm {
     font-size: 0.875rem;
     line-height: 1.25rem;
+  }
+
+  .sm\:text-xs {
+    font-size: 0.75rem;
+    line-height: 1rem;
   }
 }
 

@@ -106,8 +106,21 @@ Fixed content being cut off at the bottom on iPhone 17 Pro (and other mobile dev
 4. User secrets for Zitadel auth: authority + client ID + project ID
 5. App runs via `dotnet run` from Server project
 
+### 9. Mobile Table/Chart Height Reduction (April 10, 2026)
+Reduced height of standings table and chart on mobile to prevent content being cut off by browser chrome (e.g., Chrome Mobile on iPhone 17 Pro).
+
+**StandingsTable.razor**:
+- Changed table container `height: 70vh` → `height: 60dvh` (uses dynamic viewport height that accounts for mobile browser UI)
+
+**StandingsGraph.razor**:
+- Changed chart container from `h-[70vh]` → `h-[60dvh] sm:h-[70vh]` (smaller on mobile, normal on desktop)
+- Reduced container bottom padding: `pb-6` → `pb-2 sm:pb-6`
+- Compacted info section: `mt-4 p-3` → `mt-1 p-1 sm:mt-4 sm:p-3`
+- Reduced info text size: `text-xs` → `text-[10px] sm:text-xs`
+- Fixed landscape CSS selector for info section hide rule (updated from `.mt-4.p-3` to `.bg-gray-50.rounded`)
+
 ## Next Steps
-- Recompile Sass and rebuild Docker image with accordion + viewport fixes
+- Recompile Sass and rebuild Docker image with accordion + viewport + height fixes
 - Deploy to production
 - Create user accounts in Zitadel for league members and grant roles
 - Set up MongoDB backup strategy (periodic mongodump to external storage)
