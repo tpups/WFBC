@@ -39,7 +39,7 @@ services:
 
   # --- DATABASE: MONGODB ---
   mongodb:
-    image: mongo:6.0
+    image: mongo:7.0
     restart: unless-stopped
     ports:
       - "27017:27017"
