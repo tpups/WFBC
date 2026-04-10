@@ -60,7 +60,6 @@ namespace WFBC.Client
             // Add a separate HttpClient for public requests
             builder.Services.AddHttpClient<PublicClient>(client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
             
-            builder.Services.AddApiAuthorization();
 
             builder.Services.AddSingleton<AppState>();
 
