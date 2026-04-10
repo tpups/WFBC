@@ -42,6 +42,7 @@ details.rulebook-section {
 
     summary {
         list-style: none;
+        touch-action: pan-y;
 
         &::-webkit-details-marker {
             display: none;

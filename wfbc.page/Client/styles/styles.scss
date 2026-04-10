@@ -36,11 +36,6 @@ html, body {
 
 /* Additional mobile-specific prevention */
 @media (max-width: 768px) {
-  * {
-    overscroll-behavior: none;
-    -webkit-overscroll-behavior: none;
-  }
-  
   /* Enhance touch responsiveness */
   body {
     touch-action: pan-x pan-y;

@@ -98,25 +98,12 @@ body {
     transform: translateX(0%);
   }
 }
-@-webkit-keyframes slide-in {
-  100% {
-    -webkit-transform: translateX(0%);
-  }
-}
 @keyframes slide-out {
   0% {
     transform: translateX(0%);
   }
   100% {
     transform: translateX(-200%);
-  }
-}
-@-webkit-keyframes slide-out {
-  0% {
-    -webkit-transform: translateX(0%);
-  }
-  100% {
-    -webkit-transform: translateX(-200%);
   }
 }
 .menu-bar {
@@ -223,7 +210,6 @@ body {
   transition: transform 600ms;
   -moz-user-select: none;
   -webkit-user-select: none;
-  -ms-user-select: none;
   user-select: none;
 }
 
@@ -317,25 +303,12 @@ body {
     transform: translateY(0%);
   }
 }
-@-webkit-keyframes slide-down {
-  100% {
-    -webkit-transform: translateY(0%);
-  }
-}
 @keyframes slide-up {
   0% {
     transform: translateY(0%);
   }
   100% {
     transform: translateY(-100%);
-  }
-}
-@-webkit-keyframes slide-up {
-  0% {
-    -webkit-transform: translateY(0%);
-  }
-  100% {
-    -webkit-transform: translateY(-100%);
   }
 }
 .lds-hourglass {
@@ -710,12 +683,8 @@ html, body {
 
 /* Additional mobile-specific prevention */
 @media (max-width: 768px) {
-  * {
-    overscroll-behavior: none;
-    -webkit-overscroll-behavior: none;
-  }
   /* Enhance touch responsiveness */
   body {
     touch-action: pan-x pan-y;
   }
-}
+}/*# sourceMappingURL=styles.css.map */
