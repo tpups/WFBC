@@ -98,12 +98,25 @@ body {
     transform: translateX(0%);
   }
 }
+@-webkit-keyframes slide-in {
+  100% {
+    -webkit-transform: translateX(0%);
+  }
+}
 @keyframes slide-out {
   0% {
     transform: translateX(0%);
   }
   100% {
     transform: translateX(-200%);
+  }
+}
+@-webkit-keyframes slide-out {
+  0% {
+    -webkit-transform: translateX(0%);
+  }
+  100% {
+    -webkit-transform: translateX(-200%);
   }
 }
 .menu-bar {
@@ -210,6 +223,7 @@ body {
   transition: transform 600ms;
   -moz-user-select: none;
   -webkit-user-select: none;
+  -ms-user-select: none;
   user-select: none;
 }
 
@@ -303,12 +317,25 @@ body {
     transform: translateY(0%);
   }
 }
+@-webkit-keyframes slide-down {
+  100% {
+    -webkit-transform: translateY(0%);
+  }
+}
 @keyframes slide-up {
   0% {
     transform: translateY(0%);
   }
   100% {
     transform: translateY(-100%);
+  }
+}
+@-webkit-keyframes slide-up {
+  0% {
+    -webkit-transform: translateY(0%);
+  }
+  100% {
+    -webkit-transform: translateY(-100%);
   }
 }
 .lds-hourglass {
@@ -626,6 +653,24 @@ details.rulebook-section > div {
   word-break: break-word;
   min-width: 0;
 }
+details.rulebook-section > div ul, details.rulebook-section > div ol {
+  padding-left: 2rem;
+  text-indent: 0;
+}
+details.rulebook-section > div ul li, details.rulebook-section > div ol li {
+  text-indent: 0;
+}
+details.rulebook-section > div ul {
+  list-style-type: disc;
+}
+details.rulebook-section > div ol {
+  list-style-type: decimal;
+}
+details.rulebook-section > div li > ul {
+  padding-left: 1.5rem;
+  margin-top: 0.25rem;
+  list-style-type: circle;
+}
 details.rulebook-section summary {
   list-style: none;
 }
@@ -673,4 +718,4 @@ html, body {
   body {
     touch-action: pan-x pan-y;
   }
-}/*# sourceMappingURL=styles.css.map */
+}

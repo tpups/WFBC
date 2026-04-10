@@ -12,6 +12,32 @@ details.rulebook-section {
         overflow-wrap: break-word;
         word-break: break-word;
         min-width: 0;
+
+        // Override Tailwind's indent-4 (text-indent) on lists with proper padding-left
+        // text-indent only indents the first line; padding-left indents the whole block
+        ul, ol {
+            padding-left: 2rem;
+            text-indent: 0;
+
+            li {
+                text-indent: 0;
+            }
+        }
+
+        ul {
+            list-style-type: disc;
+        }
+
+        ol {
+            list-style-type: decimal;
+        }
+
+        // Nested lists (sub-items inside li)
+        li > ul {
+            padding-left: 1.5rem;
+            margin-top: 0.25rem;
+            list-style-type: circle;
+        }
     }
 
     summary {
