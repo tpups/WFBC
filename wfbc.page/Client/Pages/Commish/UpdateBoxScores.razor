@@ -1,0 +1,142 @@
+@page "/commish/boxscores"
+@attribute [Authorize(Policy = Policies.IsCommish)]
+@using WFBC.Client.Shared.Components.Buttons
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@using Microsoft.AspNetCore.SignalR.Client
+@inject AuthorizedClient AuthorizedClient
+@inject NavigationManager NavManager
+@implements IAsyncDisposable
+
+<div class="flex flex-col my-6 lg:mx-6 w-full md:w-2/3 lg:w-1/2">
+    <h3 class="text-wfbc-blue-2 font-semibold mb-4">Update Box Scores</h3>
+
+    <div class="p-6 border rounded-xl shadow-sm space-y-4">
+        <div class="flex items-center gap-4">
+            <label class="text-sm text-wfbc-blue-2 font-medium">Year:</label>
+            <select class="pl-2 h-8 rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 text-sm"
+                    @bind="selectedYear" disabled="@isFetching">
+                @foreach (var year in availableYears)
+                {
+                    <option value="@year">@year</option>
+                }
+            </select>
+        </div>
+
+        @if (!string.IsNullOrEmpty(errorMessage))
+        {
+            <div class="p-3 bg-red-50 border border-red-200 rounded-md">
+                <p class="text-sm text-red-600">@errorMessage</p>
+            </div>
+        }
+
+        @if (isFetching || isComplete)
+        {
+            <div class="space-y-3">
+                @if (progress != null)
+                {
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>Team @progress.CurrentTeam of @progress.TotalTeams @("— " + (progress.TeamName ?? ""))</span>
+                            <span>@progress.Status</span>
+                        </div>
+                        @{ var tp = progress.TotalTeams > 0 ? (int)((double)progress.CurrentTeam / progress.TotalTeams * 100) : 0; }
+                        <div class="w-full bg-gray-200 rounded-full h-3">
+                            <div class="bg-wfbc-blue-2 h-3 rounded-full transition-all duration-300" style="@($"width:{tp}%")"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-xs text-gray-600 mb-1">
+                            <span>@(progress.CurrentDate ?? "") — Day @progress.CurrentDay of @progress.TotalDays</span>
+                        </div>
+                        @{ var dp = progress.TotalDays > 0 ? (int)((double)progress.CurrentDay / progress.TotalDays * 100) : 0; }
+                        <div class="w-full bg-gray-200 rounded-full h-2">
+                            <div class="bg-wfbc-blue-1 h-2 rounded-full transition-all duration-300" style="@($"width:{dp}%")"></div>
+                        </div>
+                    </div>
+                    <div class="flex gap-6 text-sm text-gray-700">
+                        <span>New: <strong>@progress.NewEntries</strong></span>
+                        <span>Updated: <strong>@progress.UpdatedEntries</strong></span>
+                    </div>
+                }
+                @if (isComplete)
+                {
+                    <div class="p-3 bg-green-50 border border-green-200 rounded-md">
+                        <p class="text-sm text-green-700 font-medium">Box score update complete!</p>
+                        <p class="text-xs text-green-600 mt-1">@progress?.NewEntries new, @progress?.UpdatedEntries updated.</p>
+                    </div>
+                }
+            </div>
+        }
+
+        <div>
+            @if (!isFetching)
+            {
+                <Button ButtonText="Update Box Scores" OnClickFunction="StartFetch" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+            }
+            else
+            {
+                <button class="px-4 py-2 bg-gray-300 text-gray-500 rounded-md cursor-not-allowed text-sm" disabled>Fetching...</button>
+            }
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <Button ButtonText="Back to Commish" Href="/commish" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+    </div>
+</div>
+
+@code {
+    private string selectedYear = DateTime.Now.Year.ToString();
+    private List<int> availableYears = new();
+    private bool isFetching = false;
+    private bool isComplete = false;
+    private string errorMessage = string.Empty;
+    private ProgressData? progress;
+    private HubConnection? hubConnection;
+
+    private class ProgressData
+    {
+        public int TotalTeams { get; set; }
+        public int CurrentTeam { get; set; }
+        public string? TeamName { get; set; }
+        public int TotalDays { get; set; }
+        public int CurrentDay { get; set; }
+        public string? CurrentDate { get; set; }
+        public string? Status { get; set; }
+        public int NewEntries { get; set; }
+        public int UpdatedEntries { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        for (int y = DateTime.Now.Year; y >= 2019; y--) availableYears.Add(y);
+        var baseUri = NavManager.BaseUri.TrimEnd('/');
+        hubConnection = new HubConnectionBuilder()
+            .WithUrl($"{baseUri}/progressHub")
+            .WithAutomaticReconnect()
+            .Build();
+        hubConnection.On<ProgressData>("ReceiveProgress", (update) =>
+        {
+            progress = update;
+            if (update.Status == "Complete") { isFetching = false; isComplete = true; }
+            InvokeAsync(StateHasChanged);
+        });
+        await hubConnection.StartAsync();
+    }
+
+    private async Task StartFetch()
+    {
+        if (hubConnection?.State != HubConnectionState.Connected) { errorMessage = "SignalR not connected. Please refresh."; return; }
+        errorMessage = string.Empty; isFetching = true; isComplete = false; progress = null;
+        try
+        {
+            var cid = hubConnection.ConnectionId;
+            var resp = await AuthorizedClient.Client.PostAsync($"/api/boxscore/fetch/{selectedYear}?connectionId={cid}", null);
+            if (!resp.IsSuccessStatusCode) { errorMessage = await resp.Content.ReadAsStringAsync(); isFetching = false; }
+        }
+        catch (AccessTokenNotAvailableException e) { e.Redirect(); }
+        catch (Exception ex) { errorMessage = ex.Message; isFetching = false; }
+    }
+
+    public async ValueTask DisposeAsync() { if (hubConnection != null) await hubConnection.DisposeAsync(); }
+}

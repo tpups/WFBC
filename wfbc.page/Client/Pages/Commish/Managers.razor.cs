@@ -1,63 +1,35 @@
-﻿using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
+﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using WFBC.Shared.Models;
-using System.Linq;
-
 
 namespace WFBC.Client.Pages.Commish
 {
     public class ManagersModel : ComponentBase
     {
-        [Inject]
-        public AuthorizedClient AuthorizedClient { get; set; }
-        [Inject]
-        public PublicClient PublicClient { get; set; }
-        [Inject]
-        public NavigationManager UrlNavigationManager { get; set; }
-        
+        [Inject] public AuthorizedClient AuthorizedClient { get; set; }
+        [Inject] public PublicClient PublicClient { get; set; }
+        [Inject] public NavigationManager UrlNavigationManager { get; set; }
+
         protected List<Manager> managers = new List<Manager>();
         protected Manager manager = new Manager();
-        protected List<Team> teams = new List<Team>();
 
-        protected override async Task OnInitializedAsync()
-        {
-            await GetAllManagers();
-            await GetAllTeams();
-        }
+        protected override async Task OnInitializedAsync() => await GetAllManagers();
 
         protected async Task GetAllManagers()
-        {
-            managers = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager");
-        }
+            => managers = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager") ?? new();
 
-        protected async Task GetAllTeams()
-        {
-            teams = await PublicClient.Client.GetFromJsonAsync<List<Team>>("api/team");
-        }
+        protected void DeleteConfirm(string id)
+            => manager = managers.FirstOrDefault(m => m.Id == id) ?? new Manager();
 
-        protected void DeleteConfirm(string ID)
+        protected async Task DeleteManager(string managerId)
         {
-            manager = managers.FirstOrDefault(x => x.Id == ID);
-        }
-        
-        protected async Task DeleteManager(string managerID)
-        {
-            try
-            {
-                await AuthorizedClient.Client.DeleteAsync("api/manager/" + managerID);
-                await GetAllManagers();
-            }
-            catch (AccessTokenNotAvailableException e)
-            {
-                e.Redirect();
-            }
-            catch
-            {
-
-            }
+            try { await AuthorizedClient.Client.DeleteAsync("api/manager/" + managerId); await GetAllManagers(); }
+            catch (AccessTokenNotAvailableException e) { e.Redirect(); }
         }
     }
 }

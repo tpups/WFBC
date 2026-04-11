@@ -1,127 +1,80 @@
 # Active Context
 
-## Current Status: ✅ Infrastructure Migration + Auth Fix COMPLETE (April 8, 2026)
+## Current Work
+Implementing box score import functionality into the .NET Blazor app, migrating functionality from Python scripts in `C:\dev\wfbc_utils`. Build succeeds. Two known runtime issues pending investigation.
 
-All services migrated and production site is live at https://wfbc.page
+## Recent Changes (numbered in order)
 
-## What Was Done
+1. Added `LeagueId` field to `SeasonSettings` model (`wfbc.page/Shared/Models/SeasonSettings.cs`)
+2. Updated `SeasonTeam` model — added `ManagerId`, `Year` fields (`wfbc.page/Shared/Models/SeasonTeam.cs`)
+3. Updated `Manager` model — changed single `TeamId` (string) to `TeamIds` (Dictionary<string, string> mapping year → teamId) (`wfbc.page/Shared/Models/Manager.cs`)
+4. Created `CommishSettings` model for storing Rotowire cookie (`wfbc.page/Shared/Models/CommishSettings.cs`)
+5. Created `BoxScoreImport` model with `BoxScoreEntry`, `BoxScoreImportRequest`, `BoxScoreImportResult` (`wfbc.page/Shared/Models/BoxScoreImport.cs`)
+6. Created server interfaces: `ISeasonTeam`, `ICommishSettings`, `IBoxScore` (`wfbc.page/Server/Interface/`)
+7. Created server DALs: `SeasonTeamDataAccessLayer`, `CommishSettingsDataAccessLayer`, `BoxScoreDataAccessLayer` (`wfbc.page/Server/DataAccess/`)
+8. Created `RotowireFetchService` — fetches box scores from Rotowire using cookie, sends SignalR progress updates (`wfbc.page/Server/Services/RotowireFetchService.cs`)
+9. Updated `WfbcDBContext` — added:
+   - `SeasonTeams`: `Dictionary<string, IMongoCollection<SeasonTeam>>` (reads `wfbc{year}.teams`)
+   - `BoxScores`: `Dictionary<string, Dictionary<string, IMongoCollection<BsonDocument>>>` (new — for import DAL; reads `team_box_hitting`/`team_box_pitching` as untyped documents)
+   - `BoxScoresTyped`: `Dictionary<string, Dictionary<string, IMongoCollection<Box>>>` (replaces broken original `BoxScores` — correct nested structure; used by `RotisserieStandingsService`)
+   - `CommishSettings`: `IMongoCollection<CommishSettings>` (reads `wfbc.commish_settings`)
+   - Restored `Teams`: `IMongoCollection<Team>` (reads `wfbc.teams` legacy flat collection)
+10. Created server controllers: `SeasonTeamController`, `CommishSettingsController`, `BoxScoreController` (`wfbc.page/Server/Controllers/`)
+    - `SeasonTeamController` also has a `POST api/seasonteam/migrate` endpoint that migrates legacy `wfbc.teams` records into year-specific `wfbc{year}.teams` collections (idempotent)
+11. Updated `Startup.cs` — registered `ISeasonTeam`, `ICommishSettings`, `IBoxScore`, `RotowireFetchService`, `HttpClient("rotowire")` services
+12. Rewrote client Teams pages — now use `SeasonTeam` with year-based routing:
+    - `Teams.razor` / `Teams.razor.cs`: year selector, queries `api/seasonteam/{year}`, has "Migrate Legacy Teams" button
+    - `AddEditTeam.razor` / `AddEditTeam.razor.cs`: routes `/commish/add_team/{year}` and `/commish/edit_team/{year}/{teamId}`
+13. Rewrote client Managers pages — updated to show `TeamIds` dictionary (seasons): `Managers.razor`, `Managers.razor.cs`, `AddEditManager.razor`, `AddEditManager.razor.cs`
+14. Created `CommishSettings.razor` — page for commish to paste/save Rotowire cookie (stored server-side)
+15. Created `UpdateBoxScores.razor` — page with year selector, progress bars, SignalR integration for live fetch status
+16. Updated `Commish.razor` — added "Update Box Scores" and "Settings" navigation buttons
+17. Fixed `AddEditDraft.razor.cs` — updated to use `manager.TeamIds[year.ToString()]` instead of `manager.TeamId`
+18. Fixed `RotisserieStandingsService.cs` — replaced all `_db.BoxScores[` with `_db.BoxScoresTyped[` to use the correctly-typed nested collection
 
-### 1. Auth Migration: Okta → Zitadel Cloud
-- Replaced Okta SSO with Zitadel Cloud OIDC (PKCE-enhanced)
-- Server: JWT Bearer auth with Zitadel role claim mapping
-- Client: OIDC binding to Zitadel, pattern-based claim matching for project-ID-embedded roles
-- Key discovery: Zitadel embeds project ID in claim names, requiring pattern matching
+## Build Status
+✅ Build succeeded (warnings only, no errors as of last build)
 
-### 2. Database Migration: MongoDB Atlas → Self-hosted Docker
-- Exported all databases from Atlas via `mongodump`
-- Imported to Docker-hosted MongoDB via `mongorestore`
-- WiredTiger cache constrained to 0.25GB for 2GB droplet
-- Local dev note: Must disable Windows MongoDB service to avoid port 27017 conflict with Docker
+## Known Issues / Pending Investigation
 
-### 3. Container Registry: Docker Hub → GitHub Container Registry (GHCR)
-- Image now at `ghcr.io/tpups/wfbc-page-api:latest`
-- Free private repos, integrated with GitHub account
-- Login: `docker login ghcr.io -u tpups` (uses PAT with `write:packages` scope)
+### Issue 1: Standings Broken ("No standings data found for 2025")
+**Symptom**: The standings page shows "No standings data found for 2025. Please ensure standings have been calculated."
 
-### 4. SSL/Proxy: nginx + certbot → Caddy
-- Caddy handles automatic SSL and reverse proxy
-- Simple Caddyfile: `wfbc.page { reverse_proxy web:8080 }`
+**Background**:
+- `wfbc2025.standings` collection HAS data
+- `wfbc2025.compiled_standings` collection HAS data
+- `BuildUpdateStandings` process successfully ran before our session
+- It stopped working during/after our session
 
-### 5. Docker Compose Rewrite
-- 3-service stack: web, caddy, mongodb
-- Environment variables from `.env` file
-- Memory-budgeted: web 400M, mongodb 500M, caddy 50M (~950M total on 2GB droplet)
+**Likely Cause**: The original `WfbcDBContext.BoxScores` had a **pre-existing bug** — it returned `Dictionary<string, IMongoCollection<Box>>` (flat, keyed by year) but the `RotisserieStandingsService` was calling `_db.BoxScores[year]["hitting"]` which requires a **nested** dictionary. The git commit had this broken type. Our change (`BoxScores → BoxScoresTyped` with proper `Dictionary<string, Dictionary<string, IMongoCollection<Box>>>`) fixes the runtime bug. However, this doesn't explain why pre-existing standings data stopped appearing.
 
-### 6. Zitadel Auth Fix (April 7-8, 2026)
-Fixed 401 errors on Commish API calls (season settings, standings). Three issues found and resolved:
+**Alternative Cause**: The Manager model change (`TeamId string` → `TeamIds Dictionary`) might be affecting how `RotisserieStandingsService` looks up teams when computing standings, since it may be reading manager records that no longer have the old `team_id` BSON field.
 
-**Issue A — Audience Mismatch**: Server validated JWT audience against Client ID, but Zitadel puts Project ID in the `aud` claim.
-- Fix: Added `Zitadel:ProjectId` config and updated `Startup.cs` to accept both Project ID and Client ID as valid audiences.
-- Files: `Startup.cs`, `appsettings.json`, `docker-compose.yml`, `.env`, user secrets
+**Debugging Suggestions**:
+1. Check server logs when loading the standings page — look for `[GetFinalStandingsForYearAsync]` log lines to see if the query returns 0 results
+2. Check if the MongoDB filter `Builders<Standings>.Filter.Eq("Year", year)` is matching — the `Year` field in the standings documents may be stored as int, not string
+3. Check if the `ServerSideStandingsCache` is serving a stale empty result from a previous failed load (cache doesn't expire)
+4. Verify the `wfbc2025.standings` collection can be queried directly in MongoDB shell: `db.standings.find({Year: "2025"}).count()` — if Year is stored as int, the string filter won't match
+5. The `RotisserieStandingsService` uses managers to look up teams for standings — since `Manager.TeamId` no longer exists (changed to `TeamIds`), any code in that service referencing `manager.TeamId` would silently return null/empty
 
-**Issue B — JSON Array Role Claims**: Zitadel returns the roles claim as a JSON array `[{...}]`, not object `{...}`. Both `GroupsClaimsPrincipalFactory` and `Startup.cs OnTokenValidated` called `EnumerateObject()` which fails on arrays.
-- Fix: Updated both parsers to detect `JsonValueKind.Array` vs `JsonValueKind.Object` and handle both, with deduplication via `HashSet`.
-- Files: `GroupsClaimsPrincipalFactory.cs`, `Startup.cs`
+**Action needed**: Search `RotisserieStandingsService.cs` for `TeamId` references that were not updated (the powershell replace only updated `BoxScores` references, not `TeamId` references).
 
-**Issue C — No Role Claims in Access Token**: Zitadel includes role claims in ID tokens but NOT in JWT access tokens. The server receives the access token, validates it, but finds no role claims → Commish policy fails.
-- Fix: Server-side `OnTokenValidated` falls back to Zitadel's `/oidc/v1/userinfo` endpoint when no role claims are in the access token. Results are cached in `IMemoryCache` for 5 minutes per user to avoid repeated calls.
-- Files: `Startup.cs`
+### Issue 2: Teams Page Shows Empty (now resolved with migration button)
+**Cause**: The old Teams page called `api/team` which returned ALL teams from the flat `wfbc.teams` collection. The new Teams page calls `api/seasonteam/{year}` which reads from year-specific `wfbc{year}.teams` collections that are empty until the migration runs.
 
-**Issue D (Prerequisite)**: Zitadel issues opaque access tokens by default for SPA apps.
-- Fix: Changed Token Type from "Opaque" to "JWT" in Zitadel console app settings.
-
-**Additional client change**: Added `urn:zitadel:iam:org:project:id:zitadel:aud` scope to request project audience in access tokens.
-- Files: `Client/Program.cs`
-
-### 7. Rulebook Accordion Conversion (April 8, 2026)
-Converted all 10 rulebook pages from flat text to collapsible accordion sections.
-
-**Changes across all 10 rulebook pages** (Rulebook11, 14, 16, 20, 21, 22, 23, 24, 25, 26):
-- Each section wrapped in `<details class="rulebook-section">` with `<summary>` header
-- All sections start collapsed
-- "Expand All / Collapse All" toggle button with JS interop via `site.js`
-- Added `w-full` to outer container div to fix width inconsistency in flex-row layout
-- Custom SCSS (`_accordion.scss`) for marker hiding, arrow rotation, and width constraints
-- `site.js` added to `wwwroot/js/` with `rulebookAccordion.toggleAll` function
-- Cache-busting added to `index.html`: `styles.css?ver2.2`, `site.js?ver1.0`
-
-**Key files created/modified**:
-- `wwwroot/js/site.js` (new) — JS interop for expand/collapse all
-- `styles/_accordion.scss` (new) — custom details/summary styles
-- `styles/styles.scss` — added `@import 'accordion'`
-- `index.html` — added site.js reference + cache busting
-- All 10 `Rulebook*.razor` files — converted to accordion format
-
-### 8. Mobile Viewport Fix (April 8, 2026)
-Fixed content being cut off at the bottom on iPhone 17 Pro (and other mobile devices with browser toolbars/notches).
-
-**Root Cause**: `.drawer-container` used `height: 100vh`, which on mobile browsers includes the area behind the browser's bottom toolbar. This made the `.main` scrollable area extend behind the toolbar, cutting off the last ~50-80px of content (trophy bottom row, last-place teams in results, etc.). Chrome DevTools can't reproduce this because it doesn't simulate dynamic browser chrome.
-
-**Fixes**:
-- `_drawer.scss`: Changed `height: 100vh` → `height: 100dvh` (dynamic viewport height that accounts for mobile browser UI)
-- `index.html`: Added `viewport-fit=cover` to viewport meta tag for proper safe-area handling on notched devices
-- `styles.scss`: Added `padding-bottom: env(safe-area-inset-bottom)` to `.main` for home indicator area on iPhones
-
-**Note**: Requires Sass recompilation via VS Code Sass Watch extension before deployment.
-
-## Production Deployment Details
-- **Droplet**: Digital Ocean Ubuntu (`docker-ubuntu-s-1vcpu-1gb-sfo3-01`)
-- **SSH user**: josh (`/home/josh/wfbc/`)
-- **Root access**: Via DO console only (SSH root login disabled)
-- **Files on droplet**: `docker-compose.yml`, `Caddyfile`, `.env` (no MongoDB port exposed)
-
-## Zitadel Cloud Details
-- **Instance**: https://wfbc-edq5hx.us1.zitadel.cloud
-- **Project**: wfbc.page (ID: 366760786435015572)
-- **Client ID**: 366762034123100053
-- **Roles**: `Commish` and `Managers`
-- **Redirect URIs**: Both `localhost` (dev) and `wfbc.page` (prod) configured
-- **Token Type**: JWT (changed from default Opaque)
-- **"Return user roles during authentication"**: Enabled at project level
-
-## Local Development Setup
-1. Docker Desktop running with MongoDB container (`docker compose up mongodb -d`)
-2. Windows MongoDB service must be STOPPED and DISABLED (`sc.exe config MongoDB start=disabled`)
-3. User secrets for MongoDB connection: `mongodb://localhost:27017`
-4. User secrets for Zitadel auth: authority + client ID + project ID
-5. App runs via `dotnet run` from Server project
-
-### 9. Mobile Table/Chart Height Reduction (April 10, 2026)
-Reduced height of standings table and chart on mobile to prevent content being cut off by browser chrome (e.g., Chrome Mobile on iPhone 17 Pro).
-
-**StandingsTable.razor**:
-- Changed table container `height: 70vh` → `height: 60dvh` (uses dynamic viewport height that accounts for mobile browser UI)
-
-**StandingsGraph.razor**:
-- Changed chart container from `h-[70vh]` → `h-[60dvh] sm:h-[70vh]` (smaller on mobile, normal on desktop)
-- Reduced container bottom padding: `pb-6` → `pb-2 sm:pb-6`
-- Compacted info section: `mt-4 p-3` → `mt-1 p-1 sm:mt-4 sm:p-3`
-- Reduced info text size: `text-xs` → `text-[10px] sm:text-xs`
-- Fixed landscape CSS selector for info section hide rule (updated from `.mt-4.p-3` to `.bg-gray-50.rounded`)
+**Resolution**: A "Migrate Legacy Teams" button was added to the Teams page. Clicking it calls `POST api/seasonteam/migrate` which copies all records from `wfbc.teams` into the appropriate `wfbc{year}.teams` collection based on each team's `Year` field.
 
 ## Next Steps
-- Recompile Sass and rebuild Docker image with accordion + viewport + height fixes
-- Deploy to production
-- Create user accounts in Zitadel for league members and grant roles
-- Set up MongoDB backup strategy (periodic mongodump to external storage)
-- Consider GitHub Actions for automated Docker builds on push
+1. **URGENT**: Search `RotisserieStandingsService.cs` for any remaining `manager.TeamId` references and update to `manager.TeamIds`
+2. Run the app and check server logs for standings query results
+3. After standings fixed: run Teams migration to populate year-specific collections
+4. Set Rotowire cookie in Settings, add teams, run box score import
+5. Update memory bank after fixes
+
+## Key Architecture Decisions
+- `wfbc.teams` collection (old flat structure) kept for backward compatibility; new teams live in `wfbc{year}.teams`
+- Box scores stored as `BsonDocument` (flexible schema) in `wfbc{year}.team_box_hitting` / `team_box_pitching`
+- `BoxScoresTyped` (`IMongoCollection<Box>`) used by `RotisserieStandingsService` for standings calculations
+- `BoxScores` (`IMongoCollection<BsonDocument>`) used by `BoxScoreDataAccessLayer` for importing raw data
+- Rotowire cookie stored server-side in `wfbc.commish_settings` (single document, commish-only access)
+- Box score fetching happens server-side (not client-side) using stored cookie

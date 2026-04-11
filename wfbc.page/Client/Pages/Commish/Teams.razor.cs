@@ -1,60 +1,52 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using System;
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using System.Collections.Generic;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using WFBC.Shared.Models;
 using System.Linq;
-using MongoDB.Bson;
 
 namespace WFBC.Client.Pages.Commish
 {
     public class TeamsModel : ComponentBase
     {
-        [Inject]
-        public AuthorizedClient AuthorizedClient { get; set; }
-        [Inject]
-        public PublicClient PublicClient { get; set; }
-        [Inject]
-        public NavigationManager UrlNavigationManager { get; set; }
-        
+        [Inject] public AuthorizedClient AuthorizedClient { get; set; }
+        [Inject] public PublicClient PublicClient { get; set; }
+        [Inject] public NavigationManager UrlNavigationManager { get; set; }
+
         protected List<Manager> managers = new List<Manager>();
-        protected Manager manager = new Manager();
-        protected List<Team> teams = new List<Team>();
-        protected Team team = new Team();
+        protected List<SeasonTeam> seasonTeams = new List<SeasonTeam>();
+        protected SeasonTeam seasonTeam = new SeasonTeam();
+        protected string selectedYear = DateTime.Now.Year.ToString();
+        protected List<int> availableYears = new List<int>();
 
         protected override async Task OnInitializedAsync()
         {
+            for (int y = DateTime.Now.Year; y >= 2019; y--) availableYears.Add(y);
             await GetAllManagers();
-            await GetAllTeams();
+            await LoadTeams();
         }
 
         protected async Task GetAllManagers()
+            => managers = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager") ?? new();
+
+        protected async Task LoadTeams()
+            => seasonTeams = await PublicClient.Client.GetFromJsonAsync<List<SeasonTeam>>($"api/seasonteam/{selectedYear}") ?? new();
+
+        protected async Task OnYearChanged(ChangeEventArgs e)
         {
-            managers = await PublicClient.Client.GetFromJsonAsync<List<Manager>>("api/manager");
-        }
-        
-        protected async Task GetAllTeams()
-        {
-            teams = await PublicClient.Client.GetFromJsonAsync<List<Team>>("api/team");
+            selectedYear = e.Value?.ToString() ?? selectedYear;
+            await LoadTeams();
         }
 
-        protected void DeleteConfirm(string ID)
+        protected void DeleteConfirm(string id)
+            => seasonTeam = seasonTeams.FirstOrDefault(t => t.Id == id) ?? new SeasonTeam();
+
+        protected async Task DeleteSeasonTeam(string id)
         {
-            team = teams.FirstOrDefault(x => x.Id == ID);
-        }
-        
-        protected async Task DeleteTeam(string teamID)
-        {
-            try
-            {
-                await AuthorizedClient.Client.DeleteAsync("api/team/" + teamID);
-                await GetAllTeams();
-            }
-            catch (AccessTokenNotAvailableException e)
-            {
-                e.Redirect();
-            }
+            try { await AuthorizedClient.Client.DeleteAsync($"api/seasonteam/{selectedYear}/{id}"); await LoadTeams(); }
+            catch (AccessTokenNotAvailableException e) { e.Redirect(); }
         }
     }
 }

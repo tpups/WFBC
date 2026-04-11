@@ -2,7 +2,7 @@
 @attribute [Authorize(Policy = Policies.IsCommish)]
 @inherits ManagersModel
 @using WFBC.Client.Shared.Components.Buttons;
-
+@using System.Linq
 
 <div class="flex flex-col m-3 lg:m-6 max-w-full">
     <div class="flex p-4 mb-2 border rounded-xl shadow-sm">
@@ -17,21 +17,32 @@
                         <thead>
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Name</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Team</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Seasons</th>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Email</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-wfbc-black-1 uppercase">Status</th>
                                 <th scope="col" class="px-6 py-3 text-right text-xs font-medium text-wfbc-black-1 uppercase">Options</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-wfbc-blue-2">
-                            @foreach (var manager in managers)
+                            @foreach (var mgr in managers)
                             {
                                 <tr>
-                                    <td class="p-2 md:p-4 text-sm md:text-md">@manager.FirstName</td>
-                                    <td class="p-2 md:p-4 text-sm md:text-md whitespace-nowrap">@(teams.Where(t => t.ManagerId == manager.Id).FirstOrDefault()?.Name)</td>
-                                    <td class="p-2 md:p-4 text-sm md:text-md">@manager.Email</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@mgr.FirstName @mgr.LastName</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">
+                                        @if (mgr.TeamIds != null && mgr.TeamIds.Any())
+                                        {
+                                            <span class="text-xs">@string.Join(", ", mgr.TeamIds.Keys.OrderByDescending(k => k))</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-xs text-gray-400">None</span>
+                                        }
+                                    </td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@mgr.Email</td>
+                                    <td class="p-2 md:p-4 text-sm md:text-md">@mgr.Status</td>
                                     <td class="p-2 md:p-4 text-sm md:text-md flex">
-                                        <Button ButtonText="Edit" Href=@("/commish/edit_manager/" + @manager.Id) AriaLabel="edit manager link" />
-                                        <Button ButtonText="Delete" FunctionParameter="@manager.Id" OnClickFunction=OpenDeleteManagerModal AriaLabel="open delete manager modal" />
+                                        <Button ButtonText="Edit" Href=@("/commish/edit_manager/" + @mgr.Id) AriaLabel="edit manager link" />
+                                        <Button ButtonText="Delete" FunctionParameter="@mgr.Id" OnClickFunction=OpenDeleteManagerModal AriaLabel="open delete manager modal" />
                                     </td>
                                 </tr>
                             }
@@ -41,7 +52,6 @@
             </div>
         </div>
     </div>
-
 </div>
 
 <Modal ModalId="delete-manager-modal" Hidden="@Hidden" CloseModal=CloseModal>
@@ -51,28 +61,10 @@
     <Button ButtonText="No, cancel" OnClickFunction=CloseModal />
 </Modal>
 
-
 @code {
     public string Hidden { get; set; }
-
-    protected override async Task OnInitializedAsync()
-    {
-        Hidden = "hidden";
-        await base.OnInitializedAsync();
-    }
-
-    public void OpenDeleteManagerModal(string manId)
-    {
-        Hidden = "";
-        DeleteConfirm(manId);
-    }
-    public void CloseModal()
-    {
-        Hidden = "hidden";
-    }
-    public async Task Delete(string id)
-    {
-        await DeleteManager(id);
-        CloseModal();
-    }
+    protected override async Task OnInitializedAsync() { Hidden = "hidden"; await base.OnInitializedAsync(); }
+    public void OpenDeleteManagerModal(string manId) { Hidden = ""; DeleteConfirm(manId); }
+    public void CloseModal() { Hidden = "hidden"; }
+    public async Task Delete(string id) { await DeleteManager(id); CloseModal(); }
 }

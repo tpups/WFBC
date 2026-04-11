@@ -19,6 +19,9 @@ namespace WFBC.Shared.Models
         [BsonElement("seasonEndDate")]
         public DateTime SeasonEndDate { get; set; }
 
+        [BsonElement("leagueId")]
+        public string? LeagueId { get; set; }
+
         [BsonElement("createdAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

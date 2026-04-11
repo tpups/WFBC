@@ -208,6 +208,11 @@ namespace WFBC.Server
             services.AddTransient<IPick, PickDataAccessLayer>();
             services.AddTransient<IStandings, StandingsDataAccessLayer>();
             services.AddTransient<ISeasonSettings, SeasonSettingsDataAccessLayer>();
+            services.AddTransient<ISeasonTeam, SeasonTeamDataAccessLayer>();
+            services.AddTransient<ICommishSettings, CommishSettingsDataAccessLayer>();
+            services.AddTransient<IBoxScore, BoxScoreDataAccessLayer>();
+            services.AddTransient<RotowireFetchService>();
+            services.AddHttpClient("rotowire");
             // Memory Cache
             services.AddMemoryCache();
             
