@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Work
-Implementing box score import functionality into the .NET Blazor app, migrating functionality from Python scripts in `C:\dev\wfbc_utils`. Build succeeds. Two known runtime issues pending investigation.
+Implementing box score import functionality into the .NET Blazor app, migrating functionality from Python scripts in `C:\dev\wfbc_utils`. Build succeeds. Standings and Teams display confirmed working.
 
 ## Recent Changes (numbered in order)
 
@@ -13,68 +13,69 @@ Implementing box score import functionality into the .NET Blazor app, migrating 
 6. Created server interfaces: `ISeasonTeam`, `ICommishSettings`, `IBoxScore` (`wfbc.page/Server/Interface/`)
 7. Created server DALs: `SeasonTeamDataAccessLayer`, `CommishSettingsDataAccessLayer`, `BoxScoreDataAccessLayer` (`wfbc.page/Server/DataAccess/`)
 8. Created `RotowireFetchService` — fetches box scores from Rotowire using cookie, sends SignalR progress updates (`wfbc.page/Server/Services/RotowireFetchService.cs`)
-9. Updated `WfbcDBContext` — added:
-   - `SeasonTeams`: `Dictionary<string, IMongoCollection<SeasonTeam>>` (reads `wfbc{year}.teams`)
-   - `BoxScores`: `Dictionary<string, Dictionary<string, IMongoCollection<BsonDocument>>>` (new — for import DAL; reads `team_box_hitting`/`team_box_pitching` as untyped documents)
-   - `BoxScoresTyped`: `Dictionary<string, Dictionary<string, IMongoCollection<Box>>>` (replaces broken original `BoxScores` — correct nested structure; used by `RotisserieStandingsService`)
-   - `CommishSettings`: `IMongoCollection<CommishSettings>` (reads `wfbc.commish_settings`)
-   - Restored `Teams`: `IMongoCollection<Team>` (reads `wfbc.teams` legacy flat collection)
-10. Created server controllers: `SeasonTeamController`, `CommishSettingsController`, `BoxScoreController` (`wfbc.page/Server/Controllers/`)
-    - `SeasonTeamController` also has a `POST api/seasonteam/migrate` endpoint that migrates legacy `wfbc.teams` records into year-specific `wfbc{year}.teams` collections (idempotent)
+9. Updated `WfbcDBContext` — added `SeasonTeams`, `BoxScores` (untyped), `BoxScoresTyped` (typed), `CommishSettings`, restored `Teams`
+10. Created server controllers: `SeasonTeamController`, `CommishSettingsController`, `BoxScoreController`
 11. Updated `Startup.cs` — registered `ISeasonTeam`, `ICommishSettings`, `IBoxScore`, `RotowireFetchService`, `HttpClient("rotowire")` services
-12. Rewrote client Teams pages — now use `SeasonTeam` with year-based routing:
-    - `Teams.razor` / `Teams.razor.cs`: year selector, queries `api/seasonteam/{year}`, has "Migrate Legacy Teams" button
-    - `AddEditTeam.razor` / `AddEditTeam.razor.cs`: routes `/commish/add_team/{year}` and `/commish/edit_team/{year}/{teamId}`
-13. Rewrote client Managers pages — updated to show `TeamIds` dictionary (seasons): `Managers.razor`, `Managers.razor.cs`, `AddEditManager.razor`, `AddEditManager.razor.cs`
-14. Created `CommishSettings.razor` — page for commish to paste/save Rotowire cookie (stored server-side)
-15. Created `UpdateBoxScores.razor` — page with year selector, progress bars, SignalR integration for live fetch status
+12. Rewrote client Teams pages — year-based routing, queries `api/seasonteam/{year}`
+13. Rewrote client Managers pages — updated to show `TeamIds` dictionary
+14. Created `CommishSettings.razor` — page for commish to paste/save Rotowire cookie
+15. Created `UpdateBoxScores.razor` — page with year selector, progress bars, SignalR integration
 16. Updated `Commish.razor` — added "Update Box Scores" and "Settings" navigation buttons
-17. Fixed `AddEditDraft.razor.cs` — updated to use `manager.TeamIds[year.ToString()]` instead of `manager.TeamId`
-18. Fixed `RotisserieStandingsService.cs` — replaced all `_db.BoxScores[` with `_db.BoxScoresTyped[` to use the correctly-typed nested collection
+17. Fixed `AddEditDraft.razor.cs` — updated to use `manager.TeamIds[year.ToString()]`
+18. Fixed `RotisserieStandingsService.cs` — replaced `_db.BoxScores[` with `_db.BoxScoresTyped[`
+19. **Added `[BsonIgnoreExtraElements]` to `Manager` model** — fixes standings display bug (old MongoDB docs had `team_id` string; new model has `TeamIds` dict; driver was throwing BsonSerializationException)
+20. **Updated `appsettings.json` EndYear from 2025 to 2026** — enables 2026 season support; MongoDB creates `wfbc2026` lazily on first write
 
 ## Build Status
-✅ Build succeeded (warnings only, no errors as of last build)
+✅ Build succeeded (warnings only, no errors)
 
-## Known Issues / Pending Investigation
+## Runtime Status
+✅ Standings display working
+✅ Teams page showing existing teams from `wfbc{year}.teams` collections (data pre-existed from Python scripts)
 
-### Issue 1: Standings Broken ("No standings data found for 2025")
-**Symptom**: The standings page shows "No standings data found for 2025. Please ensure standings have been calculated."
+## Architecture Notes
 
-**Background**:
-- `wfbc2025.standings` collection HAS data
-- `wfbc2025.compiled_standings` collection HAS data
-- `BuildUpdateStandings` process successfully ran before our session
-- It stopped working during/after our session
+### Data Sources
+- `wfbc.managers` — Manager documents
+- `wfbc.settings` — SeasonSettings documents (one per year; contains `leagueId`, `seasonStartDate`, `seasonEndDate`)
+- `wfbc.commish_settings` — single document with Rotowire cookie
+- `wfbc{year}.teams` — SeasonTeam documents (already existed from Python with correct snake_case field names)
+- `wfbc{year}.team_box_hitting` / `team_box_pitching` — box score data
+- `wfbc{year}.standings` / `compiled_standings` — pre-computed standings
 
-**Likely Cause**: The original `WfbcDBContext.BoxScores` had a **pre-existing bug** — it returned `Dictionary<string, IMongoCollection<Box>>` (flat, keyed by year) but the `RotisserieStandingsService` was calling `_db.BoxScores[year]["hitting"]` which requires a **nested** dictionary. The git commit had this broken type. Our change (`BoxScores → BoxScoresTyped` with proper `Dictionary<string, Dictionary<string, IMongoCollection<Box>>>`) fixes the runtime bug. However, this doesn't explain why pre-existing standings data stopped appearing.
+### 2026 Season
+- No `wfbc2026` database exists yet; MongoDB creates it on first write
+- EndYear is now 2026; `WfbcDBContext` initializes 2026 database handles
+- Teams page year dropdown: `DateTime.Now.Year` (2026) down to 2019
 
-**Alternative Cause**: The Manager model change (`TeamId string` → `TeamIds Dictionary`) might be affecting how `RotisserieStandingsService` looks up teams when computing standings, since it may be reading manager records that no longer have the old `team_id` BSON field.
+## Next Steps (in priority order)
 
-**Debugging Suggestions**:
-1. Check server logs when loading the standings page — look for `[GetFinalStandingsForYearAsync]` log lines to see if the query returns 0 results
-2. Check if the MongoDB filter `Builders<Standings>.Filter.Eq("Year", year)` is matching — the `Year` field in the standings documents may be stored as int, not string
-3. Check if the `ServerSideStandingsCache` is serving a stale empty result from a previous failed load (cache doesn't expire)
-4. Verify the `wfbc2025.standings` collection can be queried directly in MongoDB shell: `db.standings.find({Year: "2025"}).count()` — if Year is stored as int, the string filter won't match
-5. The `RotisserieStandingsService` uses managers to look up teams for standings — since `Manager.TeamId` no longer exists (changed to `TeamIds`), any code in that service referencing `manager.TeamId` would silently return null/empty
+### 1. Fix RotowireFetchService HTTP headers
+The C# service only sends `Cookie`, truncated `User-Agent`, and minimal `Accept` header. Python sends a full browser fingerprint:
+- `Host: www.rotowire.com`
+- `Connection: keep-alive`
+- `Cache-Control: max-age=0`
+- `DNT: 1`
+- `Upgrade-Insecure-Requests: 1`
+- `User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52`
+- `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9`
+- `Sec-Fetch-Site: none`, `Sec-Fetch-Mode: navigate`, `Sec-Fetch-User: ?1`, `Sec-Fetch-Dest: document`
+- `Accept-Encoding: gzip, deflate, br`
+- `Accept-Language: en-US,en;q=0.9,mt;q=0.8`
+- `Cookie: {cookie}`
 
-**Action needed**: Search `RotisserieStandingsService.cs` for `TeamId` references that were not updated (the powershell replace only updated `BoxScores` references, not `TeamId` references).
+### 2. Add Season Settings Commish page (new page, separate from CommishSettings)
+The `RotowireFetchService.FetchBoxScores` reads `SeasonSettings` from `wfbc.settings` collection (fields: `year`, `leagueId`, `seasonStartDate`, `seasonEndDate`). No record exists for 2026 yet. Python had these hardcoded; C# reads from DB.
+- Need: new Commish page listing all season settings by year, with Add/Edit form
+- Fields: year (int), season start date, season end date, league ID (Rotowire league ID)
+- The `SeasonSettingsController` and `SeasonSettingsDataAccessLayer` already exist
 
-### Issue 2: Teams Page Shows Empty (now resolved with migration button)
-**Cause**: The old Teams page called `api/team` which returned ALL teams from the flat `wfbc.teams` collection. The new Teams page calls `api/seasonteam/{year}` which reads from year-specific `wfbc{year}.teams` collections that are empty until the migration runs.
+### 3. Update UpdateBoxScores page
+- Add warning if no SeasonSettings exist for the selected year
+- Consider linking to the Season Settings page from the warning
 
-**Resolution**: A "Migrate Legacy Teams" button was added to the Teams page. Clicking it calls `POST api/seasonteam/migrate` which copies all records from `wfbc.teams` into the appropriate `wfbc{year}.teams` collection based on each team's `Year` field.
-
-## Next Steps
-1. **URGENT**: Search `RotisserieStandingsService.cs` for any remaining `manager.TeamId` references and update to `manager.TeamIds`
-2. Run the app and check server logs for standings query results
-3. After standings fixed: run Teams migration to populate year-specific collections
-4. Set Rotowire cookie in Settings, add teams, run box score import
-5. Update memory bank after fixes
-
-## Key Architecture Decisions
-- `wfbc.teams` collection (old flat structure) kept for backward compatibility; new teams live in `wfbc{year}.teams`
-- Box scores stored as `BsonDocument` (flexible schema) in `wfbc{year}.team_box_hitting` / `team_box_pitching`
-- `BoxScoresTyped` (`IMongoCollection<Box>`) used by `RotisserieStandingsService` for standings calculations
-- `BoxScores` (`IMongoCollection<BsonDocument>`) used by `BoxScoreDataAccessLayer` for importing raw data
-- Rotowire cookie stored server-side in `wfbc.commish_settings` (single document, commish-only access)
-- Box score fetching happens server-side (not client-side) using stored cookie
+### 4. After code is done (manual steps)
+- Add Rotowire cookie in Settings page
+- Add 2026 teams via Teams tool
+- Add 2026 season settings via new Season Settings page (leagueId needed from Rotowire)
+- Run box score import for 2026

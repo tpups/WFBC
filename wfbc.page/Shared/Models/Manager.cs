@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WFBC.Shared.Models
 {
+    [BsonIgnoreExtraElements]
     public class Manager
     {
         [BsonId]
