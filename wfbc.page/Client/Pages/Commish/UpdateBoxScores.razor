@@ -4,7 +4,9 @@
 @using Microsoft.AspNetCore.Components.WebAssembly.Authentication
 @using Microsoft.AspNetCore.SignalR.Client
 @inject AuthorizedClient AuthorizedClient
+@inject PublicClient PublicClient
 @inject NavigationManager NavManager
+@inject IAccessTokenProvider TokenProvider
 @implements IAsyncDisposable
 
 <div class="flex flex-col my-6 lg:mx-6 w-full md:w-2/3 lg:w-1/2">
@@ -14,13 +16,23 @@
         <div class="flex items-center gap-4">
             <label class="text-sm text-wfbc-blue-2 font-medium">Year:</label>
             <select class="pl-2 h-8 rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 text-sm"
-                    @bind="selectedYear" disabled="@isFetching">
+                    @bind="selectedYear" @bind:after="OnYearChanged" disabled="@isFetching">
                 @foreach (var year in availableYears)
                 {
                     <option value="@year">@year</option>
                 }
             </select>
         </div>
+
+        @if (!seasonSettingsFound)
+        {
+            <div class="p-3 bg-yellow-50 border border-yellow-300 rounded-md">
+                <p class="text-sm text-yellow-800">
+                    No season settings found for <strong>@selectedYear</strong>.
+                    <a href="/commish/seasonsettings" class="underline font-medium ml-1">Configure season settings →</a>
+                </p>
+            </div>
+        }
 
         @if (!string.IsNullOrEmpty(errorMessage))
         {
@@ -90,6 +102,7 @@
     private List<int> availableYears = new();
     private bool isFetching = false;
     private bool isComplete = false;
+    private bool seasonSettingsFound = true;
     private string errorMessage = string.Empty;
     private ProgressData? progress;
     private HubConnection? hubConnection;
@@ -110,9 +123,17 @@
     protected override async Task OnInitializedAsync()
     {
         for (int y = DateTime.Now.Year; y >= 2019; y--) availableYears.Add(y);
+        await CheckSeasonSettings();
         var baseUri = NavManager.BaseUri.TrimEnd('/');
         hubConnection = new HubConnectionBuilder()
-            .WithUrl($"{baseUri}/progressHub")
+            .WithUrl($"{baseUri}/progressHub", options =>
+            {
+                options.AccessTokenProvider = async () =>
+                {
+                    var result = await TokenProvider.RequestAccessToken();
+                    return result.TryGetToken(out var token) ? token.Value : null;
+                };
+            })
             .WithAutomaticReconnect()
             .Build();
         hubConnection.On<ProgressData>("ReceiveProgress", (update) =>
@@ -122,6 +143,21 @@
             InvokeAsync(StateHasChanged);
         });
         await hubConnection.StartAsync();
+    }
+
+    private async Task OnYearChanged()
+    {
+        await CheckSeasonSettings();
+    }
+
+    private async Task CheckSeasonSettings()
+    {
+        try
+        {
+            var s = await PublicClient.Client.GetFromJsonAsync<WFBC.Shared.Models.SeasonSettings>($"/api/seasonsettings/{selectedYear}");
+            seasonSettingsFound = s != null;
+        }
+        catch { seasonSettingsFound = false; }
     }
 
     private async Task StartFetch()

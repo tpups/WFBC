@@ -69,6 +69,16 @@ namespace WFBC.Server
                 };
                 options.Events = new JwtBearerEvents
                 {
+                    OnMessageReceived = context =>
+                    {
+                        var accessToken = context.Request.Query["access_token"];
+                        if (!string.IsNullOrEmpty(accessToken) &&
+                            context.HttpContext.Request.Path.StartsWithSegments("/progressHub"))
+                        {
+                            context.Token = accessToken;
+                        }
+                        return System.Threading.Tasks.Task.CompletedTask;
+                    },
                     OnAuthenticationFailed = context =>
                     {
                         var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("ZitadelAuth");
@@ -212,7 +222,10 @@ namespace WFBC.Server
             services.AddTransient<ICommishSettings, CommishSettingsDataAccessLayer>();
             services.AddTransient<IBoxScore, BoxScoreDataAccessLayer>();
             services.AddTransient<RotowireFetchService>();
-            services.AddHttpClient("rotowire");
+            services.AddHttpClient("rotowire").ConfigurePrimaryHttpMessageHandler(() => new System.Net.Http.HttpClientHandler
+            {
+                AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate | System.Net.DecompressionMethods.Brotli
+            });
             // Memory Cache
             services.AddMemoryCache();
             

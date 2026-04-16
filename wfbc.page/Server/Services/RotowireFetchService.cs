@@ -86,8 +86,18 @@ namespace WFBC.Server.Services
             {
                 var req = new HttpRequestMessage(HttpMethod.Get, $"{baseUrl}?leagueID={leagueId}&teamID={teamId}&date={date}&borp={borp}");
                 req.Headers.Add("Cookie", cookie);
-                req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36");
-                req.Headers.Add("Accept", "application/json, */*");
+                req.Headers.Add("Host", "www.rotowire.com");
+                req.Headers.Add("Connection", "keep-alive");
+                req.Headers.Add("Cache-Control", "max-age=0");
+                req.Headers.Add("DNT", "1");
+                req.Headers.Add("Upgrade-Insecure-Requests", "1");
+                req.Headers.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52");
+                req.Headers.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
+                req.Headers.Add("Sec-Fetch-Site", "none");
+                req.Headers.Add("Sec-Fetch-Mode", "navigate");
+                req.Headers.Add("Sec-Fetch-User", "?1");
+                req.Headers.Add("Sec-Fetch-Dest", "document");
+                req.Headers.Add("Accept-Language", "en-US,en;q=0.9,mt;q=0.8");
                 var resp = await client.SendAsync(req);
                 if (!resp.IsSuccessStatusCode) return null;
                 var content = await resp.Content.ReadAsStringAsync();

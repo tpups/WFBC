@@ -1,37 +1,42 @@
 # Active Context
 
 ## Current Work
-Implementing box score import functionality into the .NET Blazor app, migrating functionality from Python scripts in `C:\dev\wfbc_utils`. Build succeeds. Standings and Teams display confirmed working.
+Box score import and 2026 season functionality is fully working. Standings calculate correctly with data imported via the .NET app. All commish tools operational.
 
 ## Recent Changes (numbered in order)
 
-1. Added `LeagueId` field to `SeasonSettings` model (`wfbc.page/Shared/Models/SeasonSettings.cs`)
-2. Updated `SeasonTeam` model — added `ManagerId`, `Year` fields (`wfbc.page/Shared/Models/SeasonTeam.cs`)
-3. Updated `Manager` model — changed single `TeamId` (string) to `TeamIds` (Dictionary<string, string> mapping year → teamId) (`wfbc.page/Shared/Models/Manager.cs`)
-4. Created `CommishSettings` model for storing Rotowire cookie (`wfbc.page/Shared/Models/CommishSettings.cs`)
-5. Created `BoxScoreImport` model with `BoxScoreEntry`, `BoxScoreImportRequest`, `BoxScoreImportResult` (`wfbc.page/Shared/Models/BoxScoreImport.cs`)
-6. Created server interfaces: `ISeasonTeam`, `ICommishSettings`, `IBoxScore` (`wfbc.page/Server/Interface/`)
-7. Created server DALs: `SeasonTeamDataAccessLayer`, `CommishSettingsDataAccessLayer`, `BoxScoreDataAccessLayer` (`wfbc.page/Server/DataAccess/`)
-8. Created `RotowireFetchService` — fetches box scores from Rotowire using cookie, sends SignalR progress updates (`wfbc.page/Server/Services/RotowireFetchService.cs`)
-9. Updated `WfbcDBContext` — added `SeasonTeams`, `BoxScores` (untyped), `BoxScoresTyped` (typed), `CommishSettings`, restored `Teams`
+1. Added `LeagueId` field to `SeasonSettings` model
+2. Updated `SeasonTeam` model — added `ManagerId`, `Year` fields
+3. Updated `Manager` model — changed single `TeamId` to `TeamIds` (Dictionary<string, string>)
+4. Created `CommishSettings` model for storing Rotowire cookie
+5. Created `BoxScoreImport` model with `BoxScoreEntry`, `BoxScoreImportRequest`, `BoxScoreImportResult`
+6. Created server interfaces: `ISeasonTeam`, `ICommishSettings`, `IBoxScore`
+7. Created server DALs: `SeasonTeamDataAccessLayer`, `CommishSettingsDataAccessLayer`, `BoxScoreDataAccessLayer`
+8. Created `RotowireFetchService` — fetches box scores from Rotowire with full browser fingerprint headers, SignalR progress
+9. Updated `WfbcDBContext` — added `SeasonTeams`, `BoxScores` (untyped), `BoxScoresTyped` (typed), `CommishSettings`
 10. Created server controllers: `SeasonTeamController`, `CommishSettingsController`, `BoxScoreController`
-11. Updated `Startup.cs` — registered `ISeasonTeam`, `ICommishSettings`, `IBoxScore`, `RotowireFetchService`, `HttpClient("rotowire")` services
+11. Updated `Startup.cs` — registered all new services, `HttpClient("rotowire")` with auto-decompression
 12. Rewrote client Teams pages — year-based routing, queries `api/seasonteam/{year}`
 13. Rewrote client Managers pages — updated to show `TeamIds` dictionary
 14. Created `CommishSettings.razor` — page for commish to paste/save Rotowire cookie
 15. Created `UpdateBoxScores.razor` — page with year selector, progress bars, SignalR integration
-16. Updated `Commish.razor` — added "Update Box Scores" and "Settings" navigation buttons
-17. Fixed `AddEditDraft.razor.cs` — updated to use `manager.TeamIds[year.ToString()]`
-18. Fixed `RotisserieStandingsService.cs` — replaced `_db.BoxScores[` with `_db.BoxScoresTyped[`
-19. **Added `[BsonIgnoreExtraElements]` to `Manager` model** — fixes standings display bug (old MongoDB docs had `team_id` string; new model has `TeamIds` dict; driver was throwing BsonSerializationException)
-20. **Updated `appsettings.json` EndYear from 2025 to 2026** — enables 2026 season support; MongoDB creates `wfbc2026` lazily on first write
+16. Updated `Commish.razor` — added navigation buttons for new tools
+17. Created `SeasonSettingsManager.razor` — commish page for managing season settings per year
+18. Fixed `[BsonIgnoreExtraElements]` on `Manager` model for backwards compatibility
+19. Updated `appsettings.json` EndYear to 2026
+20. **Fixed SignalR auth** — Server reads token from query string for `/progressHub`, client passes `AccessTokenProvider`
+21. **Fixed gzip decompression** — Configured `HttpClientHandler` with `AutomaticDecompression` for gzip/deflate/brotli; removed manual `Accept-Encoding` header from `RotowireFetchService`
+22. **Updated 2026 nav links** — `NavMenu.razor` results loop starts at 2026; `MainLayout.razor` default Results link → `/results/2026`
+23. **Fixed standings ConvertToInt** — Added `long`, `double`, `decimal`, `short` handling to `ConvertToInt()` in `RotisserieStandingsService.cs` (the .NET importer stores numbers as Int64 via `System.Text.Json`, while Python stored Int32)
 
 ## Build Status
-✅ Build succeeded (warnings only, no errors)
+✅ Build succeeded
 
 ## Runtime Status
-✅ Standings display working
-✅ Teams page showing existing teams from `wfbc{year}.teams` collections (data pre-existed from Python scripts)
+✅ Standings display working with all stat categories
+✅ Box score import from Rotowire working
+✅ 2026 season fully operational (teams, settings, box scores, standings)
+✅ SignalR progress updates working for both box score import and standings build
 
 ## Architecture Notes
 
@@ -39,43 +44,18 @@ Implementing box score import functionality into the .NET Blazor app, migrating 
 - `wfbc.managers` — Manager documents
 - `wfbc.settings` — SeasonSettings documents (one per year; contains `leagueId`, `seasonStartDate`, `seasonEndDate`)
 - `wfbc.commish_settings` — single document with Rotowire cookie
-- `wfbc{year}.teams` — SeasonTeam documents (already existed from Python with correct snake_case field names)
+- `wfbc{year}.teams` — SeasonTeam documents
 - `wfbc{year}.team_box_hitting` / `team_box_pitching` — box score data
 - `wfbc{year}.standings` / `compiled_standings` — pre-computed standings
 
-### 2026 Season
-- No `wfbc2026` database exists yet; MongoDB creates it on first write
-- EndYear is now 2026; `WfbcDBContext` initializes 2026 database handles
-- Teams page year dropdown: `DateTime.Now.Year` (2026) down to 2019
+### Key Technical Details
+- Rotowire HTTP client uses `AutomaticDecompression` (gzip/deflate/brotli) configured via `ConfigurePrimaryHttpMessageHandler` in `Startup.cs`
+- Box score numeric values stored as `Int64` (long) in MongoDB via `System.Text.Json` → `TryGetInt64`
+- `ConvertToInt()` in standings service handles `int`, `long`, `double`, `decimal`, `short`, and `string` types
+- SignalR `/progressHub` auth uses query string `access_token` parameter (WebSocket can't send Authorization headers)
+- `ResultsDynamic.razor` handles years 2019+ with parameterized route `/results/{year:int}`
 
-## Next Steps (in priority order)
-
-### 1. Fix RotowireFetchService HTTP headers
-The C# service only sends `Cookie`, truncated `User-Agent`, and minimal `Accept` header. Python sends a full browser fingerprint:
-- `Host: www.rotowire.com`
-- `Connection: keep-alive`
-- `Cache-Control: max-age=0`
-- `DNT: 1`
-- `Upgrade-Insecure-Requests: 1`
-- `User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/84.0.4147.105 Safari/537.36 Edg/84.0.522.52`
-- `Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9`
-- `Sec-Fetch-Site: none`, `Sec-Fetch-Mode: navigate`, `Sec-Fetch-User: ?1`, `Sec-Fetch-Dest: document`
-- `Accept-Encoding: gzip, deflate, br`
-- `Accept-Language: en-US,en;q=0.9,mt;q=0.8`
-- `Cookie: {cookie}`
-
-### 2. Add Season Settings Commish page (new page, separate from CommishSettings)
-The `RotowireFetchService.FetchBoxScores` reads `SeasonSettings` from `wfbc.settings` collection (fields: `year`, `leagueId`, `seasonStartDate`, `seasonEndDate`). No record exists for 2026 yet. Python had these hardcoded; C# reads from DB.
-- Need: new Commish page listing all season settings by year, with Add/Edit form
-- Fields: year (int), season start date, season end date, league ID (Rotowire league ID)
-- The `SeasonSettingsController` and `SeasonSettingsDataAccessLayer` already exist
-
-### 3. Update UpdateBoxScores page
-- Add warning if no SeasonSettings exist for the selected year
-- Consider linking to the Season Settings page from the warning
-
-### 4. After code is done (manual steps)
-- Add Rotowire cookie in Settings page
-- Add 2026 teams via Teams tool
-- Add 2026 season settings via new Season Settings page (leagueId needed from Rotowire)
-- Run box score import for 2026
+## Next Steps
+- Deploy updated container to production
+- Consider automating box score imports (scheduled task or cron)
+- Trophy.razor needs 2026 entry added at end of season

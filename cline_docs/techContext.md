@@ -24,7 +24,7 @@
 - **Attributes**: MongoDB.Bson for model mapping
 - **Connection**: `mongodb://mongodb:27017` (Docker internal) / `mongodb://localhost:27017` (local dev)
 - **Cache**: WiredTiger cache constrained to 0.25GB for 2GB droplet
-- **Databases**: `wfbc` (main) + `wfbc2011`-`wfbc2025` (per-season standings)
+- **Databases**: `wfbc` (main) + `wfbc2011`-`wfbc2026` (per-season data)
 
 ### Infrastructure
 - **Containerization**: Docker Compose (3 services: web, mongodb, caddy)
@@ -153,8 +153,25 @@ ZITADEL_PROJECT_ID=366760786435015572
 - **No secrets in repo**: Auth config in user secrets (dev) and .env (prod)
 - **MongoDB**: Not exposed to internet in production (Docker internal network only)
 
+### Rotowire HTTP Client
+- Named client "rotowire" configured with `AutomaticDecompression` (gzip/deflate/brotli) via `ConfigurePrimaryHttpMessageHandler`
+- Do NOT add manual `Accept-Encoding` header — the handler manages it automatically
+- Full browser fingerprint headers required (User-Agent, Sec-Fetch-*, etc.)
+- Cookie obtained from browser DevTools → Network tab → Request Headers → Cookie
+
+### SignalR Authentication
+- WebSocket protocol can't send Authorization headers
+- Server extracts token from `?access_token=` query parameter for `/progressHub` (configured in `OnMessageReceived` JwtBearer event)
+- Client configures `AccessTokenProvider` on `HubConnectionBuilder`
+
+### Box Score Import — Int64 vs Int32
+- Python scripts stored numeric values as Int32 in MongoDB
+- .NET `System.Text.Json` deserializes numbers via `TryGetInt64` → stores as Int64
+- `ConvertToInt()` in `RotisserieStandingsService.cs` handles `int`, `long`, `double`, `decimal`, `short`, `string`
+- IP (innings pitched) stored as string, handled separately
+
 ## Integration Points
 - **Zitadel Cloud**: Authentication and authorization (OIDC)
-- **Rotowire**: External fantasy sports data (team IDs in Manager model)
+- **Rotowire**: Box score data fetched via HTTP with browser fingerprint + cookie auth
 - **GitHub Container Registry**: Docker image hosting
 - **Digital Ocean**: Infrastructure hosting

@@ -344,8 +344,12 @@ namespace WFBC.Server.Services
         {
             if (value == null) return null;
             
-            // Handle direct int values
+            // Handle direct numeric types
             if (value is int intVal) return intVal;
+            if (value is long longVal) return (int)longVal;
+            if (value is double doubleVal) return (int)doubleVal;
+            if (value is decimal decVal) return (int)decVal;
+            if (value is short shortVal) return shortVal;
             
             // Handle string values
             if (value is string stringVal && !string.IsNullOrEmpty(stringVal))
