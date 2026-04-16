@@ -57,7 +57,10 @@ namespace WFBC.Client.Pages.Commish
                 {
                     foreach (var manager in _managers)
                     {
-                        if (string.IsNullOrWhiteSpace(manager.TeamId))
+                        var yearKey = draft.Year.ToString();
+                        var teamIdForYear = manager.TeamIds != null && manager.TeamIds.ContainsKey(yearKey)
+                            ? manager.TeamIds[yearKey] : null;
+                        if (string.IsNullOrWhiteSpace(teamIdForYear))
                         {
                             return "Not all active managers are assigned to a team. Please update using Teams page.";
                         }
@@ -68,7 +71,7 @@ namespace WFBC.Client.Pages.Commish
                             Round = i + 1,
                             Year = draft.Year,
                             DraftType = draft.DraftType,
-                            TeamId = manager.TeamId,
+                            TeamId = teamIdForYear,
                             DraftId = newDraftID
                         };
                         picks.Add(pick);

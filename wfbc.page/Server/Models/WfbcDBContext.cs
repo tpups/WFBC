@@ -1,4 +1,5 @@
 ﻿using MongoDB.Driver;
+using MongoDB.Bson;
 using System.Collections.Generic;
 using WFBC.Shared.Models;
 
@@ -49,9 +50,13 @@ namespace WFBC.Server.Models
         }
         public IMongoCollection<Team> Teams
         {
+            get { return _wfbcDatabase.GetCollection<Team>("teams"); }
+        }
+        public IMongoCollection<CommishSettings> CommishSettings
+        {
             get
             {
-                return _wfbcDatabase.GetCollection<Team>("teams");
+                return _wfbcDatabase.GetCollection<CommishSettings>("commish_settings");
             }
         }
         public IMongoCollection<SeasonSettings> Settings
@@ -87,7 +92,24 @@ namespace WFBC.Server.Models
                 return _seasonTeams;
             }
         }
-        public Dictionary<string, Dictionary<string, IMongoCollection<Box>>> BoxScores
+        public Dictionary<string, Dictionary<string, IMongoCollection<BsonDocument>>> BoxScores
+        {
+            get
+            {
+                Dictionary<string, Dictionary<string, IMongoCollection<BsonDocument>>> _boxScores = new Dictionary<string, Dictionary<string, IMongoCollection<BsonDocument>>>();
+                for (int i = _settings.StartYear; i <= _settings.EndYear; i++)
+                {
+                    string year = i.ToString();
+                    _boxScores.Add(year, new Dictionary<string, IMongoCollection<BsonDocument>>
+                    {
+                        { "hitting", _dbs[year].GetCollection<BsonDocument>("team_box_hitting") },
+                        { "pitching", _dbs[year].GetCollection<BsonDocument>("team_box_pitching") },
+                    });
+                }
+                return _boxScores;
+            }
+        }
+        public Dictionary<string, Dictionary<string, IMongoCollection<Box>>> BoxScoresTyped
         {
             get
             {

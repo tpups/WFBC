@@ -1,94 +1,70 @@
 # System Patterns
 
-## Architecture Overview
-WFBC follows a clean, layered architecture with clear separation of concerns:
+## Architecture
+- **Blazor WebAssembly** hosted on ASP.NET Core server
+- **MongoDB** database (Docker container, Mongo 7.0)
+- **Caddy** reverse proxy with automatic SSL
+- **Docker Compose** for production deployment (3 services: web, caddy, mongodb)
 
-```
-Client (Blazor WebAssembly) → Server (REST API) → Data Access Layer → MongoDB Atlas
-```
+## Server-Side Patterns
 
-## Key Architectural Patterns
+### Database Context (`WfbcDBContext`)
+- Single `wfbc` database for cross-season data (managers, settings, commish_settings)
+- Year-specific databases (`wfbc2011` through `wfbc2026`) for season data
+- `BoxScores[year][type]` — untyped `BsonDocument` collections for import
+- `BoxScoresTyped[year][type]` — typed `Box` model collections for querying
+- `SeasonTeams[year]` — teams per season
+- `CompiledFinalStandings[year]` / `CompiledProgressionData[year]` — optimized standings
 
-### Repository Pattern
-- **Interfaces**: Located in `wfbc.page/Server/Interface/`
-  - `IDraft.cs`, `IManager.cs`, `IPick.cs`, `IStandings.cs`, `ITeam.cs`
-- **Implementations**: Located in `wfbc.page/Server/DataAccess/`
-  - `DraftDataAccessLayer.cs`, `ManagerDataAccessLayer.cs`, etc.
-- **Controllers**: Located in `wfbc.page/Server/Controllers/`
-  - `DraftController.cs`, `ManagerController.cs`, etc.
+### Data Access Layer Pattern
+- Interface + Implementation: `IBoxScore` → `BoxScoreDataAccessLayer`
+- Registered as `AddTransient<>` in `Startup.cs`
+- Direct MongoDB driver usage (no ORM)
 
-### Authentication & Authorization Pattern
-- **Okta SSO Integration**: PKCE-enhanced authorization code flow
-- **Claims-based Authorization**: 
-  - Okta groups → .NET Claims → Policies
-  - `groups: ["Everyone","Managers","Commish"]` → `Managers: Managers` and `Commish: Commish`
-- **Policy-based Access Control**:
-  - `[Authorize]` - Any authenticated user
-  - `[Authorize(Policy = Policies.IsCommish)]` - Commissioner only
-  - `[Authorize(Policy = Policies.IsManager)]` - Manager only
+### Box Score Import Pipeline
+1. Client sends year + SignalR connectionId to `BoxScoreController`
+2. Controller reads cookie from `CommishSettings` collection
+3. `RotowireFetchService` fetches from Rotowire with browser fingerprint headers
+4. JSON deserialized to `Dictionary<string, object?>` (values are `JsonElement`)
+5. `BoxScoreDataAccessLayer.ConvertToBson()` converts `JsonElement` → native types (long for numbers, string for strings)
+6. Upsert logic: find by teamID + stats_date + player + position; insert new or update changed stats
+7. SignalR progress sent back to client via `ReceiveProgress`
 
-### Data Model Pattern
-- **MongoDB Integration**: Using MongoDB.Bson attributes
-- **Consistent Model Structure**:
-  ```csharp
-  [BsonId]
-  [BsonRepresentation(BsonType.ObjectId)]
-  public string? Id { get; set; }
-  
-  [Required]
-  public DateTime? CreatedAt { get; set; }
-  
-  [Required]
-  public DateTime? LastUpdatedAt { get; set; }
-  ```
-- **Shared Models**: Located in `wfbc.page/Shared/Models/`
+### Standings Calculation
+- `RotisserieStandingsService` — loads box scores, aggregates stats, calculates rotisserie points
+- Incremental daily processing with pre-loaded season data for performance
+- Compiled documents (2 per year) replace thousands of individual standings docs
+- `ConvertToInt()` handles multiple numeric types: `int`, `long`, `double`, `decimal`, `short`, `string`
+- IP (innings pitched) handled as string with special decimal parsing
 
-### Client-Side Patterns
-- **Dual HttpClient Pattern**:
-  - `PublicClient` - Unauthenticated requests
-  - `AuthenticatedClient` - Authenticated requests with access tokens
-- **Component Organization**:
-  - Pages: Route-specific components
-  - Shared: Reusable components
-  - Shared/Components: Generic UI components
-  - Shared/SVG: SVG icon components
+### HTTP Client Configuration
+- Named client "rotowire" with `AutomaticDecompression` (gzip/deflate/brotli)
+- Full browser fingerprint headers (User-Agent, Sec-Fetch-*, Cookie, etc.)
+- Do NOT manually set `Accept-Encoding` — handler manages it
 
-### Styling Architecture
-- **Sass (Primary)**: Custom layout and navigation
-  - Main styles in `Client/styles/` → `wwwroot/css/styles.css`
-  - Custom CSS animations for drawer and navigation
-- **Tailwind (Secondary)**: Page and component styling
-  - Config: `Client/styles/tailwind/tailwind.config.js`
-  - Output: `wwwroot/css/app.css`
-  - Monitors: `Client/Shared` and `Client/Pages`
+### Authentication
+- Zitadel Cloud OIDC with JWT Bearer
+- Role claims extracted from userinfo endpoint (cached 5 min)
+- SignalR uses query string `access_token` parameter (WebSocket limitation)
+- Policies: `IsCommish`, `IsManager`
 
-## Development Patterns
+### Caching
+- `ServerSideStandingsCache` — in-memory cache with explicit invalidation after standings rebuild
+- `IMemoryCache` — 5-minute cache for Zitadel userinfo role lookups
 
-### Version Upgrade Pattern
-- Regular .NET version upgrades (.NET Core 3.2 → 5.0 → 7.0 → 8.0)
-- Dockerfile updates required with .NET version changes
+## Client-Side Patterns
 
-### Deployment Pattern
-- **Docker Containerization**: Single container for the full application
-- **GitHub → Docker Hub → Digital Ocean**: Automated deployment pipeline
-- **Environment Variables**: Managed via `.env` file on server
-- **Image Management**: Local build → Docker Hub push → Server pull
+### Navigation
+- Sidebar drawer with collapsible sections (Results, Rulebook)
+- `NavMenu.razor` generates year links dynamically (2026 down to 2011)
+- `ResultsDynamic.razor` handles years 2019+ with parameterized route `/results/{year:int}`
+- Static result pages for 2011-2018
 
-### Configuration Pattern
-- **Development**: User Secrets in Visual Studio
-- **Production**: Environment variables via Docker/docker-compose
-- **Settings Structure**: 
-  - Client: `WFBC.Client/wwwroot/appsettings.json`
-  - Server: `WFBC.Server/appsettings.json`
+### Commish Panel
+- Protected by `IsCommish` policy
+- Tools: Teams, Managers, Drafts, Standings, Update Box Scores, Season Settings, Settings
+- SignalR for real-time progress on long operations
 
-## Security Patterns
-- **SSL/TLS**: Let's Encrypt certificates via certbot
-- **SSH Access**: Key-based authentication to Digital Ocean droplet
-- **Role-based UI**: Conditional rendering based on user claims
-- **API Authorization**: Controller-level and action-level authorization
-
-## Data Patterns
-- **Audit Trail**: CreatedAt/LastUpdatedAt on all entities
-- **External Integration**: Rotowire team ID mapping in Manager model
-- **Historical Data**: Year-based organization for results and rulebooks
-- **Responsive Navigation**: Conditional menus based on section and device type
+### State Management
+- `AppState` service for UI state (drawer open/closed, mobile detection)
+- Cascading parameters for nav section context

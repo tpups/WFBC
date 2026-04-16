@@ -1,0 +1,62 @@
+// Rulebook Accordion Styles
+// Uses <details>/<summary> HTML5 elements
+// Most styling done via Tailwind classes in razor files;
+// this file handles summary marker, width consistency, and transitions.
+
+details.rulebook-section {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+
+    > div {
+        overflow-wrap: break-word;
+        word-break: break-word;
+        min-width: 0;
+
+        // Override Tailwind's indent-4 (text-indent) on lists with proper padding-left
+        // text-indent only indents the first line; padding-left indents the whole block
+        ul, ol {
+            padding-left: 2rem;
+            text-indent: 0;
+
+            li {
+                text-indent: 0;
+            }
+        }
+
+        ul {
+            list-style-type: disc;
+        }
+
+        ol {
+            list-style-type: decimal;
+        }
+
+        // Nested lists (sub-items inside li)
+        li > ul {
+            padding-left: 1.5rem;
+            margin-top: 0.25rem;
+            list-style-type: circle;
+        }
+    }
+
+    summary {
+        list-style: none;
+        touch-action: pan-y;
+
+        &::-webkit-details-marker {
+            display: none;
+        }
+
+        &::before {
+            content: '▸';
+            font-size: 1.1rem;
+            transition: transform 0.2s ease;
+            flex-shrink: 0;
+        }
+    }
+
+    &[open] summary::before {
+        transform: rotate(90deg);
+    }
+}

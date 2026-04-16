@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace WFBC.Shared.Models
 {
+    [BsonIgnoreExtraElements]
     public class Manager
     {
         [BsonId]
@@ -24,8 +25,7 @@ namespace WFBC.Shared.Models
         [Required]
         public string? LastName { get; set; }
 
-        [BsonRepresentation(BsonType.ObjectId)]
-        public string? TeamId { get; set; }
+        public Dictionary<string, string>? TeamIds { get; set; }
 
         [Required]
         [EmailAddress]
@@ -37,6 +37,5 @@ namespace WFBC.Shared.Models
         [Required]
         public string? Access { get; set; }
 
-        public Dictionary<string, string>? RotowireTeamIds { get; set; }
     }
 }

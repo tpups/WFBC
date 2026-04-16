@@ -40,9 +40,15 @@ namespace WFBC.Client
 
             builder.Services.AddOidcAuthentication(options =>
             {
-                builder.Configuration.Bind("Okta", options.ProviderOptions);
+                builder.Configuration.Bind("Zitadel", options.ProviderOptions);
                 options.ProviderOptions.ResponseType = "code";
-                options.UserOptions.RoleClaim = "role";
+                options.ProviderOptions.DefaultScopes.Add("openid");
+                options.ProviderOptions.DefaultScopes.Add("profile");
+                options.ProviderOptions.DefaultScopes.Add("email");
+                options.ProviderOptions.DefaultScopes.Add("urn:zitadel:iam:org:project:roles");
+                // Request project-specific audience in the access token so the server can validate it
+                options.ProviderOptions.DefaultScopes.Add("urn:zitadel:iam:org:project:id:zitadel:aud");
+                options.UserOptions.RoleClaim = "urn:zitadel:iam:org:project:roles";
             }).AddAccountClaimsPrincipalFactory<GroupsClaimsPrincipalFactory>();
 
             builder.Services.AddAuthorizationCore(options =>
@@ -54,7 +60,6 @@ namespace WFBC.Client
             // Add a separate HttpClient for public requests
             builder.Services.AddHttpClient<PublicClient>(client => client.BaseAddress = new Uri(builder.HostEnvironment.BaseAddress));
             
-            builder.Services.AddApiAuthorization();
 
             builder.Services.AddSingleton<AppState>();
 

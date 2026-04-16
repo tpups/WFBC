@@ -9,6 +9,7 @@
 @import '_nav-menu';
 //@import '_table';
 @import '_tabs';
+@import '_accordion';
 //@import '_modals';
 //@import '_buttons';
 
@@ -29,15 +30,12 @@ html, body {
   -webkit-overscroll-behavior-y: none;
   /* Enhanced touch scrolling on iOS */
   -webkit-overflow-scrolling: touch;
+  /* Safe area padding for notched/home-indicator devices */
+  padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Additional mobile-specific prevention */
 @media (max-width: 768px) {
-  * {
-    overscroll-behavior: none;
-    -webkit-overscroll-behavior: none;
-  }
-  
   /* Enhance touch responsiveness */
   body {
     touch-action: pan-x pan-y;

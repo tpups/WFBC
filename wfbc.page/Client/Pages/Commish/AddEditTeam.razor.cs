@@ -4,7 +4,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using WFBC.Shared.Models;
 using Microsoft.AspNetCore.Components;
-using System.Net.Http;
 using System.Net.Http.Json;
 
 namespace WFBC.Client.Pages.Commish
@@ -12,57 +11,41 @@ namespace WFBC.Client.Pages.Commish
     public class AddEditTeamModel : TeamsModel
     {
         protected string Title = "Add";
-        [Parameter]
-        public string teamID { get; set; }
+
+        [Parameter] public string? year { get; set; }
+        [Parameter] public string? teamId { get; set; }
+
         protected override async Task OnParametersSetAsync()
         {
-            if (!string.IsNullOrEmpty(teamID))
+            if (!string.IsNullOrEmpty(year)) selectedYear = year;
+            await GetAllManagers();
+            if (!string.IsNullOrEmpty(teamId))
             {
                 Title = "Edit";
-                team = await AuthorizedClient.Client.GetFromJsonAsync<Team>("/api/team/" + teamID);
+                seasonTeam = await PublicClient.Client.GetFromJsonAsync<SeasonTeam>($"api/seasonteam/{selectedYear}/{teamId}") ?? new SeasonTeam();
             }
             else
             {
-                team = new Team();
+                seasonTeam = new SeasonTeam { Year = int.Parse(selectedYear) };
             }
         }
+
         protected async Task SaveTeam()
         {
-            List<Manager> managers = await AuthorizedClient.Client.GetFromJsonAsync<List<Manager>>("/api/manager/");
-            Manager oldManager = managers.Where(m => m.TeamId == team.Id).FirstOrDefault();
-            if (oldManager != null)
+            if (!string.IsNullOrEmpty(seasonTeam.ManagerId))
             {
-                oldManager.TeamId = null;
-                await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", oldManager);
+                var mgr = managers.FirstOrDefault(m => m.Id == seasonTeam.ManagerId);
+                if (mgr != null)
+                    seasonTeam.Manager = $"{mgr.FirstName} {mgr.LastName}".Trim();
             }
+            seasonTeam.Year = int.Parse(selectedYear);
 
-            if (team.ManagerId == "")
-            {
-                team.ManagerId = null;
-            }
+            if (!string.IsNullOrEmpty(seasonTeam.Id))
+                await AuthorizedClient.Client.PutAsJsonAsync($"api/seasonteam/{selectedYear}", seasonTeam);
             else
-            {
-                if (!string.IsNullOrEmpty(team.ManagerId))
-                {
-                    manager = await AuthorizedClient.Client.GetFromJsonAsync<Manager>("/api/manager/" + team.ManagerId);
-                    manager.TeamId = team.Id;
-                    await AuthorizedClient.Client.PutAsJsonAsync("/api/manager/", manager);
-                }
-            }
+                await AuthorizedClient.Client.PostAsJsonAsync($"api/seasonteam/{selectedYear}", seasonTeam);
 
-            if (team.Id != null)
-            {
-                team.LastUpdatedAt = DateTime.Now;
-                await AuthorizedClient.Client.PutAsJsonAsync("/api/team/", team);
-                UrlNavigationManager.NavigateTo("/commish/teams");
-            }
-            else
-            {
-                team.CreatedAt = DateTime.Now;
-                team.LastUpdatedAt = team.CreatedAt;
-                await AuthorizedClient.Client.PostAsJsonAsync("/api/team/", team);
-                UrlNavigationManager.NavigateTo("/commish/teams");
-            }
+            UrlNavigationManager.NavigateTo("/commish/teams");
         }
     }
 }

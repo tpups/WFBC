@@ -13,10 +13,17 @@ namespace WFBC.Shared.Models
         [BsonElement("manager")]
         public string? Manager { get; set; }
 
+        [BsonElement("manager_id")]
+        [BsonRepresentation(BsonType.ObjectId)]
+        public string? ManagerId { get; set; }
+
         [BsonElement("team_id")]
         public string? TeamId { get; set; }
 
         [BsonElement("team_name")]
         public string? TeamName { get; set; }
+
+        [BsonElement("year")]
+        public int Year { get; set; }
     }
 }

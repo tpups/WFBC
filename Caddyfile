@@ -1,0 +1,7 @@
+wfbc.page {
+    reverse_proxy web:8080
+}
+
+www.wfbc.page {
+    redir https://wfbc.page{uri} permanent
+}

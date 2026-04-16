@@ -1,86 +1,138 @@
 # Progress Status
 
-## Recent Accomplishments ✅
+## ✅ Box Score Import & 2026 Season COMPLETE (April 15, 2026)
 
-### JSON Deserialization Error Fix (COMPLETED)
-- **Issue**: "The input does not contain any JSON tokens" error when creating drafts and teams
-- **Root Cause**: Okta authorization issuer validation failure
-- **Solution**: Fixed `AuthorizationServerId` configuration in user secrets
-- **Impact**: Commissioner interface now fully functional with proper authorization
+Full migration of Python box score import functionality into .NET Blazor app. 2026 season fully operational.
 
-### Commissioner Interface (FULLY FUNCTIONAL)
-- ✅ **Authentication & Authorization**: Okta integration working perfectly
-- ✅ **Teams Management**: Create, edit, and manage teams with proper manager assignments
-- ✅ **Draft Creation**: Complete draft setup with automatic pick generation
-- ✅ **Managers Management**: Full CRUD operations for league managers
-- ✅ **Standings Management**: View and manage season standings
-- ✅ **Security**: All endpoints properly secured with clean configuration
+### What Was Done
+- Migrated Rotowire box score fetching from Python scripts to `RotowireFetchService.cs`
+- Created Commish panel tools: Update Box Scores, Commish Settings (cookie), Season Settings Manager
+- Fixed gzip decompression: `HttpClientHandler` with `AutomaticDecompression` + removed manual `Accept-Encoding`
+- Fixed SignalR auth: server reads `access_token` from query string for WebSocket `/progressHub`
+- Fixed standings `ConvertToInt()`: handles `long` (Int64) values from .NET JSON importer (Python stored Int32)
+- Updated nav for 2026: `NavMenu.razor` loop starts at 2026, `MainLayout.razor` default link → `/results/2026`
+- `ResultsDynamic.razor` already had 2026 league ID (16) mapped
 
-### Technical Infrastructure (COMPLETED)
-- ✅ **Database**: MongoDB integration working with all CRUD operations
-- ✅ **API Controllers**: All REST endpoints functional (Draft, Pick, Team, Manager, Standings)
-- ✅ **Client-Server Communication**: Proper HTTP client configuration with authorization
-- ✅ **Error Handling**: Comprehensive error handling with specific status codes
-- ✅ **CORS**: Proper cross-origin configuration for Blazor WebAssembly
+### Files Created
+- `Server/Services/RotowireFetchService.cs` — Rotowire fetch with SignalR progress
+- `Server/DataAccess/BoxScoreDataAccessLayer.cs` — MongoDB import with BsonDocument conversion
+- `Server/DataAccess/SeasonTeamDataAccessLayer.cs`
+- `Server/DataAccess/CommishSettingsDataAccessLayer.cs`
+- `Server/Controllers/BoxScoreController.cs`, `SeasonTeamController.cs`, `CommishSettingsController.cs`
+- `Server/Interface/IBoxScore.cs`, `ISeasonTeam.cs`, `ICommishSettings.cs`
+- `Shared/Models/BoxScoreImport.cs`, `CommishSettings.cs`
+- `Client/Pages/Commish/UpdateBoxScores.razor`, `CommishSettings.razor`, `SeasonSettingsManager.razor`
 
-## Current Status
+### Files Modified
+- `Server/Startup.cs` — HttpClient with AutomaticDecompression, SignalR OnMessageReceived token extraction
+- `Server/Services/RotisserieStandingsService.cs` — `ConvertToInt()` handles long/double/decimal/short
+- `Server/Models/WfbcDBContext.cs` — Added BoxScores, BoxScoresTyped, SeasonTeams, CommishSettings
+- `Client/Shared/NavMenu.razor` — Results loop starts at 2026
+- `Client/Shared/MainLayout.razor` — Default Results link → /results/2026
+- `Client/Pages/Commish/Commish.razor` — New nav buttons
+- `Shared/Models/SeasonSettings.cs` — Added LeagueId
+- `Shared/Models/SeasonTeam.cs` — Added ManagerId, Year
+- `Shared/Models/Manager.cs` — TeamIds dict + BsonIgnoreExtraElements
 
-### What's Working
-1. **Full Commissioner Functionality**: All league management operations
-2. **User Authentication**: Okta-based login with role-based access
-3. **Data Management**: Complete CRUD operations for all entities
-4. **Draft System**: End-to-end draft creation with pick generation
-5. **Team-Manager Relationships**: Proper association and management
+---
 
-### Code Quality
-- ✅ **Clean Architecture**: Well-organized separation of concerns
-- ✅ **Error Handling**: Robust error handling and validation
-- ✅ **Security**: Proper authorization and authentication
-- ✅ **Performance**: Efficient async operations and data access
-- ✅ **Maintainability**: Clean, documented, and optimized code
+## ✅ Rulebook Accordion Conversion COMPLETE (April 8, 2026)
 
-## Next Potential Features
+Converted all 10 rulebook pages to collapsible accordion sections using HTML5 `<details>`/`<summary>`.
 
-### Data Visualization & Analytics
-- **Season Performance Charts**: Historical standings over time
-- **Draft Analysis**: Pick performance and value analysis
-- **Manager Statistics**: Win/loss records and performance metrics
+### What Was Done
+- All 10 rulebook pages (2011-2026) converted from flat text to accordion format
+- Each rulebook section is a collapsible `<details>` element, all starting collapsed
+- "Expand All / Collapse All" button via JS interop (`site.js`)
+- Custom SCSS (`_accordion.scss`) for marker hiding, arrow rotation, width constraints
+- Fixed width inconsistency: added `w-full` to outer container (flex-row parent was sizing to content)
 
-### Enhanced User Experience
-- **Advanced Filtering**: Better data filtering and search capabilities
-- **Bulk Operations**: Mass updates and batch processing
-- **Mobile Optimization**: Enhanced mobile responsiveness
+### Files Created
+- `wwwroot/js/site.js` — JS interop for accordion toggle
+- `styles/_accordion.scss` — Custom accordion styles
 
-### Advanced Features
-- **Automated Scoring**: Integration with external data sources
-- **Season Archives**: Historical season data management
-- **Export Capabilities**: Data export for external analysis
+### Files Modified
+- All 10 `Rulebook*.razor` files — Accordion conversion + `w-full` on outer div
+- `styles/styles.scss` — Added `@import 'accordion'`
+- `index.html` — Added `site.js` reference, cache-busting (`styles.css?ver2.2`, `site.js?ver1.0`)
 
-## Technical Architecture Status
+---
 
-### Frontend (Blazor WebAssembly)
-- ✅ **Components**: All UI components functional and tested
-- ✅ **State Management**: Proper state management with AppState
-- ✅ **Routing**: Clean navigation and route management
-- ✅ **Authentication**: Client-side authentication with Okta
+## ✅ Zitadel Auth Fix COMPLETE (April 8, 2026)
 
-### Backend (ASP.NET Core Web API)
-- ✅ **Controllers**: All API endpoints implemented and secured
-- ✅ **Data Access**: MongoDB integration with proper async patterns
-- ✅ **Authentication**: Server-side Okta validation
-- ✅ **CORS**: Proper cross-origin resource sharing
+### Issues Fixed
+1. **Audience mismatch** — Server validated against Client ID, but Zitadel uses Project ID in `aud`
+2. **JSON array role claims** — Zitadel returns roles as array `[{...}]` not object `{...}`
+3. **No roles in access token** — Zitadel doesn't include roles in JWT access tokens; added userinfo endpoint fallback with 5-minute cache
+4. **Opaque tokens** — Changed Zitadel app Token Type from Opaque to JWT
+5. **Client scope** — Added `urn:zitadel:iam:org:project:id:zitadel:aud` scope
 
-### Database (MongoDB)
-- ✅ **Collections**: All required collections (Drafts, Picks, Teams, Managers, Standings)
-- ✅ **Relationships**: Proper document relationships and references
-- ✅ **Indexing**: Appropriate indexing for performance
-- ✅ **Data Integrity**: Validation and consistency checks
+---
 
-## Success Metrics Met
-- ✅ **Functionality**: All core features working without errors
-- ✅ **Security**: Proper authentication and authorization throughout
-- ✅ **Performance**: Fast, responsive user interface
-- ✅ **Reliability**: Stable operation with comprehensive error handling
-- ✅ **Maintainability**: Clean, well-documented codebase
+## ✅ Infrastructure Migration COMPLETE (April 7, 2026)
 
-The WFBC application is getting closer to a production-ready state with a fully functional commissioner interface and robust technical foundation for future enhancements.
+### What Was Migrated
+| Component | Before | After |
+|-----------|--------|-------|
+| Auth | Okta SSO | Zitadel Cloud OIDC |
+| Database | MongoDB Atlas (external) | MongoDB 7.0 (Docker container) |
+| SSL/Proxy | nginx + certbot | Caddy (automatic SSL) |
+| Container Registry | Docker Hub | GitHub Container Registry |
+| Compose | Old docker-compose with Zitadel self-hosted | Clean 3-service compose (web, caddy, mongodb) |
+
+### What's Working ✅
+1. **Production site live** at https://wfbc.page
+2. **Zitadel Cloud auth** — OIDC with PKCE, role-based policies
+3. **MongoDB in Docker** — All databases (wfbc + wfbc2011-2026) 
+4. **Caddy SSL** — Automatic certificate management
+5. **GHCR** — Image at `ghcr.io/tpups/wfbc-page-api:latest`
+6. **Local dev** — Docker MongoDB + user secrets working
+7. **All pages** — Homepage, results, standings, drafts, commish pages
+8. **Rulebook accordions** — All 10 rulebook pages with collapsible sections
+9. **Server-side caching** — Standings cache with explicit invalidation
+10. **Box score import** — Full Rotowire integration via Commish panel
+
+## Remaining / Future Tasks
+
+### Near-term
+- [ ] Deploy latest changes to production
+- [ ] Create Zitadel user accounts for league members and assign roles
+- [ ] Set up MongoDB backup strategy (periodic mongodump)
+- [ ] Add 2026 Trophy entry at end of season
+
+### Nice-to-have
+- [ ] GitHub Actions for automated Docker builds on push
+- [ ] Automated/scheduled box score imports
+- [ ] MongoDB index optimization for standings queries
+- [ ] Health check endpoint for monitoring
+- [ ] Automated backup to external storage (DO Spaces or similar)
+
+## Technical Notes
+
+### Box Score Import — Int64 vs Int32
+- Python scripts stored numeric values as Int32 in MongoDB
+- .NET `System.Text.Json` deserializes numbers via `TryGetInt64` → stores as Int64
+- `ConvertToInt()` in `RotisserieStandingsService.cs` must handle both types
+- IP (innings pitched) stored as string, handled separately
+
+### Rotowire HTTP Client
+- Named client "rotowire" configured with `AutomaticDecompression` (gzip/deflate/brotli)
+- Do NOT add manual `Accept-Encoding` header — the handler manages it
+- Full browser fingerprint headers required (User-Agent, Sec-Fetch-*, etc.)
+- Cookie obtained from browser DevTools → Network tab → Request Headers → Cookie
+
+### SignalR Authentication
+- WebSocket protocol can't send Authorization headers
+- Server extracts token from `?access_token=` query parameter for `/progressHub`
+- Client configures `AccessTokenProvider` on `HubConnectionBuilder`
+
+### Local Dev: MongoDB
+- Run `docker compose up -d mongodb` to start local MongoDB
+- Docker Desktop must be running first
+- Data persists in `mongo_data` Docker volume
+
+### Zitadel Role Claims
+- Zitadel embeds project ID in claim names
+- Expected: `urn:zitadel:iam:org:project:roles`
+- Actual: `urn:zitadel:iam:org:project:366760786435015572:roles`
+- Solution: Pattern matching with StartsWith/EndsWith

@@ -16,15 +16,4 @@
         public int EndYear { get; set; }
     }
 
-    public interface IOktaSettings
-    {
-        string OktaDomain { get; set; }
-        string Token { get; set; }
-    }
-
-    public class OktaSettings : IOktaSettings
-    {
-        public string OktaDomain { get; set; }
-        public string Token { get; set; }
-    }
 }

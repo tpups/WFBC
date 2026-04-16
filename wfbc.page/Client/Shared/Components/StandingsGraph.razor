@@ -2,17 +2,17 @@
 @inject IJSRuntime JSRuntime
 @inject AppState AppState
 
-<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-6 sm:p-6">
+<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-2 sm:pb-6 sm:p-6">
     @if (ProgressionData?.Count > 0)
     {
         <!-- Chart Canvas - Desktop Contained -->
-        <div class="w-full max-w-[calc(100vw-0.5rem)] h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
+        <div class="w-full max-w-[calc(100vw-0.5rem)] h-[60dvh] sm:h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
         </div>
 
         <!-- Legend and Controls (Future Enhancement) -->
-        <div class="mt-4 p-3 bg-gray-50 dark:bg-gray-700 rounded">
-            <p class="text-xs text-gray-500 dark:text-gray-400">
+        <div class="mt-1 p-1 sm:mt-4 sm:p-3 bg-gray-50 dark:bg-gray-700 rounded">
+            <p class="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                 @teamCount teams with @dataPointCount total data points.
             </p>
         </div>
@@ -132,10 +132,12 @@
                 g => g.OrderBy(s => s.Date).ToList()
             );
 
-        // Get all unique dates and sort them
+        // Get all unique dates and sort them, filtering out future dates
+        var today = DateTime.Today;
         var allDates = ProgressionData
             .Select(s => s.Date)
             .Distinct()
+            .Where(d => d.Date <= today)
             .OrderBy(d => d)
             .ToList();
 
@@ -179,10 +181,27 @@
             colorIndex++;
         }
 
+        // Determine if this is the current season and get last updated date
+        var isCurrentSeason = int.TryParse(Year, out var yearInt) && yearInt == DateTime.Now.Year;
+        var lastUpdatedUtc = isCurrentSeason && ProgressionData.Any(s => s.LastUpdatedAt.HasValue)
+            ? ProgressionData.Where(s => s.LastUpdatedAt.HasValue).Max(s => s.LastUpdatedAt!.Value)
+            : (DateTime?)null;
+
+        string? lastUpdatedFormatted = null;
+        if (lastUpdatedUtc.HasValue)
+        {
+            var pstZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var lastUpdatedPst = TimeZoneInfo.ConvertTimeFromUtc(
+                DateTime.SpecifyKind(lastUpdatedUtc.Value, DateTimeKind.Utc), pstZone);
+            lastUpdatedFormatted = lastUpdatedPst.ToString("MM/dd/yyyy h:mm tt") + " PST";
+        }
+
         return new
         {
             labels = allDates.Select(d => d.ToString("MM/dd")).ToArray(),
-            datasets = datasets
+            datasets = datasets,
+            lastUpdated = lastUpdatedFormatted,
+            isCurrentSeason = isCurrentSeason
         };
     }
 }
@@ -236,8 +255,8 @@
         }
         
         /* Hide the info section in landscape to save space */
-        .mt-4.p-3.bg-gray-50,
-        .mt-4.p-3.bg-gray-700 {
+        .bg-gray-50.rounded,
+        .bg-gray-700.rounded {
             display: none !important;
         }
     }
@@ -342,9 +361,35 @@
         
         chartData.datasets = datasetsOrderedByFinalStandings.map(item => item.dataset);
 
+        // Custom plugin to draw "Last updated" text in top-right
+        const lastUpdatedPlugin = {
+            id: 'lastUpdatedText',
+            afterDraw: function(chart) {
+                if (!chartData.lastUpdated || !chartData.isCurrentSeason) return;
+                
+                const ctx = chart.ctx;
+                const chartArea = chart.chartArea;
+                const fontSize = isMobile ? 9 : 11;
+                
+                ctx.save();
+                ctx.font = `${fontSize}px sans-serif`;
+                ctx.fillStyle = '#6b7280'; // gray-500
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                
+                const text = `Updated: ${chartData.lastUpdated}`;
+                const xPos = chartArea.right;
+                const yPos = 4; // Near top of canvas
+                
+                ctx.fillText(text, xPos, yPos);
+                ctx.restore();
+            }
+        };
+
         const chart = new Chart(ctx, {
             type: 'line',
             data: chartData,
+            plugins: [lastUpdatedPlugin],
             options: {
                 responsive: true,
                 maintainAspectRatio: false,

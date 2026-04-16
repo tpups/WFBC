@@ -1,0 +1,203 @@
+@page "/commish/seasonsettings"
+@attribute [Authorize(Policy = Policies.IsCommish)]
+@using WFBC.Shared.Models
+@using WFBC.Client.Shared.Components.Buttons
+@using Microsoft.AspNetCore.Components.WebAssembly.Authentication
+@inject AuthorizedClient AuthorizedClient
+@inject PublicClient PublicClient
+
+<div class="flex flex-col my-6 lg:mx-6 w-full md:w-2/3 lg:w-1/2">
+    <h3 class="text-wfbc-blue-2 font-semibold mb-4">Season Settings</h3>
+
+    @if (!string.IsNullOrEmpty(statusMessage))
+    {
+        <div class="mb-4 p-3 rounded-md @(isError ? "bg-red-50 text-red-700" : "bg-green-50 text-green-700") text-sm">
+            @statusMessage
+        </div>
+    }
+
+    @* Add / Edit Form *@
+    <div class="p-6 border rounded-xl shadow-sm space-y-4 mb-6">
+        <h4 class="text-wfbc-blue-2 font-medium">@(editMode ? $"Edit Season {editModel.Year}" : "Add Season")</h4>
+
+        <div class="grid grid-cols-2 gap-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Year</label>
+                <input type="number" @bind="editModel.Year" disabled="@editMode"
+                       class="w-full p-2 rounded-md bg-wfbc-grey-1 border border-gray-300 text-sm @(editMode ? "opacity-50 cursor-not-allowed" : "")" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">League ID</label>
+                <input type="text" @bind="editModel.LeagueId"
+                       class="w-full p-2 rounded-md bg-wfbc-grey-1 border border-gray-300 text-sm" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Season Start Date</label>
+                <input type="date" value="@StartDateStr"
+                       @onchange="e => OnStartDateChanged(e.Value?.ToString())"
+                       class="w-full p-2 rounded-md bg-wfbc-grey-1 border border-gray-300 text-sm" />
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Season End Date</label>
+                <input type="date" value="@EndDateStr"
+                       @onchange="e => OnEndDateChanged(e.Value?.ToString())"
+                       class="w-full p-2 rounded-md bg-wfbc-grey-1 border border-gray-300 text-sm" />
+            </div>
+        </div>
+
+        <div class="flex gap-2">
+            <Button ButtonText="@(editMode ? "Save Changes" : "Add Season")" OnClickFunction="@(async () => await SaveSettings())" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+            @if (editMode)
+            {
+                <Button ButtonText="Cancel" OnClickFunction="@CancelEdit" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+            }
+        </div>
+    </div>
+
+    @* Seasons List *@
+    <div class="border rounded-xl shadow-sm overflow-hidden mb-4">
+        <table class="w-full text-sm">
+            <thead class="bg-wfbc-blue-1 text-white">
+                <tr>
+                    <th class="p-3 text-left">Year</th>
+                    <th class="p-3 text-left">League ID</th>
+                    <th class="p-3 text-left">Start</th>
+                    <th class="p-3 text-left">End</th>
+                    <th class="p-3 text-left">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (seasonSettingsList == null || !seasonSettingsList.Any())
+                {
+                    <tr><td colspan="5" class="p-4 text-center text-gray-400">No season settings found.</td></tr>
+                }
+                else
+                {
+                    @foreach (var s in seasonSettingsList.OrderByDescending(x => x.Year))
+                    {
+                        <tr class="border-t hover:bg-gray-50">
+                            <td class="p-3 font-medium">@s.Year</td>
+                            <td class="p-3">@(s.LeagueId ?? "—")</td>
+                            <td class="p-3">@s.SeasonStartDate.ToString("MMM d")</td>
+                            <td class="p-3">@s.SeasonEndDate.ToString("MMM d")</td>
+                            <td class="p-3">
+                                <button @onclick="() => BeginEdit(s)" class="text-wfbc-blue-2 hover:underline text-xs mr-2">Edit</button>
+                                <button @onclick="() => DeleteConfirm(s.Year)" class="text-red-500 hover:underline text-xs">Delete</button>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+
+    @if (confirmDeleteYear.HasValue)
+    {
+        <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700 mb-4">
+            <p class="mb-2">Delete settings for <strong>@confirmDeleteYear</strong>? This cannot be undone.</p>
+            <div class="flex gap-2">
+                <button @onclick="@(async () => await DeleteSettings())" class="px-3 py-1 bg-red-600 text-white rounded text-xs">Confirm Delete</button>
+                <button @onclick="() => confirmDeleteYear = null" class="px-3 py-1 bg-gray-200 text-gray-700 rounded text-xs">Cancel</button>
+            </div>
+        </div>
+    }
+
+    <div class="mt-2">
+        <Button ButtonText="← Back to Commish" Href="/commish" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+    </div>
+</div>
+
+@code {
+    private List<WFBC.Shared.Models.SeasonSettings> seasonSettingsList = new();
+    private WFBC.Shared.Models.SeasonSettings editModel = new WFBC.Shared.Models.SeasonSettings { Year = DateTime.Now.Year, SeasonStartDate = new DateTime(DateTime.Now.Year, 3, 1), SeasonEndDate = new DateTime(DateTime.Now.Year, 10, 31) };
+    private bool editMode = false;
+    private string statusMessage = string.Empty;
+    private bool isError = false;
+    private int? confirmDeleteYear = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadSettings();
+    }
+
+    private async Task LoadSettings()
+    {
+        try
+        {
+            seasonSettingsList = await PublicClient.Client.GetFromJsonAsync<List<WFBC.Shared.Models.SeasonSettings>>("/api/seasonsettings") ?? new();
+        }
+        catch { statusMessage = "Could not load season settings."; isError = true; }
+    }
+
+    private void BeginEdit(WFBC.Shared.Models.SeasonSettings s)
+    {
+        editModel = new WFBC.Shared.Models.SeasonSettings
+        {
+            Id = s.Id,
+            Year = s.Year,
+            LeagueId = s.LeagueId,
+            SeasonStartDate = s.SeasonStartDate,
+            SeasonEndDate = s.SeasonEndDate,
+            CreatedAt = s.CreatedAt
+        };
+        editMode = true;
+        statusMessage = string.Empty;
+    }
+
+    private void CancelEdit()
+    {
+        editMode = false;
+        editModel = new WFBC.Shared.Models.SeasonSettings { Year = DateTime.Now.Year, SeasonStartDate = new DateTime(DateTime.Now.Year, 3, 1), SeasonEndDate = new DateTime(DateTime.Now.Year, 10, 31) };
+        statusMessage = string.Empty;
+    }
+
+    private async Task SaveSettings()
+    {
+        try
+        {
+            HttpResponseMessage resp;
+            if (editMode)
+                resp = await AuthorizedClient.Client.PutAsJsonAsync("/api/seasonsettings", editModel);
+            else
+                resp = await AuthorizedClient.Client.PostAsJsonAsync("/api/seasonsettings", editModel);
+
+            if (resp.IsSuccessStatusCode)
+            {
+                statusMessage = editMode ? $"Season {editModel.Year} updated." : $"Season {editModel.Year} added.";
+                isError = false;
+                editMode = false;
+                editModel = new WFBC.Shared.Models.SeasonSettings { Year = DateTime.Now.Year, SeasonStartDate = new DateTime(DateTime.Now.Year, 3, 1), SeasonEndDate = new DateTime(DateTime.Now.Year, 10, 31) };
+                await LoadSettings();
+            }
+            else
+            {
+                statusMessage = "Failed to save settings.";
+                isError = true;
+            }
+        }
+        catch (AccessTokenNotAvailableException e) { e.Redirect(); }
+        catch { statusMessage = "An error occurred."; isError = true; }
+    }
+
+    private string StartDateStr => editModel.SeasonStartDate.ToString("yyyy-MM-dd");
+    private string EndDateStr => editModel.SeasonEndDate.ToString("yyyy-MM-dd");
+    private void OnStartDateChanged(string? val) { if (DateTime.TryParse(val, out var d)) editModel.SeasonStartDate = d; }
+    private void OnEndDateChanged(string? val) { if (DateTime.TryParse(val, out var d)) editModel.SeasonEndDate = d; }
+
+    private void DeleteConfirm(int year) => confirmDeleteYear = year;
+
+    private async Task DeleteSettings()
+    {
+        if (!confirmDeleteYear.HasValue) return;
+        try
+        {
+            var resp = await AuthorizedClient.Client.DeleteAsync($"/api/seasonsettings/{confirmDeleteYear.Value}");
+            statusMessage = resp.IsSuccessStatusCode ? $"Season {confirmDeleteYear} deleted." : "Failed to delete.";
+            isError = !resp.IsSuccessStatusCode;
+            confirmDeleteYear = null;
+            await LoadSettings();
+        }
+        catch (AccessTokenNotAvailableException e) { e.Redirect(); }
+        catch { statusMessage = "An error occurred."; isError = true; }
+    }
+}

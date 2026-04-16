@@ -139,7 +139,7 @@ namespace WFBC.Server.Services
                 }
 
                 // Get hitting box scores - filter for team totals like Python script
-                var hitCollection = _db.BoxScores[year]["hitting"];
+                var hitCollection = _db.BoxScoresTyped[year]["hitting"];
                 var hitFilter = Builders<Box>.Filter.And(
                     Builders<Box>.Filter.Eq("player", "TOT"),
                     Builders<Box>.Filter.Eq("position", "A"),
@@ -149,7 +149,7 @@ namespace WFBC.Server.Services
                 var hitBoxScores = await hitCollection.Find(hitFilter).ToListAsync();
 
                 // Get pitching box scores - filter for team totals like Python script
-                var pitchCollection = _db.BoxScores[year]["pitching"];
+                var pitchCollection = _db.BoxScoresTyped[year]["pitching"];
                 var pitchFilter = Builders<Box>.Filter.And(
                     Builders<Box>.Filter.Eq("player", "TOT"),
                     Builders<Box>.Filter.Eq("position", "A"),
@@ -261,7 +261,7 @@ namespace WFBC.Server.Services
         private async Task CalculateQualityAppearances(string year, DateTime startDate, DateTime endDate, 
             Dictionary<string, Dictionary<string, Dictionary<string, object>>> totals)
         {
-            var pitchCollection = _db.BoxScores[year]["pitching"];
+            var pitchCollection = _db.BoxScoresTyped[year]["pitching"];
             var qaFilter = Builders<Box>.Filter.And(
                 Builders<Box>.Filter.Eq("position", "P"),
                 Builders<Box>.Filter.Ne("player", "TOT"),
@@ -344,8 +344,12 @@ namespace WFBC.Server.Services
         {
             if (value == null) return null;
             
-            // Handle direct int values
+            // Handle direct numeric types
             if (value is int intVal) return intVal;
+            if (value is long longVal) return (int)longVal;
+            if (value is double doubleVal) return (int)doubleVal;
+            if (value is decimal decVal) return (int)decVal;
+            if (value is short shortVal) return shortVal;
             
             // Handle string values
             if (value is string stringVal && !string.IsNullOrEmpty(stringVal))
@@ -660,7 +664,7 @@ namespace WFBC.Server.Services
                 var data = new SeasonBoxScoreData();
 
                 // Load all hitting box scores for the season
-                var hitCollection = _db.BoxScores[year]["hitting"];
+                var hitCollection = _db.BoxScoresTyped[year]["hitting"];
                 var hitFilter = Builders<Box>.Filter.And(
                     Builders<Box>.Filter.Eq("player", "TOT"),
                     Builders<Box>.Filter.Eq("position", "A"),
@@ -670,7 +674,7 @@ namespace WFBC.Server.Services
                 data.HittingBoxScores = await hitCollection.Find(hitFilter).ToListAsync();
 
                 // Load all pitching box scores for the season
-                var pitchCollection = _db.BoxScores[year]["pitching"];
+                var pitchCollection = _db.BoxScoresTyped[year]["pitching"];
                 var pitchFilter = Builders<Box>.Filter.And(
                     Builders<Box>.Filter.Eq("player", "TOT"),
                     Builders<Box>.Filter.Eq("position", "A"),

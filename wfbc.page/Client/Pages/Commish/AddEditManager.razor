@@ -2,51 +2,66 @@
 @page "/commish/edit_manager/{managerID}"
 @inherits AddEditManagerModel
 @using WFBC.Client.Shared.Components.Buttons
+@using System.Linq
 
-
-<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/6" Model="@manager" OnValidSubmit="SaveManager">
+<EditForm class="flex flex-col my-6 lg:mx-6 w-full md:w-1/2 lg:w-1/4" Model="@manager" OnValidSubmit="SaveManager">
     <DataAnnotationsValidator />
-    <label class="block">
+
+    <h3 class="text-wfbc-blue-2 font-semibold mb-4">@Title Manager</h3>
+
+    <label class="block mb-3">
         <span class="text-wfbc-blue-2">First Name</span>
-        <input @bind="manager.FirstName"
-               type="text"
-               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
+        <InputText @bind-Value="manager.FirstName" class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => manager.FirstName)" />
     </label>
-    <label class="block">
+
+    <label class="block mb-3">
         <span class="text-wfbc-blue-2">Last Name</span>
-        <input @bind="manager.LastName"
-               type="text"
-               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
+        <InputText @bind-Value="manager.LastName" class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => manager.LastName)" />
     </label>
-    <label class="block">
+
+    <label class="block mb-3">
         <span class="text-wfbc-blue-2">Email</span>
-        <input @bind="manager.Email"
-               type="text"
-               class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
+        <InputText @bind-Value="manager.Email" type="email" class="mt-1 pl-2 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0" />
         <ValidationMessage For="@(() => manager.Email)" />
     </label>
-    <label class="block">
+
+    <label class="block mb-3">
         <span class="text-wfbc-blue-2">Status</span>
-        <InputSelect @bind-Value="manager.Status" class="mt-1 pl-2 h-6 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0">
+        <InputSelect @bind-Value="manager.Status" class="mt-1 pl-2 h-8 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0">
             <option value="Active">Active</option>
             <option value="Inactive">Inactive</option>
         </InputSelect>
     </label>
-    <label class="block">
+
+    <label class="block mb-3">
         <span class="text-wfbc-blue-2">Access</span>
-        <InputSelect @bind-Value="manager.Access" class="mt-1 pl-2 h-6 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0">
-            <option value="Commish">Commish</option>
+        <InputSelect @bind-Value="manager.Access" class="mt-1 pl-2 h-8 block w-full rounded-md bg-wfbc-grey-1 border-transparent focus:border-wfbc-blue-2 focus:bg-wfbc-white-1 focus ring-0">
             <option value="Manager">Manager</option>
+            <option value="Commish">Commish</option>
         </InputSelect>
     </label>
 
-    <Button OnClickFunction=SaveManager ButtonText="Save Manager" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
-    <Button ButtonText="Cancel" Href="/commish/managers" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
+    @if (manager.TeamIds != null && manager.TeamIds.Any())
+    {
+        <div class="block mb-3">
+            <span class="text-wfbc-blue-2 text-sm font-medium">Team Associations</span>
+            <div class="mt-1 text-sm space-y-1">
+                @foreach (var kvp in manager.TeamIds.OrderByDescending(k => k.Key))
+                {
+                    <div class="flex items-center gap-2">
+                        <span class="font-medium">@kvp.Key:</span>
+                        <span class="text-gray-600">Team ID @kvp.Value</span>
+                    </div>
+                }
+            </div>
+            <p class="text-xs text-gray-400 mt-1">Team associations are managed via the Teams page.</p>
+        </div>
+    }
 
+    <Button OnClickFunction="@(async () => await SaveManager())" ButtonText="Save Manager" ButtonType="submit" MaxWidth="max-w-full" MarginPadding="mx-2 mt-4 px-4 py-2" />
+    <Button ButtonText="Cancel" Href="/commish/managers" MaxWidth="max-w-full" MarginPadding="mx-2 mt-2 px-4 py-2" />
 </EditForm>
 
-@code {
-
-}
+@code { }
