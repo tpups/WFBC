@@ -70,7 +70,7 @@
     @if (!isLoading && string.IsNullOrEmpty(errorMessage))
     {
         <div class="@(activeTab == "table" ? "" : "hidden")">
-            <StandingsTable Standings="finalStandings" Title="@(ShowTitle ? $"{Year} World Fantasy Baseball Classic Standings" : null)" />
+            <StandingsTable Standings="finalStandings" Title="@(ShowTitle ? $"{Year} World Fantasy Baseball Classic Standings" : null)" LastUpdatedText="@lastUpdatedText" />
         </div>
 
         <div class="@(activeTab == "graph" ? "" : "hidden")">
@@ -109,6 +109,7 @@
     private string errorMessage = "";
     private List<Standings> finalStandings = new();
     private List<Standings> progressionData = new();
+    private string? lastUpdatedText;
     private StandingsCacheStatus cacheStatus;
     private string? previousYear; // Track year changes
     private CancellationTokenSource? _cancellationTokenSource; // Cancel ongoing operations
@@ -204,6 +205,7 @@
             
             Console.WriteLine($"[StandingsDisplay] Tab switch - Received {data?.Count ?? 0} final standings for year {Year}");
             finalStandings = data ?? new List<Standings>();
+            ComputeLastUpdatedText();
             
             if (finalStandings.Count == 0)
             {
@@ -335,6 +337,7 @@
             
             Console.WriteLine($"[StandingsDisplay] Received {data?.Count ?? 0} final standings for year {requestYear}");
             finalStandings = data ?? new List<Standings>();
+            ComputeLastUpdatedText();
             
             if (finalStandings.Count == 0)
             {
@@ -436,6 +439,27 @@
         finalStandings.Clear();
         progressionData.Clear();
         await LoadStandingsData();
+    }
+
+    private void ComputeLastUpdatedText()
+    {
+        lastUpdatedText = null;
+        if (int.TryParse(Year, out var yearInt) && yearInt == DateTime.Now.Year && finalStandings.Count > 0)
+        {
+            var lastUpdatedUtc = finalStandings
+                .Where(s => s.LastUpdatedAt.HasValue)
+                .Select(s => s.LastUpdatedAt!.Value)
+                .DefaultIfEmpty()
+                .Max();
+
+            if (lastUpdatedUtc != default)
+            {
+                var pstZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+                var lastUpdatedPst = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.SpecifyKind(lastUpdatedUtc, DateTimeKind.Utc), pstZone);
+                lastUpdatedText = lastUpdatedPst.ToString("MM/dd/yyyy h:mm tt") + " PST";
+            }
+        }
     }
 
     // Get dynamic loading message based on current tab and state

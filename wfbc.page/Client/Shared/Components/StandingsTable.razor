@@ -7,7 +7,13 @@
         <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 sm:p-3 bg-wfbc-grey-1 border-b border-wfbc-grey-2 gap-2 sm:gap-0">
             @if (!string.IsNullOrEmpty(Title))
             {
-                <h2 class="text-base sm:text-lg font-semibold text-wfbc-blue-2">@Title</h2>
+                <div>
+                    <h2 class="text-base sm:text-lg font-semibold text-wfbc-blue-2">@Title</h2>
+                    @if (!string.IsNullOrEmpty(LastUpdatedText))
+                    {
+                        <p class="text-[10px] sm:text-xs text-gray-500">Updated: @LastUpdatedText</p>
+                    }
+                </div>
             }
             else
             {
@@ -385,6 +391,7 @@
 @code {
     [Parameter] public List<Standings> Standings { get; set; } = new();
     [Parameter] public string? Title { get; set; }
+    [Parameter] public string? LastUpdatedText { get; set; }
 
     public enum DisplayMode
     {
