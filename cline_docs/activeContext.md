@@ -11,6 +11,7 @@ Advanced Stats tab added to results pages. Shows leaderboard cards for Starts (G
 26. **Extended `RotisserieStandingsService`** — Added `GS` to pitching stat arrays, `K` to hitting stat arrays, `GS` mapping in `GetPitchingStatValue`, `K` mapping in `GetHittingStatValue`, new `PopulateAdvancedStats` method called after every `BuildStandingsFromPoints`
 27. **Created `AdvancedStandings.razor`** — Card-grid component with declarative category configuration; each card shows ranked leaderboard with team name, manager, formatted stat value; gold/silver/bronze row highlights for top 3
 28. **Updated `StandingsDisplay.razor`** — Added third "Advanced" tab between Standings Table and Points Over Time; reuses `finalStandings` data (no new API calls); handles tab switching and loading state
+29. **Added league averages to advanced stat cards** — Each card header now shows right-aligned "Lg Avg" with computed league average. Counting stats (Starts) use sum/teamCount with 1 decimal place; rate stats (QS%, K%, BB%) use aggregate numerator/denominator across all teams. Added `LeagueAvgAccessor` and optional `LeagueAvgFormatter` to `AdvancedCategory` record.
 
 ## Build Status
 ✅ Build succeeded

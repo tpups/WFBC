@@ -5,7 +5,6 @@
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 sm:p-3 bg-wfbc-grey-1 border-b border-wfbc-grey-2 gap-2 sm:gap-0">
         <div>
             <h2 class="text-base sm:text-lg font-semibold text-wfbc-blue-2">Advanced Stats</h2>
-            <p class="text-[10px] sm:text-xs text-gray-500">Derived from active lineup stats</p>
         </div>
     </div>
 
@@ -18,9 +17,15 @@
                 var ranked = RankForCategory(category);
                 <div class="border border-wfbc-blue-2 rounded-lg bg-wfbc-white-1 overflow-hidden shadow-sm flex flex-col">
                     <!-- Card header -->
-                    <div class="px-3 py-2 bg-wfbc-grey-1 border-b border-wfbc-grey-2">
-                        <h3 class="text-sm sm:text-base font-semibold text-wfbc-blue-2 leading-tight">@category.Name</h3>
-                        <p class="text-[10px] sm:text-xs text-gray-500">@category.Subtitle</p>
+                    <div class="px-3 py-2 bg-wfbc-grey-1 border-b border-wfbc-grey-2 flex items-center justify-between">
+                        <div>
+                            <h3 class="text-sm sm:text-base font-semibold text-wfbc-blue-2 leading-tight">@category.Name</h3>
+                            <p class="text-[10px] sm:text-xs text-gray-500">@category.Subtitle</p>
+                        </div>
+                        <div class="text-[10px] sm:text-xs text-gray-500 text-right whitespace-nowrap ml-2">
+                            Lg Avg<br />
+                            <span class="font-mono font-semibold text-wfbc-blue-2">@((category.LeagueAvgFormatter ?? category.Formatter)(category.LeagueAvgAccessor(Standings)))</span>
+                        </div>
                     </div>
                     <!-- Card body / leaderboard rows -->
                     <div class="divide-y divide-wfbc-grey-1">
@@ -63,7 +68,9 @@
         string Subtitle,
         Func<Standings, decimal> Accessor,
         Func<decimal, string> Formatter,
-        bool LowerIsBetter);
+        bool LowerIsBetter,
+        Func<List<Standings>, decimal> LeagueAvgAccessor,
+        Func<decimal, string>? LeagueAvgFormatter = null);
 
     private record RankedEntry(Standings Standing, decimal Value);
 
@@ -75,26 +82,40 @@
             "Starts",
             "GS (Pitching)",
             s => s.Advanced?.Starts ?? 0m,
-            v => ((int)v).ToString(),
-            false),
+            v => ((int)Math.Round(v)).ToString(),
+            false,
+            all => all.Count == 0 ? 0m : (decimal)all.Sum(s => s.Advanced?.Starts ?? 0) / all.Count,
+            v => v.ToString("F1")),
         new AdvancedCategory(
             "Quality Start %",
             "QS / GS",
             s => s.Advanced?.QualityStartRate ?? 0m,
             v => v.ToString("P1"),
-            false),
+            false,
+            all => {
+                var totalGS = all.Sum(s => s.Advanced?.Starts ?? 0);
+                return totalGS == 0 ? 0m : (decimal)all.Sum(s => s.Advanced?.QualityStarts ?? 0) / totalGS;
+            }),
         new AdvancedCategory(
             "Strikeout %",
             "K / PA (Batting)",
             s => s.Advanced?.StrikeoutRateBatting ?? 0m,
             v => v.ToString("P1"),
-            true),
+            true,
+            all => {
+                var totalPA = all.Sum(s => s.Advanced?.BattingPlateAppearances ?? 0);
+                return totalPA == 0 ? 0m : (decimal)all.Sum(s => s.Advanced?.BattingStrikeouts ?? 0) / totalPA;
+            }),
         new AdvancedCategory(
             "Walk %",
             "BB / PA (Batting)",
             s => s.Advanced?.WalkRateBatting ?? 0m,
             v => v.ToString("P1"),
-            false),
+            false,
+            all => {
+                var totalPA = all.Sum(s => s.Advanced?.BattingPlateAppearances ?? 0);
+                return totalPA == 0 ? 0m : (decimal)all.Sum(s => s.Advanced?.BattingWalks ?? 0) / totalPA;
+            }),
     };
 
     private List<RankedEntry> RankForCategory(AdvancedCategory category)

@@ -10,6 +10,7 @@ Added "Advanced" tab to results pages with leaderboard cards for non-scoring adv
 - Created `AdvancedStandings.razor` — declarative card-grid component with ranked leaderboards per category
 - Added third tab to `StandingsDisplay.razor` — reuses existing final standings data, no new API calls
 - Fixed missing `K` mapping in `GetHittingStatValue` that caused 0% strikeout rate
+- Added league averages to each advanced stat card header (right-aligned "Lg Avg" with computed value)
 
 ### Files Created
 - `Shared/Models/AdvancedStats.cs`
