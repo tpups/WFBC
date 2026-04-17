@@ -46,6 +46,8 @@ namespace WFBC.Server.Services
 
             var standings = BuildStandingsFromPoints(hittingPoints, pitchingPoints, teams, year, date);
 
+            PopulateAdvancedStats(standings, teamTotals);
+
             return standings;
         }
 
@@ -159,7 +161,8 @@ namespace WFBC.Server.Services
                 var pitchBoxScores = await pitchCollection.Find(pitchFilter).ToListAsync();
 
                 // Aggregate hitting stats - using same field names as Python script
-                var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "PA", "R", "RBI", "SB", "SF" };
+                // NOTE: "K" is included for advanced stats (K% = K / PA); not a scoring category.
+                var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "K", "PA", "R", "RBI", "SB", "SF" };
                 
                 foreach (var score in hitBoxScores)
                 {
@@ -186,9 +189,10 @@ namespace WFBC.Server.Services
                 }
 
                 // Aggregate pitching stats - using same field names as Python script
+                // NOTE: "GS" is included for advanced stats (Starts, QS rate); not a scoring category.
                 var pStats = year == "2019" 
-                    ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" }
-                    : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" };
+                    ? new[] { "BB", "ER", "GS", "H", "HB", "IP", "K", "QS", "S" }
+                    : new[] { "BB", "ER", "GS", "H", "HB", "IP", "K", "QS", "SV" };
 
                 foreach (var score in pitchBoxScores)
                 {
@@ -311,6 +315,7 @@ namespace WFBC.Server.Services
                 "H" => box.Hits,
                 "HBP" => box.HitByPitch,
                 "HR" => box.HomeRuns,
+                "K" => box.Strikeouts,
                 "PA" => box.PlateAppearances,
                 "R" => box.Runs,
                 "RBI" => box.RunsBattedIn,
@@ -328,6 +333,7 @@ namespace WFBC.Server.Services
             {
                 "BB" => box.Walks,
                 "ER" => box.EarnedRuns,
+                "GS" => box.GamesStarted,
                 "H" => box.Hits,
                 "HB" => box.HitBatters,
                 "K" => box.Strikeouts,
@@ -776,7 +782,9 @@ namespace WFBC.Server.Services
                 var hittingPoints = CalculateHittingPoints(runningTotals, hittingCategories, teams.Count);
                 var pitchingPoints = CalculatePitchingPoints(runningTotals, pitchingCategories, teams.Count);
                 var dailyStandings = BuildStandingsFromPoints(hittingPoints, pitchingPoints, teams, year, date);
-                
+
+                PopulateAdvancedStats(dailyStandings, runningTotals);
+
                 allStandings.AddRange(dailyStandings);
 
                 // Small delay for progress and cancellation checking
@@ -789,7 +797,8 @@ namespace WFBC.Server.Services
         private void ProcessDailyHittingData(List<Box> dailyBoxScores, 
             Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals)
         {
-            var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "PA", "R", "RBI", "SB", "SF" };
+            // NOTE: "K" is included for advanced stats (K% = K / PA); not a scoring category.
+            var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "K", "PA", "R", "RBI", "SB", "SF" };
             
             foreach (var score in dailyBoxScores)
             {
@@ -819,9 +828,10 @@ namespace WFBC.Server.Services
         private void ProcessDailyPitchingData(List<Box> dailyBoxScores, 
             Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals, string year)
         {
+            // NOTE: "GS" is included for advanced stats (Starts, QS rate); not a scoring category.
             var pStats = year == "2019" 
-                ? new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "S" }
-                : new[] { "BB", "ER", "H", "HB", "IP", "K", "QS", "SV" };
+                ? new[] { "BB", "ER", "GS", "H", "HB", "IP", "K", "QS", "S" }
+                : new[] { "BB", "ER", "GS", "H", "HB", "IP", "K", "QS", "SV" };
 
             foreach (var score in dailyBoxScores)
             {
@@ -910,6 +920,54 @@ namespace WFBC.Server.Services
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Populates the <see cref="Standings.Advanced"/> bucket for each standings row
+        /// from the current team totals dictionary.
+        ///
+        /// Advanced stats are intentionally kept separate from the scoring-category
+        /// properties. All current metrics are derived from the active-lineup totals
+        /// (position == "A", player == "TOT"); additional sources (e.g. inactive-lineup
+        /// stats) can be added here in the future without disturbing the scoring logic.
+        /// </summary>
+        private void PopulateAdvancedStats(
+            List<Standings> standings,
+            Dictionary<string, Dictionary<string, Dictionary<string, object>>> teamTotals)
+        {
+            foreach (var standing in standings)
+            {
+                if (standing.TeamId == null || !teamTotals.ContainsKey(standing.TeamId))
+                {
+                    standing.Advanced = new AdvancedStats();
+                    continue;
+                }
+
+                var hit = teamTotals[standing.TeamId]["hit"];
+                var pitch = teamTotals[standing.TeamId]["pitch"];
+
+                int starts = pitch.ContainsKey("GS") ? (int)pitch["GS"] : 0;
+                int qualityStarts = pitch.ContainsKey("QS") ? (int)pitch["QS"] : 0;
+                int battingK = hit.ContainsKey("K") ? (int)hit["K"] : 0;
+                int battingBB = hit.ContainsKey("BB") ? (int)hit["BB"] : 0;
+                int battingPA = hit.ContainsKey("PA") ? (int)hit["PA"] : 0;
+
+                decimal qsRate = starts > 0 ? (decimal)qualityStarts / starts : 0m;
+                decimal kRate = battingPA > 0 ? (decimal)battingK / battingPA : 0m;
+                decimal bbRate = battingPA > 0 ? (decimal)battingBB / battingPA : 0m;
+
+                standing.Advanced = new AdvancedStats
+                {
+                    Starts = starts,
+                    QualityStarts = qualityStarts,
+                    QualityStartRate = Math.Round(qsRate, 4),
+                    BattingStrikeouts = battingK,
+                    BattingWalks = battingBB,
+                    BattingPlateAppearances = battingPA,
+                    StrikeoutRateBatting = Math.Round(kRate, 4),
+                    WalkRateBatting = Math.Round(bbRate, 4)
+                };
             }
         }
 

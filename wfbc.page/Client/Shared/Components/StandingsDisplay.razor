@@ -15,6 +15,11 @@
                 <span class="hidden sm:inline">Standings Table</span>
                 <span class="sm:hidden">Table</span>
             </button>
+            <button class="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium rounded-t-lg transition-colors border-b-0 -ml-0.5 @(activeTab == "advanced" ? "bg-wfbc-yellow-1 text-wfbc-black-1 border-t-2 border-l-2 border-r-2 border-wfbc-blue-2" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2 border-2 border-wfbc-blue-2")"
+                    @onclick="@(() => SetActiveTab("advanced"))">
+                <span class="hidden sm:inline">Advanced</span>
+                <span class="sm:hidden">Adv</span>
+            </button>
             <button class="px-3 sm:px-6 py-2 sm:py-3 text-sm sm:text-base font-medium rounded-t-lg transition-colors border-b-0 -ml-0.5 @(activeTab == "graph" ? "bg-wfbc-yellow-1 text-wfbc-black-1 border-t-2 border-l-2 border-r-2 border-wfbc-blue-2" : "bg-wfbc-blue-1 text-white hover:bg-wfbc-blue-2 border-2 border-wfbc-blue-2")"
                     @onclick="@(() => SetActiveTab("graph"))">
                 <span class="hidden sm:inline">Points Over Time</span>
@@ -71,6 +76,10 @@
     {
         <div class="@(activeTab == "table" ? "" : "hidden")">
             <StandingsTable Standings="finalStandings" Title="@(ShowTitle ? $"{Year} World Fantasy Baseball Classic Standings" : null)" LastUpdatedText="@lastUpdatedText" />
+        </div>
+
+        <div class="@(activeTab == "advanced" ? "" : "hidden")">
+            <AdvancedStandings Standings="finalStandings" />
         </div>
 
         <div class="@(activeTab == "graph" ? "" : "hidden")">
@@ -183,6 +192,11 @@
         // Use a separate method that doesn't interfere with navigation cancellation
         if (tab == "table" && finalStandings?.Count == 0)
         {
+            await LoadFinalStandingsForTab();
+        }
+        else if (tab == "advanced" && finalStandings?.Count == 0)
+        {
+            // Advanced tab reuses final standings data - no separate API call needed
             await LoadFinalStandingsForTab();
         }
         else if (tab == "graph" && progressionData?.Count == 0)
@@ -468,6 +482,7 @@
         return activeTab switch
         {
             "table" => "Loading standings table...",
+            "advanced" => "Loading advanced stats...",
             "graph" => "Loading points progression...",
             _ => "Loading standings data..."
         };

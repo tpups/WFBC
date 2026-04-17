@@ -65,5 +65,13 @@ namespace WFBC.Shared.Models
         public int OverallRank { get; set; }
         public int HittingRank { get; set; }
         public int PitchingRank { get; set; }
+
+        // Advanced stats bucket - intentionally separate from the scoring
+        // categories above. May be null on older compiled documents that were
+        // generated before advanced stats were introduced; rebuild standings
+        // for a given year to populate.
+        [BsonIgnoreIfNull]
+        [BsonElement("advanced")]
+        public AdvancedStats? Advanced { get; set; }
     }
 }

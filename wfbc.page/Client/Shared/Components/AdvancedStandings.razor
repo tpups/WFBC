@@ -1,0 +1,123 @@
+@using WFBC.Shared.Models
+
+<div class="border-2 border-wfbc-blue-2 rounded-xl bg-wfbc-white-1 overflow-hidden w-full">
+    <!-- Header strip - matches StandingsTable -->
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 sm:p-3 bg-wfbc-grey-1 border-b border-wfbc-grey-2 gap-2 sm:gap-0">
+        <div>
+            <h2 class="text-base sm:text-lg font-semibold text-wfbc-blue-2">Advanced Stats</h2>
+            <p class="text-[10px] sm:text-xs text-gray-500">Derived from active lineup stats</p>
+        </div>
+    </div>
+
+    @if (Standings?.Count > 0 && Standings.Any(s => s.Advanced != null))
+    {
+        <!-- Card grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 p-3 sm:p-4 bg-wfbc-blue-2">
+            @foreach (var category in categories)
+            {
+                var ranked = RankForCategory(category);
+                <div class="border border-wfbc-blue-2 rounded-lg bg-wfbc-white-1 overflow-hidden shadow-sm flex flex-col">
+                    <!-- Card header -->
+                    <div class="px-3 py-2 bg-wfbc-grey-1 border-b border-wfbc-grey-2">
+                        <h3 class="text-sm sm:text-base font-semibold text-wfbc-blue-2 leading-tight">@category.Name</h3>
+                        <p class="text-[10px] sm:text-xs text-gray-500">@category.Subtitle</p>
+                    </div>
+                    <!-- Card body / leaderboard rows -->
+                    <div class="divide-y divide-wfbc-grey-1">
+                        @for (int i = 0; i < ranked.Count; i++)
+                        {
+                            var entry = ranked[i];
+                            var rank = i + 1;
+                            var rankClass = GetRankRowClass(rank);
+                            <div class="flex items-center justify-between px-3 py-2 text-sm @rankClass">
+                                <div class="flex items-center gap-2 min-w-0">
+                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full bg-wfbc-blue-1 text-wfbc-white-1 text-xs font-semibold flex-shrink-0">@rank</span>
+                                    <div class="min-w-0">
+                                        <div class="font-medium text-wfbc-blue-2 truncate">@entry.Standing.TeamName</div>
+                                        <div class="text-[10px] sm:text-xs text-gray-500 truncate">@entry.Standing.Manager</div>
+                                    </div>
+                                </div>
+                                <div class="font-mono text-wfbc-blue-2 font-semibold tabular-nums flex-shrink-0 ml-2">
+                                    @category.Formatter(entry.Value)
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="p-4 sm:p-6 text-center text-sm text-wfbc-blue-2 bg-wfbc-white-1">
+            No advanced stats available for this year yet. Rebuild standings to populate advanced metrics.
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public List<Standings> Standings { get; set; } = new();
+
+    private record AdvancedCategory(
+        string Name,
+        string Subtitle,
+        Func<Standings, decimal> Accessor,
+        Func<decimal, string> Formatter,
+        bool LowerIsBetter);
+
+    private record RankedEntry(Standings Standing, decimal Value);
+
+    // Declarative list of advanced categories. Add a new entry here to add another
+    // leaderboard card. Keep in sync with AdvancedStats fields populated on the server.
+    private readonly List<AdvancedCategory> categories = new()
+    {
+        new AdvancedCategory(
+            "Starts",
+            "GS (Pitching)",
+            s => s.Advanced?.Starts ?? 0m,
+            v => ((int)v).ToString(),
+            false),
+        new AdvancedCategory(
+            "Quality Start %",
+            "QS / GS",
+            s => s.Advanced?.QualityStartRate ?? 0m,
+            v => v.ToString("P1"),
+            false),
+        new AdvancedCategory(
+            "Strikeout %",
+            "K / PA (Batting)",
+            s => s.Advanced?.StrikeoutRateBatting ?? 0m,
+            v => v.ToString("P1"),
+            true),
+        new AdvancedCategory(
+            "Walk %",
+            "BB / PA (Batting)",
+            s => s.Advanced?.WalkRateBatting ?? 0m,
+            v => v.ToString("P1"),
+            false),
+    };
+
+    private List<RankedEntry> RankForCategory(AdvancedCategory category)
+    {
+        if (Standings == null || Standings.Count == 0)
+        {
+            return new List<RankedEntry>();
+        }
+
+        var entries = Standings
+            .Select(s => new RankedEntry(s, category.Accessor(s)))
+            .ToList();
+
+        return category.LowerIsBetter
+            ? entries.OrderBy(e => e.Value).ThenBy(e => e.Standing.TeamName).ToList()
+            : entries.OrderByDescending(e => e.Value).ThenBy(e => e.Standing.TeamName).ToList();
+    }
+
+    private static string GetRankRowClass(int rank) => rank switch
+    {
+        1 => "bg-yellow-50",
+        2 => "bg-gray-50",
+        3 => "bg-orange-50",
+        _ => ""
+    };
+}

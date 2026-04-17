@@ -1,44 +1,34 @@
 # Active Context
 
 ## Current Work
-Box score import and 2026 season functionality is fully working. Standings calculate correctly with data imported via the .NET app. All commish tools operational.
+Advanced Stats tab added to results pages. Shows leaderboard cards for Starts (GS), Quality Start Rate (QS/GS), Strikeout Rate (K/PA), and Walk Rate (BB/PA). All four categories working correctly after fixing missing K mapping in GetHittingStatValue.
 
 ## Recent Changes (numbered in order)
 
-1. Added `LeagueId` field to `SeasonSettings` model
-2. Updated `SeasonTeam` model — added `ManagerId`, `Year` fields
-3. Updated `Manager` model — changed single `TeamId` to `TeamIds` (Dictionary<string, string>)
-4. Created `CommishSettings` model for storing Rotowire cookie
-5. Created `BoxScoreImport` model with `BoxScoreEntry`, `BoxScoreImportRequest`, `BoxScoreImportResult`
-6. Created server interfaces: `ISeasonTeam`, `ICommishSettings`, `IBoxScore`
-7. Created server DALs: `SeasonTeamDataAccessLayer`, `CommishSettingsDataAccessLayer`, `BoxScoreDataAccessLayer`
-8. Created `RotowireFetchService` — fetches box scores from Rotowire with full browser fingerprint headers, SignalR progress
-9. Updated `WfbcDBContext` — added `SeasonTeams`, `BoxScores` (untyped), `BoxScoresTyped` (typed), `CommishSettings`
-10. Created server controllers: `SeasonTeamController`, `CommishSettingsController`, `BoxScoreController`
-11. Updated `Startup.cs` — registered all new services, `HttpClient("rotowire")` with auto-decompression
-12. Rewrote client Teams pages — year-based routing, queries `api/seasonteam/{year}`
-13. Rewrote client Managers pages — updated to show `TeamIds` dictionary
-14. Created `CommishSettings.razor` — page for commish to paste/save Rotowire cookie
-15. Created `UpdateBoxScores.razor` — page with year selector, progress bars, SignalR integration
-16. Updated `Commish.razor` — added navigation buttons for new tools
-17. Created `SeasonSettingsManager.razor` — commish page for managing season settings per year
-18. Fixed `[BsonIgnoreExtraElements]` on `Manager` model for backwards compatibility
-19. Updated `appsettings.json` EndYear to 2026
-20. **Fixed SignalR auth** — Server reads token from query string for `/progressHub`, client passes `AccessTokenProvider`
-21. **Fixed gzip decompression** — Configured `HttpClientHandler` with `AutomaticDecompression` for gzip/deflate/brotli; removed manual `Accept-Encoding` header from `RotowireFetchService`
-22. **Updated 2026 nav links** — `NavMenu.razor` results loop starts at 2026; `MainLayout.razor` default Results link → `/results/2026`
-23. **Fixed standings ConvertToInt** — Added `long`, `double`, `decimal`, `short` handling to `ConvertToInt()` in `RotisserieStandingsService.cs` (the .NET importer stores numbers as Int64 via `System.Text.Json`, while Python stored Int32)
+1-23. (Previous changes — see git history)
+24. **Created `AdvancedStats` model** (`wfbc.page/Shared/Models/AdvancedStats.cs`) — Separate bucket for advanced stats: Starts, QualityStartRate, StrikeoutRateBatting, WalkRateBatting, plus raw components (BattingK, BattingBB, BattingPA, QualityStarts)
+25. **Added `Advanced` property to `Standings` model** — `[BsonIgnoreIfNull]` nullable `AdvancedStats?` field, backwards-compatible with older compiled docs
+26. **Extended `RotisserieStandingsService`** — Added `GS` to pitching stat arrays, `K` to hitting stat arrays, `GS` mapping in `GetPitchingStatValue`, `K` mapping in `GetHittingStatValue`, new `PopulateAdvancedStats` method called after every `BuildStandingsFromPoints`
+27. **Created `AdvancedStandings.razor`** — Card-grid component with declarative category configuration; each card shows ranked leaderboard with team name, manager, formatted stat value; gold/silver/bronze row highlights for top 3
+28. **Updated `StandingsDisplay.razor`** — Added third "Advanced" tab between Standings Table and Points Over Time; reuses `finalStandings` data (no new API calls); handles tab switching and loading state
 
 ## Build Status
 ✅ Build succeeded
 
 ## Runtime Status
-✅ Standings display working with all stat categories
-✅ Box score import from Rotowire working
-✅ 2026 season fully operational (teams, settings, box scores, standings)
-✅ SignalR progress updates working for both box score import and standings build
+✅ All four advanced stat cards displaying correctly
+✅ Standings Table and Points Over Time tabs unaffected
+✅ Advanced tab reuses existing final standings data — no additional API calls
 
 ## Architecture Notes
+
+### Advanced Stats Design
+- `AdvancedStats` model intentionally separated from scoring categories on `Standings`
+- All current stats derived from active-lineup totals (position == "A", player == "TOT")
+- Future inactive-player stats can be added to `AdvancedStats` without disturbing scoring logic
+- `PopulateAdvancedStats` called in both `CalculateStandingsForDate` and `ProcessIncrementalStandings`
+- Older compiled standings documents won't have `advanced` field until standings are rebuilt for that year
+- Client `AdvancedStandings.razor` uses declarative `AdvancedCategory` records — add new entries to extend
 
 ### Data Sources
 - `wfbc.managers` — Manager documents
@@ -46,7 +36,7 @@ Box score import and 2026 season functionality is fully working. Standings calcu
 - `wfbc.commish_settings` — single document with Rotowire cookie
 - `wfbc{year}.teams` — SeasonTeam documents
 - `wfbc{year}.team_box_hitting` / `team_box_pitching` — box score data
-- `wfbc{year}.standings` / `compiled_standings` — pre-computed standings
+- `wfbc{year}.standings` / `compiled_standings` — pre-computed standings (now includes `advanced` sub-document)
 
 ### Key Technical Details
 - Rotowire HTTP client uses `AutomaticDecompression` (gzip/deflate/brotli) configured via `ConfigurePrimaryHttpMessageHandler` in `Startup.cs`
@@ -59,3 +49,5 @@ Box score import and 2026 season functionality is fully working. Standings calcu
 - Deploy updated container to production
 - Consider automating box score imports (scheduled task or cron)
 - Trophy.razor needs 2026 entry added at end of season
+- Future: add more advanced stat categories (e.g. BABIP, FIP, wOBA)
+- Future: include inactive-lineup stats in AdvancedStats

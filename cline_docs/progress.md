@@ -1,5 +1,27 @@
 # Progress Status
 
+## ✅ Advanced Stats Tab COMPLETE (April 16, 2026)
+
+Added "Advanced" tab to results pages with leaderboard cards for non-scoring advanced statistics.
+
+### What Was Done
+- Created `AdvancedStats` model — separate bucket for Starts (GS), Quality Start Rate (QS/GS), Strikeout Rate (K/PA), Walk Rate (BB/PA)
+- Extended `RotisserieStandingsService` — aggregates GS (pitching) and K (batting), computes rates in `PopulateAdvancedStats`
+- Created `AdvancedStandings.razor` — declarative card-grid component with ranked leaderboards per category
+- Added third tab to `StandingsDisplay.razor` — reuses existing final standings data, no new API calls
+- Fixed missing `K` mapping in `GetHittingStatValue` that caused 0% strikeout rate
+
+### Files Created
+- `Shared/Models/AdvancedStats.cs`
+- `Client/Shared/Components/AdvancedStandings.razor`
+
+### Files Modified
+- `Shared/Models/Standings.cs` — Added `Advanced` property (`[BsonIgnoreIfNull]`)
+- `Server/Services/RotisserieStandingsService.cs` — GS/K aggregation, `PopulateAdvancedStats`, `GetHittingStatValue` K mapping
+- `Client/Shared/Components/StandingsDisplay.razor` — Third tab button + content region
+
+---
+
 ## ✅ Box Score Import & 2026 Season COMPLETE (April 15, 2026)
 
 Full migration of Python box score import functionality into .NET Blazor app. 2026 season fully operational.
