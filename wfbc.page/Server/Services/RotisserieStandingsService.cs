@@ -162,7 +162,7 @@ namespace WFBC.Server.Services
 
                 // Aggregate hitting stats - using same field names as Python script
                 // NOTE: "K" is included for advanced stats (K% = K / PA); not a scoring category.
-                var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "K", "PA", "R", "RBI", "SB", "SF" };
+                var hStats = new[] { "2B", "3B", "AB", "BB", "CS", "H", "HBP", "HR", "K", "PA", "R", "RBI", "SB", "SF" };
                 
                 foreach (var score in hitBoxScores)
                 {
@@ -321,6 +321,7 @@ namespace WFBC.Server.Services
                 "RBI" => box.RunsBattedIn,
                 "SB" => box.StolenBases,
                 "SF" => box.SacrificeFlies,
+                "CS" => box.CaughtStealing,
                 _ => null
             };
 
@@ -798,7 +799,8 @@ namespace WFBC.Server.Services
             Dictionary<string, Dictionary<string, Dictionary<string, object>>> runningTotals)
         {
             // NOTE: "K" is included for advanced stats (K% = K / PA); not a scoring category.
-            var hStats = new[] { "2B", "3B", "AB", "BB", "H", "HBP", "HR", "K", "PA", "R", "RBI", "SB", "SF" };
+            // NOTE: "CS" is included for advanced stats (SB success rate); not a scoring category.
+            var hStats = new[] { "2B", "3B", "AB", "BB", "CS", "H", "HBP", "HR", "K", "PA", "R", "RBI", "SB", "SF" };
             
             foreach (var score in dailyBoxScores)
             {
@@ -952,10 +954,19 @@ namespace WFBC.Server.Services
                 int battingK = hit.ContainsKey("K") ? (int)hit["K"] : 0;
                 int battingBB = hit.ContainsKey("BB") ? (int)hit["BB"] : 0;
                 int battingPA = hit.ContainsKey("PA") ? (int)hit["PA"] : 0;
+                int battingSB = hit.ContainsKey("SB") ? (int)hit["SB"] : 0;
+                int battingCS = hit.ContainsKey("CS") ? (int)hit["CS"] : 0;
+                int battingH = hit.ContainsKey("H") ? (int)hit["H"] : 0;
+                int battingHR = hit.ContainsKey("HR") ? (int)hit["HR"] : 0;
+                int battingAB = hit.ContainsKey("AB") ? (int)hit["AB"] : 0;
+                int battingSF = hit.ContainsKey("SF") ? (int)hit["SF"] : 0;
 
                 decimal qsRate = starts > 0 ? (decimal)qualityStarts / starts : 0m;
                 decimal kRate = battingPA > 0 ? (decimal)battingK / battingPA : 0m;
                 decimal bbRate = battingPA > 0 ? (decimal)battingBB / battingPA : 0m;
+                decimal sbSuccessRate = (battingSB + battingCS) > 0 ? (decimal)battingSB / (battingSB + battingCS) : 0m;
+                int babipDenom = battingAB - battingK - battingHR + battingSF;
+                decimal babip = babipDenom > 0 ? (decimal)(battingH - battingHR) / babipDenom : 0m;
 
                 standing.Advanced = new AdvancedStats
                 {
@@ -966,7 +977,15 @@ namespace WFBC.Server.Services
                     BattingWalks = battingBB,
                     BattingPlateAppearances = battingPA,
                     StrikeoutRateBatting = Math.Round(kRate, 4),
-                    WalkRateBatting = Math.Round(bbRate, 4)
+                    WalkRateBatting = Math.Round(bbRate, 4),
+                    BattingStolenBases = battingSB,
+                    BattingCaughtStealing = battingCS,
+                    StolenBaseSuccessRate = Math.Round(sbSuccessRate, 4),
+                    BattingHits = battingH,
+                    BattingHomeRuns = battingHR,
+                    BattingAtBats = battingAB,
+                    BattingSacrificeFlies = battingSF,
+                    BABIP = Math.Round(babip, 4)
                 };
             }
         }

@@ -64,5 +64,57 @@ namespace WFBC.Shared.Models
         /// </summary>
         [BsonElement("battingPA")]
         public int BattingPlateAppearances { get; set; }
+
+        // --- Stolen Base Success ---
+
+        /// <summary>
+        /// Stolen base success rate = SB / (SB + CS) (guarded for division by zero).
+        /// </summary>
+        [BsonElement("stolenBaseSuccessRate")]
+        public decimal StolenBaseSuccessRate { get; set; }
+
+        /// <summary>
+        /// Raw stolen bases (SB) summed across active hitters.
+        /// </summary>
+        [BsonElement("battingSB")]
+        public int BattingStolenBases { get; set; }
+
+        /// <summary>
+        /// Raw caught stealing (CS) summed across active hitters.
+        /// </summary>
+        [BsonElement("battingCS")]
+        public int BattingCaughtStealing { get; set; }
+
+        // --- BABIP ---
+
+        /// <summary>
+        /// Batting average on balls in play = (H - HR) / (AB - K - HR + SF).
+        /// </summary>
+        [BsonElement("babip")]
+        public decimal BABIP { get; set; }
+
+        /// <summary>
+        /// Raw batting hits (H) summed across active hitters.
+        /// </summary>
+        [BsonElement("battingH")]
+        public int BattingHits { get; set; }
+
+        /// <summary>
+        /// Raw batting home runs (HR) summed across active hitters.
+        /// </summary>
+        [BsonElement("battingHR")]
+        public int BattingHomeRuns { get; set; }
+
+        /// <summary>
+        /// Raw batting at bats (AB) summed across active hitters.
+        /// </summary>
+        [BsonElement("battingAB")]
+        public int BattingAtBats { get; set; }
+
+        /// <summary>
+        /// Raw batting sacrifice flies (SF) summed across active hitters.
+        /// </summary>
+        [BsonElement("battingSF")]
+        public int BattingSacrificeFlies { get; set; }
     }
 }

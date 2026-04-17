@@ -116,6 +116,40 @@
                 var totalPA = all.Sum(s => s.Advanced?.BattingPlateAppearances ?? 0);
                 return totalPA == 0 ? 0m : (decimal)all.Sum(s => s.Advanced?.BattingWalks ?? 0) / totalPA;
             }),
+        new AdvancedCategory(
+            "Plate Appearances",
+            "PA (Batting)",
+            s => s.Advanced?.BattingPlateAppearances ?? 0m,
+            v => ((int)Math.Round(v)).ToString("N0"),
+            false,
+            all => all.Count == 0 ? 0m : (decimal)all.Sum(s => s.Advanced?.BattingPlateAppearances ?? 0) / all.Count,
+            v => v.ToString("F1")),
+        new AdvancedCategory(
+            "SB Success %",
+            "SB / (SB + CS)",
+            s => s.Advanced?.StolenBaseSuccessRate ?? 0m,
+            v => v.ToString("P1"),
+            false,
+            all => {
+                var totalSB = all.Sum(s => s.Advanced?.BattingStolenBases ?? 0);
+                var totalCS = all.Sum(s => s.Advanced?.BattingCaughtStealing ?? 0);
+                return (totalSB + totalCS) == 0 ? 0m : (decimal)totalSB / (totalSB + totalCS);
+            }),
+        new AdvancedCategory(
+            "BABIP",
+            "(H-HR) / (AB-K-HR+SF)",
+            s => s.Advanced?.BABIP ?? 0m,
+            v => v.ToString("F3"),
+            false,
+            all => {
+                var totalH = all.Sum(s => s.Advanced?.BattingHits ?? 0);
+                var totalHR = all.Sum(s => s.Advanced?.BattingHomeRuns ?? 0);
+                var totalAB = all.Sum(s => s.Advanced?.BattingAtBats ?? 0);
+                var totalK = all.Sum(s => s.Advanced?.BattingStrikeouts ?? 0);
+                var totalSF = all.Sum(s => s.Advanced?.BattingSacrificeFlies ?? 0);
+                var denom = totalAB - totalK - totalHR + totalSF;
+                return denom == 0 ? 0m : (decimal)(totalH - totalHR) / denom;
+            }),
     };
 
     private List<RankedEntry> RankForCategory(AdvancedCategory category)

@@ -1,7 +1,7 @@
 # Active Context
 
 ## Current Work
-Advanced Stats tab added to results pages. Shows leaderboard cards for Starts (GS), Quality Start Rate (QS/GS), Strikeout Rate (K/PA), and Walk Rate (BB/PA). All four categories working correctly after fixing missing K mapping in GetHittingStatValue.
+Advanced Stats tab expanded with 3 new categories: Plate Appearances, SB Success % (SB/(SB+CS)), and BABIP ((H-HR)/(AB-K-HR+SF)). Required adding CS (Caught Stealing) to the hitting stats accumulation pipeline. Now shows 7 total leaderboard cards.
 
 ## Recent Changes (numbered in order)
 
@@ -12,6 +12,7 @@ Advanced Stats tab added to results pages. Shows leaderboard cards for Starts (G
 27. **Created `AdvancedStandings.razor`** — Card-grid component with declarative category configuration; each card shows ranked leaderboard with team name, manager, formatted stat value; gold/silver/bronze row highlights for top 3
 28. **Updated `StandingsDisplay.razor`** — Added third "Advanced" tab between Standings Table and Points Over Time; reuses `finalStandings` data (no new API calls); handles tab switching and loading state
 29. **Added league averages to advanced stat cards** — Each card header now shows right-aligned "Lg Avg" with computed league average. Counting stats (Starts) use sum/teamCount with 1 decimal place; rate stats (QS%, K%, BB%) use aggregate numerator/denominator across all teams. Added `LeagueAvgAccessor` and optional `LeagueAvgFormatter` to `AdvancedCategory` record.
+30. **Added 3 new advanced stat categories** — Plate Appearances (PA total), SB Success % (SB/(SB+CS)), BABIP ((H-HR)/(AB-K-HR+SF)). Added CS to hStats arrays and GetHittingStatValue mapping. Extended AdvancedStats model with 8 new fields. Updated PopulateAdvancedStats to compute new metrics.
 
 ## Build Status
 ✅ Build succeeded
@@ -50,5 +51,5 @@ Advanced Stats tab added to results pages. Shows leaderboard cards for Starts (G
 - Deploy updated container to production
 - Consider automating box score imports (scheduled task or cron)
 - Trophy.razor needs 2026 entry added at end of season
-- Future: add more advanced stat categories (e.g. BABIP, FIP, wOBA)
+- Future: add more advanced stat categories (e.g. FIP, wOBA)
 - Future: include inactive-lineup stats in AdvancedStats
