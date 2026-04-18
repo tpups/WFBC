@@ -2,11 +2,11 @@
 @inject IJSRuntime JSRuntime
 @inject AppState AppState
 
-<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-2 sm:pb-6 sm:p-6">
+<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-2 sm:pb-6 sm:p-6 overflow-hidden">
     @if (ProgressionData?.Count > 0)
     {
         <!-- Chart Canvas - Desktop Contained -->
-        <div class="w-full max-w-[calc(100vw-0.5rem)] h-[60dvh] sm:h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
+        <div class="w-full max-w-full h-[60dvh] sm:h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
         </div>
 
@@ -221,16 +221,16 @@
     /* Portrait mode optimizations for narrow devices - ID-based override */
     @@media screen and (orientation: portrait) and (max-width: 400px) {
         div[id^="chartContainer-"] {
-            max-width: calc(100vw - 2rem) !important;
-            width: calc(100vw - 2rem) !important;
+            max-width: 100% !important;
+            width: 100% !important;
         }
     }
 
     /* Desktop containment - 992px and above */
     @@media screen and (min-width: 992px) {
         div[id^="chartContainer-"] {
-            max-width: calc(100vw - 6rem) !important;
-            width: calc(100vw - 6rem) !important;
+            max-width: 100% !important;
+            width: 100% !important;
         }
     }
 
@@ -238,8 +238,8 @@
     @@media screen and (orientation: landscape) {
         div[id^="chartContainer-"] {
             height: 90vh !important;
-            max-width: calc(100vw - 3rem) !important;
-            width: calc(100vw - 3rem) !important;
+            max-width: 100% !important;
+            width: 100% !important;
         }
         
         /* Apply padding only to chart component in landscape mode */
@@ -264,8 +264,8 @@
     /* Desktop landscape mode - override universal landscape for larger margins */
     @@media screen and (orientation: landscape) and (min-width: 992px) {
         div[id^="chartContainer-"] {
-            max-width: calc(100vw - 6rem) !important;
-            width: calc(100vw - 6rem) !important;
+            max-width: 100% !important;
+            width: 100% !important;
         }
     }
 </style>
@@ -318,29 +318,32 @@
                     container.style.width = 'calc(100vw - 0.25rem)';
                 }
             } else if (drawerState && drawerState.isDesktop) {
-                // Desktop: Calculate margin based on actual drawer state
+                // Desktop: Use documentElement.clientWidth (excludes browser scrollbar) with drawer margins + scrollbar buffer
+                const viewportWidth = document.documentElement.clientWidth;
+                const scrollbarBuffer = 20; // Account for main element's vertical scrollbar
                 let totalMargin = 0;
                 if (drawerState.isClosed) {
-                    totalMargin = 128; // More conservative margin to ensure no horizontal scroll when closed
+                    totalMargin = 128 + scrollbarBuffer;
                 } else if (drawerState.isMinified) {
-                    totalMargin = 128 + 128; // 128px drawer + 128px safety = 256px
+                    totalMargin = 256 + scrollbarBuffer;
                 } else {
-                    totalMargin = 256 + 128; // 256px drawer + 128px safety = 384px
+                    totalMargin = 384 + scrollbarBuffer;
                 }
                 
-                const maxWidth = Math.max(window.innerWidth - totalMargin, 300); // Minimum 300px
+                const maxWidth = Math.max(viewportWidth - totalMargin, 300);
                 
                 container.style.setProperty('max-width', maxWidth + 'px', 'important');
-                container.style.setProperty('width', `calc(100vw - ${totalMargin}px)`, 'important');
-                container.style.setProperty('min-width', 'auto', 'important'); // Remove any conflicting minWidth
+                container.style.setProperty('width', maxWidth + 'px', 'important');
+                container.style.setProperty('min-width', 'auto', 'important');
                 
-                console.log(`🖥️ Desktop mode: Total margin=${totalMargin}px, Chart width=${maxWidth}px`);
+                console.log(`🖥️ Desktop mode: viewportWidth=${viewportWidth}px, totalMargin=${totalMargin}px, chartWidth=${maxWidth}px`);
             } else {
-                // Tablet mode: standard margins
-                const maxWidth = Math.max(window.innerWidth - 48, 300); // 48px total margin (3rem), minimum 300px
-                container.style.maxWidth = maxWidth + 'px';
-                container.style.width = 'calc(100vw - 3rem)';
-                container.style.minWidth = 'auto'; // Remove any conflicting minWidth
+                // Tablet mode: documentElement.clientWidth with standard margins + scrollbar buffer
+                const viewportWidth = document.documentElement.clientWidth;
+                const maxWidth = Math.max(viewportWidth - 68, 300); // 48 + 20 scrollbar buffer
+                container.style.setProperty('max-width', maxWidth + 'px', 'important');
+                container.style.setProperty('width', maxWidth + 'px', 'important');
+                container.style.minWidth = 'auto';
             }
         }
 

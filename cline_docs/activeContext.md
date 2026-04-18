@@ -1,28 +1,38 @@
 # Active Context
 
 ## Current Work
-Advanced Stats tab expanded with 3 new categories: Plate Appearances, SB Success % (SB/(SB+CS)), and BABIP ((H-HR)/(AB-K-HR+SF)). Required adding CS (Caught Stealing) to the hitting stats accumulation pipeline. Now shows 7 total leaderboard cards.
+Fixed styling regressions introduced when adding the Advanced tab to results pages. Three issues resolved: standings table bottom bar, chart horizontal scrollbar, and advanced cards mobile overflow.
 
 ## Recent Changes (numbered in order)
 
-1-23. (Previous changes — see git history)
-24. **Created `AdvancedStats` model** (`wfbc.page/Shared/Models/AdvancedStats.cs`) — Separate bucket for advanced stats: Starts, QualityStartRate, StrikeoutRateBatting, WalkRateBatting, plus raw components (BattingK, BattingBB, BattingPA, QualityStarts)
-25. **Added `Advanced` property to `Standings` model** — `[BsonIgnoreIfNull]` nullable `AdvancedStats?` field, backwards-compatible with older compiled docs
-26. **Extended `RotisserieStandingsService`** — Added `GS` to pitching stat arrays, `K` to hitting stat arrays, `GS` mapping in `GetPitchingStatValue`, `K` mapping in `GetHittingStatValue`, new `PopulateAdvancedStats` method called after every `BuildStandingsFromPoints`
-27. **Created `AdvancedStandings.razor`** — Card-grid component with declarative category configuration; each card shows ranked leaderboard with team name, manager, formatted stat value; gold/silver/bronze row highlights for top 3
-28. **Updated `StandingsDisplay.razor`** — Added third "Advanced" tab between Standings Table and Points Over Time; reuses `finalStandings` data (no new API calls); handles tab switching and loading state
-29. **Added league averages to advanced stat cards** — Each card header now shows right-aligned "Lg Avg" with computed league average. Counting stats (Starts) use sum/teamCount with 1 decimal place; rate stats (QS%, K%, BB%) use aggregate numerator/denominator across all teams. Added `LeagueAvgAccessor` and optional `LeagueAvgFormatter` to `AdvancedCategory` record.
-30. **Added 3 new advanced stat categories** — Plate Appearances (PA total), SB Success % (SB/(SB+CS)), BABIP ((H-HR)/(AB-K-HR+SF)). Added CS to hStats arrays and GetHittingStatValue mapping. Extended AdvancedStats model with 8 new fields. Updated PopulateAdvancedStats to compute new metrics.
+1-30. (Previous changes — see git history)
+31. **Fixed Standings Table bottom blue bar** (`StandingsTable.razor`) — Changed `h-[60dvh] sm:h-[70vh]` to `max-h-[60dvh] sm:max-h-[70vh]` on scroll container so table shrinks to fit content instead of maintaining fixed height with blue background showing through
+32. **Fixed Points Over Time chart horizontal scrollbar** (`StandingsGraph.razor`) — Replaced `100vw`-based viewport calculations with `document.documentElement.clientWidth` (excludes browser scrollbar) plus 20px buffer for `<main>` element's vertical scrollbar. Drawer-based margins retained: closed=148px, minified=276px, open=404px, tablet=68px. CSS media queries changed to `100%` fallbacks.
+33. **Fixed Advanced cards mobile overflow** — CSS `max-w-full` and grid `1fr` column on mobile already handled by existing styles; the `max-h` fix on standings table resolved the container overflow that was pushing cards wide
 
 ## Build Status
 ✅ Build succeeded
 
 ## Runtime Status
-✅ All four advanced stat cards displaying correctly
-✅ Standings Table and Points Over Time tabs unaffected
-✅ Advanced tab reuses existing final standings data — no additional API calls
+✅ Standings Table — no dark blue bar on right/bottom on larger screens
+✅ Points Over Time — no horizontal scrollbar on larger screens
+✅ Advanced tab — cards properly sized on mobile (iPhone 17 Pro 402px)
+✅ Tab switching (Advanced → Chart) works correctly
+✅ Drawer open/closed/minified states all render chart correctly
 
 ## Architecture Notes
+
+### Chart Width Calculation (StandingsGraph.razor)
+- **Mobile (<640px)**: Uses `100vw`-based calculations (drawer doesn't affect mobile)
+- **Desktop**: `document.documentElement.clientWidth - (drawerMargin + 20px scrollbar buffer)`
+  - Drawer closed: 148px total margin
+  - Drawer minified: 276px total margin
+  - Drawer open: 404px total margin
+- **Tablet**: `document.documentElement.clientWidth - 68px`
+- Key insight: `100vw` includes browser scrollbar width (~17px on Windows), `document.documentElement.clientWidth` does not
+- Additional 20px buffer accounts for `<main>` element's own vertical scrollbar
+- Cannot use `parentElement.clientWidth` — fails when navigating from hidden tabs (Advanced → Chart)
+- Cannot use CSS-only sizing — Chart.js `responsive: true` creates feedback loop without explicit width constraints
 
 ### Advanced Stats Design
 - `AdvancedStats` model intentionally separated from scoring categories on `Standings`

@@ -1,5 +1,16 @@
 # Progress Status
 
+## ✅ Styling Fixes COMPLETE (April 17, 2026)
+
+Fixed styling regressions from Advanced tab addition: standings table bottom blue bar (changed fixed height to max-height), chart horizontal scrollbar (replaced `100vw` with `document.documentElement.clientWidth` + scrollbar buffer), and advanced cards mobile overflow.
+
+### Files Modified
+- `Client/Shared/Components/StandingsTable.razor` — `h-[60dvh]` → `max-h-[60dvh]`
+- `Client/Shared/Components/StandingsGraph.razor` — JS viewport calc + CSS media query updates
+- `Client/Shared/MainLayout.razor` — verified `overflow-auto` on main element
+
+---
+
 ## ✅ Advanced Stats Tab COMPLETE (April 16, 2026)
 
 Added "Advanced" tab to results pages with leaderboard cards for non-scoring advanced statistics.
