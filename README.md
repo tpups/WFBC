@@ -3,8 +3,8 @@
 
 * Blazor Web Assembly Client
 
-* Github > DockerHub > DigitalOcean Ubuntu Droplet
+* GHCR > DigitalOcean Ubuntu Droplet
 
-* SSO IDP == Okta
+* SSO IDP == Zitadel
 
 * See wiki for detailed info
