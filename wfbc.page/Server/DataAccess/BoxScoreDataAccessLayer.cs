@@ -14,7 +14,7 @@ namespace WFBC.Server.DataAccess
     {
         private readonly WfbcDBContext _db;
         private static readonly string[] HittingCats = { "2B","3B","AB","AVG","BB","CS","GP","H","HBP","HR","K","OPS","PA","R","RBI","SB","SF" };
-        private static readonly string[] PitchingCats = { "BB","BS","ER","ERA","GP","H","HB","HR","IP","K","L","QS","R","SV","W","WHIP","WP" };
+        private static readonly string[] PitchingCats = { "BB","BS","ER","ERA","GP","GS","H","HB","HR","IP","K","L","QS","R","SV","W","WHIP","WP" };
 
         public BoxScoreDataAccessLayer(WfbcDBContext db) { _db = db; }
 

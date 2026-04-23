@@ -1,24 +1,19 @@
 # Active Context
 
 ## Current Work
-Fixed styling regressions introduced when adding the Advanced tab to results pages. Three issues resolved: standings table bottom bar, chart horizontal scrollbar, and advanced cards mobile overflow.
+Fixed GS (Games Started) advanced stat not updating on box score re-imports due to missing field in update array.
 
 ## Recent Changes (numbered in order)
 
-1-30. (Previous changes — see git history)
-31. **Fixed Standings Table bottom blue bar** (`StandingsTable.razor`) — Changed `h-[60dvh] sm:h-[70vh]` to `max-h-[60dvh] sm:max-h-[70vh]` on scroll container so table shrinks to fit content instead of maintaining fixed height with blue background showing through
-32. **Fixed Points Over Time chart horizontal scrollbar** (`StandingsGraph.razor`) — Replaced `100vw`-based viewport calculations with `document.documentElement.clientWidth` (excludes browser scrollbar) plus 20px buffer for `<main>` element's vertical scrollbar. Drawer-based margins retained: closed=148px, minified=276px, open=404px, tablet=68px. CSS media queries changed to `100%` fallbacks.
-33. **Fixed Advanced cards mobile overflow** — CSS `max-w-full` and grid `1fr` column on mobile already handled by existing styles; the `max-h` fix on standings table resolved the container overflow that was pushing cards wide
+1-33. (Previous changes — see git history)
+34. **Fixed GS stuck in advanced stats** (`BoxScoreDataAccessLayer.cs`) — Added `"GS"` to the `PitchingCats` array so that Games Started values get updated when pitching box scores are re-imported for the same date. Previously, GS was missing from this array, meaning re-imports silently skipped GS changes while all other pitching stats were properly updated.
 
 ## Build Status
-✅ Build succeeded
+✅ Build succeeded (verified locally)
 
 ## Runtime Status
-✅ Standings Table — no dark blue bar on right/bottom on larger screens
-✅ Points Over Time — no horizontal scrollbar on larger screens
-✅ Advanced tab — cards properly sized on mobile (iPhone 17 Pro 402px)
-✅ Tab switching (Advanced → Chart) works correctly
-✅ Drawer open/closed/minified states all render chart correctly
+✅ GS updates correctly on local instance after fix
+⏳ Production deployment pending
 
 ## Architecture Notes
 
@@ -58,7 +53,8 @@ Fixed styling regressions introduced when adding the Advanced tab to results pag
 - `ResultsDynamic.razor` handles years 2019+ with parameterized route `/results/{year:int}`
 
 ## Next Steps
-- Deploy updated container to production
+- Deploy updated container to production and re-import box scores to pick up missing GS values
+- Re-run standings calculation after re-import to rebuild with correct GS totals
 - Consider automating box score imports (scheduled task or cron)
 - Trophy.razor needs 2026 entry added at end of season
 - Future: add more advanced stat categories (e.g. FIP, wOBA)
