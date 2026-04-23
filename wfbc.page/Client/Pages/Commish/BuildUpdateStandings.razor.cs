@@ -128,6 +128,16 @@ namespace WFBC.Client.Pages.Commish
             {
                 // Create SignalR connection
                 var baseUrl = Navigation.BaseUri.TrimEnd('/');
+                // Verify token is still valid before creating connection
+                var preCheck = await AccessTokenProvider.RequestAccessToken();
+                if (!preCheck.TryGetToken(out _))
+                {
+                    errorMessage = "Your session has expired. Please sign out and sign back in.";
+                    isCalculating = false;
+                    StateHasChanged();
+                    return;
+                }
+
                 hubConnection = new HubConnectionBuilder()
                     .WithUrl($"{baseUrl}/progressHub", options =>
                     {
@@ -141,6 +151,7 @@ namespace WFBC.Client.Pages.Commish
                             return null;
                         };
                     })
+                    .WithAutomaticReconnect()
                     .Build();
 
                 // Set up progress update handler
@@ -173,7 +184,15 @@ namespace WFBC.Client.Pages.Commish
                 // Start calculation with progress reporting
                 var response = await AuthorizedClient.Client.PostAsync($"/api/RotisserieStandings/calculate-with-progress/{selectedYear}", null);
                 
-                if (response.IsSuccessStatusCode)
+                if ((int)response.StatusCode == 401)
+                {
+                    errorMessage = "Your session has expired. Please sign out and sign back in.";
+                    calculationMessage = "";
+                    isCalculating = false;
+                    StateHasChanged();
+                    return;
+                }
+                else if (response.IsSuccessStatusCode)
                 {
                     var jsonContent = await response.Content.ReadAsStringAsync();
                     calculationMessage = $"API response received, parsing JSON...";

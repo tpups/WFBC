@@ -1,18 +1,20 @@
 # Active Context
 
 ## Current Work
-Fixed GS (Games Started) advanced stat not updating on box score re-imports due to missing field in update array.
+Improved auth performance and fixed token expiry bug causing "SignalR not connected" errors.
 
 ## Recent Changes (numbered in order)
 
 1-33. (Previous changes — see git history)
-34. **Fixed GS stuck in advanced stats** (`BoxScoreDataAccessLayer.cs`) — Added `"GS"` to the `PitchingCats` array so that Games Started values get updated when pitching box scores are re-imported for the same date. Previously, GS was missing from this array, meaning re-imports silently skipped GS changes while all other pitching stats were properly updated.
+34. **Fixed GS stuck in advanced stats** (`BoxScoreDataAccessLayer.cs`) — Added `"GS"` to the `PitchingCats` array so that Games Started values get updated when pitching box scores are re-imported for the same date.
+35. **Auth performance improvements** (`Startup.cs`) — Replaced `new HttpClient()` with `IHttpClientFactory` (named "zitadel" client) for userinfo endpoint calls to reuse connections. Increased role cache duration from 5 to 30 minutes.
+36. **Fixed token expiry / SignalR bug** (`UpdateBoxScores.razor`, `BuildUpdateStandings.razor.cs`) — Added `EnsureHubConnected()` method that checks token freshness and rebuilds SignalR connection if expired. Added `.WithAutomaticReconnect()` to `BuildUpdateStandings`. Both pages now detect 401 responses and show "Your session has expired" instead of generic errors.
+37. **Faster logout** (`MenuBar.razor`) — Added `post_logout_redirect_uri` (Navigation.BaseUri) to logout call so user is redirected back to home after Zitadel logout instead of lingering on Zitadel's page.
 
 ## Build Status
 ✅ Build succeeded (verified locally)
 
 ## Runtime Status
-✅ GS updates correctly on local instance after fix
 ⏳ Production deployment pending
 
 ## Architecture Notes
@@ -55,6 +57,7 @@ Fixed GS (Games Started) advanced stat not updating on box score re-imports due 
 ## Next Steps
 - Deploy updated container to production and re-import box scores to pick up missing GS values
 - Re-run standings calculation after re-import to rebuild with correct GS totals
+- Test auth improvements in production (verify faster login, proper session expiry handling)
 - Consider automating box score imports (scheduled task or cron)
 - Trophy.razor needs 2026 entry added at end of season
 - Future: add more advanced stat categories (e.g. FIP, wOBA)

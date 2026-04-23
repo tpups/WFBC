@@ -121,7 +121,8 @@ namespace WFBC.Server
                                     
                                     if (!string.IsNullOrEmpty(accessToken))
                                     {
-                                        using var httpClient = new System.Net.Http.HttpClient();
+                                        var httpClientFactory = context.HttpContext.RequestServices.GetRequiredService<System.Net.Http.IHttpClientFactory>();
+                                        var httpClient = httpClientFactory.CreateClient("zitadel");
                                         httpClient.DefaultRequestHeaders.Authorization = 
                                             new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken);
                                         var userInfoResponse = await httpClient.GetAsync($"{authority}/oidc/v1/userinfo");
@@ -137,10 +138,10 @@ namespace WFBC.Server
                                                 {
                                                     var rolesJson = prop.Value.GetRawText();
                                                     rolesClaim = new System.Security.Claims.Claim(prop.Name, rolesJson);
-                                                    // Cache roles for 5 minutes to avoid repeated userinfo calls
+                                                    // Cache roles for 30 minutes to avoid repeated userinfo calls
                                                     if (sub != null)
                                                     {
-                                                        cache.Set(cacheKey, rolesJson, System.TimeSpan.FromMinutes(5));
+                                                        cache.Set(cacheKey, rolesJson, System.TimeSpan.FromMinutes(30));
                                                     }
                                                     break;
                                                 }
@@ -226,6 +227,8 @@ namespace WFBC.Server
             {
                 AutomaticDecompression = System.Net.DecompressionMethods.GZip | System.Net.DecompressionMethods.Deflate | System.Net.DecompressionMethods.Brotli
             });
+            // Named HttpClient for Zitadel userinfo calls (reuses connections)
+            services.AddHttpClient("zitadel");
             // Memory Cache
             services.AddMemoryCache();
             

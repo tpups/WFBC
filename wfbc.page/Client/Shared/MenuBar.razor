@@ -55,7 +55,7 @@
     {
         //await SignOutManager.SetSignOutState();
         //Navigation.NavigateTo("authentication/logout");
-        Microsoft.AspNetCore.Components.WebAssembly.Authentication.NavigationManagerExtensions.NavigateToLogout(Navigation, "authentication/logout");
+        Microsoft.AspNetCore.Components.WebAssembly.Authentication.NavigationManagerExtensions.NavigateToLogout(Navigation, "authentication/logout", Navigation.BaseUri);
     }
     void ToggleDrawer()
     {

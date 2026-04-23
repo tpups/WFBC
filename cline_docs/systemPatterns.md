@@ -44,13 +44,18 @@
 
 ### Authentication
 - Zitadel Cloud OIDC with JWT Bearer
-- Role claims extracted from userinfo endpoint (cached 5 min)
+- Role claims extracted from userinfo endpoint (cached 30 min via IMemoryCache)
+- Userinfo HTTP calls use named `IHttpClientFactory` client ("zitadel") for connection reuse
 - SignalR uses query string `access_token` parameter (WebSocket limitation)
+- SignalR pages use `EnsureHubConnected()` pattern to detect token expiry and rebuild connections
+- Both `UpdateBoxScores` and `BuildUpdateStandings` use `.WithAutomaticReconnect()`
+- 401 responses show "Your session has expired" instead of generic errors
+- Logout includes `post_logout_redirect_uri` for immediate redirect back to app
 - Policies: `IsCommish`, `IsManager`
 
 ### Caching
 - `ServerSideStandingsCache` — in-memory cache with explicit invalidation after standings rebuild
-- `IMemoryCache` — 5-minute cache for Zitadel userinfo role lookups
+- `IMemoryCache` — 30-minute cache for Zitadel userinfo role lookups
 
 ## Client-Side Patterns
 

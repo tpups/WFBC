@@ -160,15 +160,83 @@
         catch { seasonSettingsFound = false; }
     }
 
+    private async Task EnsureHubConnected()
+    {
+        if (hubConnection?.State == HubConnectionState.Connected) return;
+
+        // Token may have expired — try to get a fresh one before reconnecting
+        var result = await TokenProvider.RequestAccessToken();
+        if (!result.TryGetToken(out var token))
+        {
+            // Token refresh failed — force re-login
+            Microsoft.AspNetCore.Components.WebAssembly.Authentication.NavigationManagerExtensions.NavigateToLogout(NavManager, "authentication/logout");
+            return;
+        }
+
+        try
+        {
+            if (hubConnection != null)
+                await hubConnection.DisposeAsync();
+
+            var baseUri = NavManager.BaseUri.TrimEnd('/');
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl($"{baseUri}/progressHub", options =>
+                {
+                    options.AccessTokenProvider = async () =>
+                    {
+                        var r = await TokenProvider.RequestAccessToken();
+                        return r.TryGetToken(out var t) ? t.Value : null;
+                    };
+                })
+                .WithAutomaticReconnect()
+                .Build();
+            hubConnection.On<ProgressData>("ReceiveProgress", (update) =>
+            {
+                progress = update;
+                if (update.Status == "Complete") { isFetching = false; isComplete = true; }
+                InvokeAsync(StateHasChanged);
+            });
+            await hubConnection.StartAsync();
+        }
+        catch
+        {
+            hubConnection = null;
+            throw;
+        }
+    }
+
     private async Task StartFetch()
     {
-        if (hubConnection?.State != HubConnectionState.Connected) { errorMessage = "SignalR not connected. Please refresh."; return; }
+        try
+        {
+            await EnsureHubConnected();
+        }
+        catch
+        {
+            errorMessage = "Your session has expired. Please sign out and sign back in.";
+            return;
+        }
+
+        if (hubConnection?.State != HubConnectionState.Connected)
+        {
+            errorMessage = "Your session has expired. Please sign out and sign back in.";
+            return;
+        }
+
         errorMessage = string.Empty; isFetching = true; isComplete = false; progress = null;
         try
         {
             var cid = hubConnection.ConnectionId;
             var resp = await AuthorizedClient.Client.PostAsync($"/api/boxscore/fetch/{selectedYear}?connectionId={cid}", null);
-            if (!resp.IsSuccessStatusCode) { errorMessage = await resp.Content.ReadAsStringAsync(); isFetching = false; }
+            if (!resp.IsSuccessStatusCode)
+            {
+                var body = await resp.Content.ReadAsStringAsync();
+                if ((int)resp.StatusCode == 401)
+                    errorMessage = "Your session has expired. Please sign out and sign back in.";
+                else
+                    errorMessage = body;
+                isFetching = false;
+            }
         }
         catch (AccessTokenNotAvailableException e) { e.Redirect(); }
         catch (Exception ex) { errorMessage = ex.Message; isFetching = false; }
