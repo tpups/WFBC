@@ -217,6 +217,55 @@ namespace WFBC.Client.Services
             return new List<WagerData>();
         }
 
+        // Get funds data for a year with caching
+        public async Task<FundsResponse> GetFundsDataAsync(string year)
+        {
+            var cacheKey = $"funds_data_{year}";
+
+            if (_cache.ContainsKey(cacheKey))
+            {
+                var cached = _cache[cacheKey];
+                var cacheAge = DateTime.UtcNow - cached.CachedAt;
+
+                if (cacheAge < TimeSpan.FromMinutes(5) && cached.FundsData != null)
+                {
+                    Console.WriteLine($"[StandingsCache] Serving funds data for {year} from cache ({cacheAge.TotalMinutes:F1}min old)");
+                    return cached.FundsData;
+                }
+                else
+                {
+                    Console.WriteLine($"[StandingsCache] Funds cache expired or empty for {year} - removing and fetching fresh");
+                    _cache.Remove(cacheKey);
+                }
+            }
+
+            Console.WriteLine($"[StandingsCache] Fetching fresh funds data for {year}");
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<FundsResponse>($"api/Funds/{year}");
+
+                if (response != null)
+                {
+                    Console.WriteLine($"[StandingsCache] Server returned {response.DataPoints.Count} funds data points for {year} - caching for 5 minutes");
+
+                    _cache[cacheKey] = new StandingsCache
+                    {
+                        Year = year,
+                        CachedAt = DateTime.UtcNow,
+                        FundsData = response
+                    };
+
+                    return response;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StandingsCache] Error fetching funds data for {year}: {ex.Message}");
+            }
+
+            return new FundsResponse();
+        }
+
         // Get the final standings last-updated timestamp from cache (must call GetFinalStandingsAsync first)
         public DateTime? GetFinalStandingsLastUpdated(string year)
         {
@@ -263,6 +312,13 @@ namespace WFBC.Client.Services
             if (_cache.ContainsKey(wagerCacheKey))
             {
                 _cache.Remove(wagerCacheKey);
+                removedAny = true;
+            }
+
+            var fundsCacheKey = $"funds_data_{year}";
+            if (_cache.ContainsKey(fundsCacheKey))
+            {
+                _cache.Remove(fundsCacheKey);
                 removedAny = true;
             }
             
@@ -332,6 +388,7 @@ namespace WFBC.Client.Services
         public List<Standings> FinalStandings { get; set; }
         public List<Standings> ProgressionData { get; set; }
         public List<WagerData> WagerData { get; set; }
+        public FundsResponse FundsData { get; set; }
     }
 
     // Cache status for debugging

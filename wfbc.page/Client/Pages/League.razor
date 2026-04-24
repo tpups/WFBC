@@ -10,8 +10,9 @@
 
     <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
 
-        <!-- Wagers Section (first on mobile, left on desktop) -->
+        <!-- Wagers Section (with The Funds above) -->
         <div class="order-1 lg:order-1 lg:w-3/5">
+            <TheFunds FundsData="fundsData" />
             @if (isLoading)
             {
                 <div class="flex justify-center items-center py-4">
@@ -25,7 +26,7 @@
             }
         </div>
 
-        <!-- Schedule Section (second on mobile, right on desktop) -->
+        <!-- Schedule Section -->
         <div class="order-2 lg:order-2 lg:w-2/5 mt-6">
             <div class="border-2 border-wfbc-blue-2 rounded-lg overflow-hidden">
                 <div class="bg-wfbc-blue-2 text-white px-4 py-3 text-center">
@@ -92,6 +93,7 @@
 
 @code {
     private List<WagerData> wagerData = new();
+    private FundsResponse? fundsData;
     private bool isLoading = true;
     private string? wagerLastUpdatedText;
 
@@ -99,7 +101,12 @@
     {
         try
         {
-            wagerData = await CacheService.GetWagerDataAsync("2026");
+            // Load funds data and wager data in parallel
+            var fundsTask = CacheService.GetFundsDataAsync("2026");
+            var wagerTask = CacheService.GetWagerDataAsync("2026");
+            
+            fundsData = await fundsTask;
+            wagerData = await wagerTask;
             
             // Get last-updated timestamp from cache (populated by GetWagerDataAsync)
             var lastUpdated = CacheService.GetWagerLastUpdated("2026");

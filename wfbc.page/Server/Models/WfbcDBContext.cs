@@ -152,6 +152,19 @@ namespace WFBC.Server.Models
                 return _compiledProgression;
             }
         }
+        public Dictionary<string, IMongoCollection<FundsDataPoint>> TheFunds
+        {
+            get
+            {
+                Dictionary<string, IMongoCollection<FundsDataPoint>> _theFunds = new Dictionary<string, IMongoCollection<FundsDataPoint>>();
+                for (int i = _settings.StartYear; i <= _settings.EndYear; i++)
+                {
+                    string year = i.ToString();
+                    _theFunds.Add(year, _dbs[year].GetCollection<FundsDataPoint>("the_funds"));
+                }
+                return _theFunds;
+            }
+        }
         public Dictionary<string, IMongoCollection<CompiledWagerData>> CompiledWagerData
         {
             get

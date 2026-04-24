@@ -1,0 +1,176 @@
+@using WFBC.Shared.Models
+@inject IJSRuntime JSRuntime
+
+@if (FundsData?.DataPoints?.Any() == true)
+{
+    <div class="mt-6">
+        <div class="border-2 border-wfbc-blue-2 rounded-lg overflow-hidden">
+            <div class="bg-wfbc-blue-2 text-white px-4 py-3 text-center">
+                <h2 class="text-xl font-bold">The Funds</h2>
+            </div>
+            <div class="bg-white p-2 sm:p-4">
+                <div class="relative w-full h-[250px] sm:h-[300px]">
+                    <canvas id="fundsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public FundsResponse? FundsData { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && FundsData?.DataPoints?.Any() == true)
+        {
+            await RenderChart();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (FundsData?.DataPoints?.Any() == true)
+        {
+            await Task.Delay(100);
+            await RenderChart();
+        }
+    }
+
+    private async Task RenderChart()
+    {
+        try
+        {
+            if (FundsData?.DataPoints == null || !FundsData.DataPoints.Any()) return;
+
+            var today = DateTime.Today;
+            var yearInt = FundsData.SeasonStartDate.Year;
+            var seasonEnd = new DateTime(yearInt, 11, 7); // November 7
+            var endDate = today < seasonEnd ? today : seasonEnd;
+
+            var chartData = new
+            {
+                labels = FundsData.DataPoints.Select(d => d.Date.ToString("MM/dd")).ToArray(),
+                amounts = FundsData.DataPoints.Select(d => (double)d.Amount).ToArray(),
+                seasonStartLabel = FundsData.SeasonStartDate.ToString("MM/dd"),
+                endDateLabel = endDate.ToString("MM/dd"),
+                seasonStartDate = FundsData.SeasonStartDate.ToString("yyyy-MM-dd"),
+                endDate = endDate.ToString("yyyy-MM-dd")
+            };
+
+            await JSRuntime.InvokeVoidAsync("renderFundsChart", "fundsChart", chartData);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error rendering funds chart: {ex.Message}");
+        }
+    }
+}
+
+<script>
+    window.renderFundsChart = function(canvasId, chartData) {
+        if (window.fundsChartInstance) {
+            window.fundsChartInstance.destroy();
+        }
+
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) {
+            console.error('Funds chart canvas not found:', canvasId);
+            return;
+        }
+
+        if (typeof Chart === 'undefined') {
+            console.warn('Chart.js not available for funds chart.');
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        const isMobile = window.innerWidth < 640;
+
+        // Build data points as {x, y} for time scale
+        const dataPoints = chartData.labels.map((label, i) => ({
+            x: label,
+            y: chartData.amounts[i]
+        }));
+
+        window.fundsChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: 'The Funds',
+                    data: chartData.amounts,
+                    borderColor: '#1e40af',
+                    backgroundColor: 'rgba(30, 64, 175, 0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: '#1e40af',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                    padding: {
+                        left: isMobile ? 5 : 10,
+                        right: isMobile ? 5 : 10,
+                        top: 10,
+                        bottom: 5
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: !isMobile,
+                            text: 'Date'
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 9 : 11
+                            }
+                        }
+                    },
+                    y: {
+                        display: true,
+                        title: {
+                            display: !isMobile,
+                            text: 'Funds ($)'
+                        },
+                        grid: {
+                            color: '#e5e7eb'
+                        },
+                        ticks: {
+                            font: {
+                                size: isMobile ? 9 : 11
+                            },
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    };
+</script>
