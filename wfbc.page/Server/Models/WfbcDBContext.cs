@@ -152,5 +152,18 @@ namespace WFBC.Server.Models
                 return _compiledProgression;
             }
         }
+        public Dictionary<string, IMongoCollection<CompiledWagerData>> CompiledWagerData
+        {
+            get
+            {
+                Dictionary<string, IMongoCollection<CompiledWagerData>> _compiledWagers = new Dictionary<string, IMongoCollection<CompiledWagerData>>();
+                for (int i = _settings.StartYear; i <= _settings.EndYear; i++)
+                {
+                    string year = i.ToString();
+                    _compiledWagers.Add(year, _dbs[year].GetCollection<CompiledWagerData>("compiled_standings"));
+                }
+                return _compiledWagers;
+            }
+        }
     }
 }

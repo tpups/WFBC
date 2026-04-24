@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Http.Json;
 using System.Threading.Tasks;
 using WFBC.Shared.Models;
+using System.Text.Json;
 
 namespace WFBC.Client.Services
 {
@@ -162,11 +163,88 @@ namespace WFBC.Client.Services
             }
         }
 
+        // Get wager data for a year with caching
+        public async Task<List<WagerData>> GetWagerDataAsync(string year)
+        {
+            var cacheKey = $"wager_data_{year}";
+
+            if (_cache.ContainsKey(cacheKey))
+            {
+                var cached = _cache[cacheKey];
+                var cacheAge = DateTime.UtcNow - cached.CachedAt;
+
+                if (cacheAge < TimeSpan.FromMinutes(5) && cached.WagerData?.Any() == true)
+                {
+                    Console.WriteLine($"[StandingsCache] Serving {cached.WagerData.Count} wagers for {year} from cache ({cacheAge.TotalMinutes:F1}min old)");
+                    return cached.WagerData;
+                }
+                else
+                {
+                    Console.WriteLine($"[StandingsCache] Wager cache expired or empty for {year} - removing and fetching fresh");
+                    _cache.Remove(cacheKey);
+                }
+            }
+
+            Console.WriteLine($"[StandingsCache] Fetching fresh wager data for {year}");
+            try
+            {
+                var response = await _httpClient.GetFromJsonAsync<StandingsResponse<List<WagerData>>>($"api/Standings/wagers/{year}");
+
+                if (response?.Data?.Any() == true)
+                {
+                    Console.WriteLine($"[StandingsCache] Server returned {response.Data.Count} wagers for {year} - caching for 5 minutes");
+
+                    _cache[cacheKey] = new StandingsCache
+                    {
+                        Year = year,
+                        CachedAt = DateTime.UtcNow,
+                        DataLastUpdated = response.LastUpdated,
+                        WagerData = response.Data
+                    };
+
+                    return response.Data;
+                }
+                else
+                {
+                    Console.WriteLine($"[StandingsCache] Server returned empty/null wager data for {year} - NOT caching empty result");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[StandingsCache] Error fetching wager data for {year}: {ex.Message}");
+            }
+
+            return new List<WagerData>();
+        }
+
+        // Get the final standings last-updated timestamp from cache (must call GetFinalStandingsAsync first)
+        public DateTime? GetFinalStandingsLastUpdated(string year)
+        {
+            var cacheKey = $"final_standings_{year}";
+            if (_cache.ContainsKey(cacheKey))
+            {
+                return _cache[cacheKey].DataLastUpdated;
+            }
+            return null;
+        }
+
+        // Get the wager last-updated timestamp from cache (must call GetWagerDataAsync first)
+        public DateTime? GetWagerLastUpdated(string year)
+        {
+            var cacheKey = $"wager_data_{year}";
+            if (_cache.ContainsKey(cacheKey))
+            {
+                return _cache[cacheKey].DataLastUpdated;
+            }
+            return null;
+        }
+
         // Manually invalidate cache for a year (useful when standings are updated)
         public void InvalidateCache(string year)
         {
             var finalCacheKey = $"final_standings_{year}";
             var progressionCacheKey = $"progression_data_{year}";
+            var wagerCacheKey = $"wager_data_{year}";
             
             bool removedAny = false;
             
@@ -179,6 +257,12 @@ namespace WFBC.Client.Services
             if (_cache.ContainsKey(progressionCacheKey))
             {
                 _cache.Remove(progressionCacheKey);
+                removedAny = true;
+            }
+            
+            if (_cache.ContainsKey(wagerCacheKey))
+            {
+                _cache.Remove(wagerCacheKey);
                 removedAny = true;
             }
             
@@ -247,6 +331,7 @@ namespace WFBC.Client.Services
         public DateTime? DataLastUpdated { get; set; }
         public List<Standings> FinalStandings { get; set; }
         public List<Standings> ProgressionData { get; set; }
+        public List<WagerData> WagerData { get; set; }
     }
 
     // Cache status for debugging

@@ -233,6 +233,7 @@ namespace WFBC.Server
             services.AddMemoryCache();
             
             // Services
+            services.AddTransient<WagerService>();
             services.AddTransient<RotisserieStandingsService>();
             services.AddTransient<ServerSideStandingsCache>();
 

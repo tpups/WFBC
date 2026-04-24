@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using MongoDB.Driver;
 using WFBC.Server.DataAccess;
 using WFBC.Server.Services;
+using WFBC.Server.Models;
 using WFBC.Shared.Models;
 using WFBC.Server.Interface;
 
@@ -17,11 +19,13 @@ namespace WFBC.Server.Controllers
     {
         private readonly IStandings wfbc;
         private readonly ServerSideStandingsCache _standingsCache;
+        private readonly WfbcDBContext _db;
         
-        public StandingsController(IStandings _wfbc, ServerSideStandingsCache standingsCache)
+        public StandingsController(IStandings _wfbc, ServerSideStandingsCache standingsCache, WfbcDBContext db)
         {
             wfbc = _wfbc;
             _standingsCache = standingsCache;
+            _db = db;
         }
 
         [HttpGet]
@@ -38,7 +42,9 @@ namespace WFBC.Server.Controllers
             try
             {
                 // RE-ENABLED: Server-side cache for 90%+ MongoDB query reduction
-                var lastUpdated = await _standingsCache.GetLastUpdatedAsync(year);
+                // Use box score download timestamp instead of standings calculation timestamp
+                var lastBoxScoreUpdate = await _standingsCache.GetLastBoxScoreUpdateAsync(year);
+                var lastUpdated = lastBoxScoreUpdate ?? await _standingsCache.GetLastUpdatedAsync(year);
                 var standings = await _standingsCache.GetFinalStandingsAsync(year);
 
                 var response = new StandingsResponse<List<Standings>>
@@ -69,8 +75,9 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                // RE-ENABLED: Server-side cache for 90%+ MongoDB query reduction
-                var lastUpdated = await _standingsCache.GetLastUpdatedAsync(year);
+                // Use box score download timestamp instead of standings calculation timestamp
+                var lastBoxScoreUpdate = await _standingsCache.GetLastBoxScoreUpdateAsync(year);
+                var lastUpdated = lastBoxScoreUpdate ?? await _standingsCache.GetLastUpdatedAsync(year);
                 var standings = await _standingsCache.GetProgressionDataAsync(year);
 
                 var response = new StandingsResponse<List<Standings>>
@@ -92,6 +99,35 @@ namespace WFBC.Server.Controllers
             catch (Exception ex)
             {
                 return StatusCode(500, $"Error retrieving progression data: {ex.Message}");
+            }
+        }
+
+        // Get wager data for a year (returns wagers + last box score update timestamp)
+        [HttpGet("wagers/{year}")]
+        public async Task<ActionResult<StandingsResponse<List<WagerData>>>> GetWagerDataAsync(string year)
+        {
+            try
+            {
+                var collection = _db.CompiledWagerData[year];
+                var filter = Builders<CompiledWagerData>.Filter.And(
+                    Builders<CompiledWagerData>.Filter.Eq("year", year),
+                    Builders<CompiledWagerData>.Filter.Eq("type", "wager_data")
+                );
+
+                var compiled = await collection.Find(filter).FirstOrDefaultAsync();
+
+                var response = new StandingsResponse<List<WagerData>>
+                {
+                    Data = compiled?.Wagers ?? new List<WagerData>(),
+                    LastUpdated = compiled?.LastBoxScoreUpdate,
+                    CacheKey = compiled?.LastBoxScoreUpdate?.ToString("yyyyMMddHHmmss") ?? "no-data"
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error retrieving wager data: {ex.Message}");
             }
         }
 

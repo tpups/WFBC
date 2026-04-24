@@ -1,0 +1,130 @@
+@page "/league"
+@using WFBC.Shared.Models
+@using WFBC.Client.Services
+@using WFBC.Client.Shared.Components
+@inject StandingsCacheService CacheService
+
+<div class="m-3 lg:m-6 max-w-screen-xl w-full">
+
+    <h1 class="text-3xl text-center pb-6">WFBC 2026 League</h1>
+
+    <div class="flex flex-col lg:flex-row lg:gap-8 lg:items-start">
+
+        <!-- Wagers Section (first on mobile, left on desktop) -->
+        <div class="order-1 lg:order-1 lg:w-3/5">
+            @if (isLoading)
+            {
+                <div class="flex justify-center items-center py-4">
+                    <div class="animate-spin rounded-full h-6 w-6 border-b-2 border-wfbc-blue-1"></div>
+                    <span class="ml-2 text-wfbc-blue-2 text-sm">Loading wagers...</span>
+                </div>
+            }
+            else
+            {
+                <Wagers WagerList="wagerData" LastUpdatedText="@wagerLastUpdatedText" />
+            }
+        </div>
+
+        <!-- Schedule Section (second on mobile, right on desktop) -->
+        <div class="order-2 lg:order-2 lg:w-2/5 mt-6">
+            <div class="border-2 border-wfbc-blue-2 rounded-lg overflow-hidden">
+                <div class="bg-wfbc-blue-2 text-white px-4 py-3 text-center">
+                    <h2 class="text-xl font-bold">Schedule</h2>
+                </div>
+                <table class="border-collapse w-full text-sm sm:text-base">
+                    <thead>
+                        <tr class="bg-wfbc-grey-1">
+                            <th class="border border-wfbc-grey-2 px-4 py-2 text-left text-wfbc-blue-2 font-semibold">Event</th>
+                            <th class="border border-wfbc-grey-2 px-4 py-2 text-left text-wfbc-blue-2 font-semibold">Date</th>
+                            <th class="border border-wfbc-grey-2 px-4 py-2 text-left text-wfbc-blue-2 font-semibold">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="bg-wfbc-white-1 font-bold">
+                            <td class="border border-wfbc-grey-2 px-4 py-2">PS Draft</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">March 15</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">7:00 PM</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-wfbc-grey-2 px-4 py-2 italic pl-8">Drops Due</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">March 13</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">9:00 PM</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-wfbc-grey-2 px-4 py-2 italic pl-8">Free Agency Ends</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">March 22</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">11:59 PM</td>
+                        </tr>
+                        <tr class="bg-wfbc-white-1 font-bold">
+                            <td class="border border-wfbc-grey-2 px-4 py-2">CBD</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">May 17</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">Slow Draft</td>
+                        </tr>
+                        <tr class="bg-wfbc-white-1 font-bold">
+                            <td class="border border-wfbc-grey-2 px-4 py-2">MS Draft</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">July 13</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">7:00 PM</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-wfbc-grey-2 px-4 py-2 italic pl-8">Drops Due</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">July 11</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">9:00 PM</td>
+                        </tr>
+                        <tr>
+                            <td class="border border-wfbc-grey-2 px-4 py-2 italic pl-8">Free Agency Ends</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">July 16</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">9:00 PM</td>
+                        </tr>
+                        <tr class="bg-wfbc-white-1 font-bold">
+                            <td class="border border-wfbc-grey-2 px-4 py-2">Trade Deadline</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">September 20</td>
+                            <td class="border border-wfbc-grey-2 px-4 py-2">9:00 PM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p class="text-sm text-wfbc-grey-2 pt-2 text-center">* All dates and times are subject to change</p>
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    private List<WagerData> wagerData = new();
+    private bool isLoading = true;
+    private string? wagerLastUpdatedText;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            wagerData = await CacheService.GetWagerDataAsync("2026");
+            
+            // Get last-updated timestamp from cache (populated by GetWagerDataAsync)
+            var lastUpdated = CacheService.GetWagerLastUpdated("2026");
+            if (lastUpdated.HasValue)
+            {
+                try
+                {
+                    var pstZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+                    var lastUpdatedPst = TimeZoneInfo.ConvertTimeFromUtc(
+                        DateTime.SpecifyKind(lastUpdated.Value, DateTimeKind.Utc), pstZone);
+                    wagerLastUpdatedText = lastUpdatedPst.ToString("MM/dd/yyyy h:mm tt") + " PST";
+                }
+                catch
+                {
+                    wagerLastUpdatedText = lastUpdated.Value.ToString("MM/dd/yyyy h:mm tt") + " UTC";
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[League] Error loading wager data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

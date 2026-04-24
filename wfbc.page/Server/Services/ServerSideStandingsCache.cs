@@ -4,8 +4,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
+using MongoDB.Driver;
 using WFBC.Shared.Models;
 using WFBC.Server.Interface;
+using WFBC.Server.Models;
 
 namespace WFBC.Server.Services
 {
@@ -13,20 +15,24 @@ namespace WFBC.Server.Services
     {
         private readonly IMemoryCache _cache;
         private readonly IStandings _standingsDataAccess;
+        private readonly WfbcDBContext _db;
         private readonly ILogger<ServerSideStandingsCache> _logger;
 
         // Cache keys
         private const string FINAL_STANDINGS_KEY_PREFIX = "final_standings_";
         private const string PROGRESSION_DATA_KEY_PREFIX = "progression_data_";
         private const string LAST_UPDATED_KEY_PREFIX = "last_updated_";
+        private const string LAST_BOX_SCORE_UPDATE_KEY_PREFIX = "last_box_score_update_";
 
         public ServerSideStandingsCache(
             IMemoryCache cache, 
             IStandings standingsDataAccess,
+            WfbcDBContext db,
             ILogger<ServerSideStandingsCache> logger)
         {
             _cache = cache;
             _standingsDataAccess = standingsDataAccess;
+            _db = db;
             _logger = logger;
         }
 
@@ -148,6 +154,53 @@ namespace WFBC.Server.Services
         }
 
         /// <summary>
+        /// Get the last box score download/import timestamp from compiled standings
+        /// </summary>
+        public async Task<DateTime?> GetLastBoxScoreUpdateAsync(string year)
+        {
+            var cacheKey = $"{LAST_BOX_SCORE_UPDATE_KEY_PREFIX}{year}";
+
+            if (_cache.TryGetValue(cacheKey, out DateTime? cached))
+            {
+                _logger.LogInformation($"[ServerCache] Serving last box score update for {year} from cache: {cached}");
+                return cached;
+            }
+
+            _logger.LogInformation($"[ServerCache] Cache miss for last box score update {year} - fetching from compiled standings");
+
+            try
+            {
+                var collection = _db.CompiledFinalStandings[year];
+                var filter = Builders<CompiledFinalStandings>.Filter.And(
+                    Builders<CompiledFinalStandings>.Filter.Eq("year", year),
+                    Builders<CompiledFinalStandings>.Filter.Eq("type", "final_standings")
+                );
+                var compiled = await collection.Find(filter).FirstOrDefaultAsync();
+
+                var lastBoxScoreUpdate = compiled?.LastBoxScoreUpdate;
+
+                if (lastBoxScoreUpdate.HasValue)
+                {
+                    var cacheOptions = new MemoryCacheEntryOptions
+                    {
+                        Priority = CacheItemPriority.Normal,
+                        SlidingExpiration = null,
+                        AbsoluteExpiration = null
+                    };
+                    _cache.Set(cacheKey, lastBoxScoreUpdate, cacheOptions);
+                    _logger.LogInformation($"[ServerCache] Cached last box score update for {year}: {lastBoxScoreUpdate}");
+                }
+
+                return lastBoxScoreUpdate;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, $"[ServerCache] Error fetching last box score update for {year}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Explicitly invalidate all cached data for a specific year
         /// Called by RotisserieStandingsService after standings calculation
         /// </summary>
@@ -156,12 +209,14 @@ namespace WFBC.Server.Services
             var finalKey = $"{FINAL_STANDINGS_KEY_PREFIX}{year}";
             var progressionKey = $"{PROGRESSION_DATA_KEY_PREFIX}{year}";
             var lastUpdatedKey = $"{LAST_UPDATED_KEY_PREFIX}{year}";
+            var lastBoxScoreKey = $"{LAST_BOX_SCORE_UPDATE_KEY_PREFIX}{year}";
 
             _cache.Remove(finalKey);
             _cache.Remove(progressionKey);
             _cache.Remove(lastUpdatedKey);
+            _cache.Remove(lastBoxScoreKey);
 
-            _logger.LogInformation($"[ServerCache] Explicitly invalidated all cached data for year {year} (final, progression, last updated)");
+            _logger.LogInformation($"[ServerCache] Explicitly invalidated all cached data for year {year} (final, progression, last updated, box score update)");
         }
 
         /// <summary>

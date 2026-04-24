@@ -79,11 +79,11 @@
         </div>
 
         <div class="@(activeTab == "advanced" ? "" : "hidden")">
-            <AdvancedStandings Standings="finalStandings" />
+            <AdvancedStandings Standings="finalStandings" LastUpdatedText="@lastUpdatedText" />
         </div>
 
         <div class="@(activeTab == "graph" ? "" : "hidden")">
-            <StandingsGraph ProgressionData="progressionData" Year="@Year" />
+            <StandingsGraph ProgressionData="progressionData" Year="@Year" LastUpdatedText="@lastUpdatedText" />
         </div>
     }
 
@@ -460,11 +460,23 @@
         lastUpdatedText = null;
         if (int.TryParse(Year, out var yearInt) && yearInt == DateTime.Now.Year && finalStandings.Count > 0)
         {
-            var lastUpdatedUtc = finalStandings
-                .Where(s => s.LastUpdatedAt.HasValue)
-                .Select(s => s.LastUpdatedAt!.Value)
-                .DefaultIfEmpty()
-                .Max();
+            // Prefer the box score download timestamp from the API/cache
+            var cachedLastUpdated = CacheService.GetFinalStandingsLastUpdated(Year);
+            
+            DateTime lastUpdatedUtc;
+            if (cachedLastUpdated.HasValue && cachedLastUpdated.Value != default)
+            {
+                lastUpdatedUtc = cachedLastUpdated.Value;
+            }
+            else
+            {
+                // Fallback to standings LastUpdatedAt for older data without LastBoxScoreUpdate
+                lastUpdatedUtc = finalStandings
+                    .Where(s => s.LastUpdatedAt.HasValue)
+                    .Select(s => s.LastUpdatedAt!.Value)
+                    .DefaultIfEmpty()
+                    .Max();
+            }
 
             if (lastUpdatedUtc != default)
             {

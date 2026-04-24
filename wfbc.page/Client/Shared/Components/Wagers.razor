@@ -1,0 +1,89 @@
+@using WFBC.Shared.Models
+
+@if (WagerList?.Any() == true)
+{
+    <div class="mt-6">
+        <div class="border-2 border-wfbc-blue-2 rounded-lg overflow-hidden">
+            <div class="bg-wfbc-blue-2 text-white px-4 py-3 text-center">
+                <h2 class="text-xl font-bold">Wagers</h2>
+                @if (!string.IsNullOrEmpty(LastUpdatedText))
+                {
+                    <p class="text-[10px] sm:text-xs text-wfbc-grey-1">Updated: @LastUpdatedText</p>
+                }
+            </div>
+
+            @foreach (var wager in WagerList)
+            {
+                <div class="bg-white p-4 sm:p-6 border-b border-wfbc-grey-2 last:border-b-0">
+                    <h3 class="text-lg font-bold text-wfbc-blue-2 text-center">@wager.WagerName</h3>
+                    <p class="text-sm text-gray-500 text-center mb-4">@wager.Subtitle</p>
+
+                    @if (wager.Players?.Count >= 2)
+                    {
+                        var maxValue = wager.Players.Max(p => p.Value);
+                        var player1 = wager.Players[0];
+                        var player2 = wager.Players[1];
+
+                        <!-- Player 1 -->
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">@GetShortName(player1.Name)</span>
+                                <span class="text-sm font-bold text-wfbc-blue-2">@player1.Value</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+                                <div class="h-5 rounded-full transition-all duration-500 bg-wfbc-blue-1"
+                                     style="width: @(GetBarWidth(player1.Value, maxValue))%;">
+                                </div>
+                            </div>
+                            <div class="text-xs text-wfbc-grey-2 mt-1">
+                                @FormatBreakdown(player1.StatBreakdown)
+                            </div>
+                        </div>
+
+                        <!-- Player 2 -->
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <span class="text-sm font-medium text-gray-700">@GetShortName(player2.Name)</span>
+                                <span class="text-sm font-bold text-wfbc-blue-2">@player2.Value</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-5 overflow-hidden">
+                                <div class="h-5 rounded-full transition-all duration-500 bg-wfbc-yellow-1"
+                                     style="width: @(GetBarWidth(player2.Value, maxValue))%;">
+                                </div>
+                            </div>
+                            <div class="text-xs text-wfbc-grey-2 mt-1">
+                                @FormatBreakdown(player2.StatBreakdown)
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public List<WagerData>? WagerList { get; set; }
+    [Parameter] public string? LastUpdatedText { get; set; }
+
+    private string GetBarWidth(int value, int maxValue)
+    {
+        if (maxValue == 0) return "0";
+        var pct = (double)value / maxValue * 100;
+        return pct.ToString("F1");
+    }
+
+    private string GetShortName(string fullName)
+    {
+        var parts = fullName.Split(' ');
+        if (parts.Length >= 2)
+            return $"{parts[0][0]}. {parts[^1]}";
+        return fullName;
+    }
+
+    private string FormatBreakdown(Dictionary<string, int>? breakdown)
+    {
+        if (breakdown == null || !breakdown.Any()) return "";
+        return string.Join(" | ", breakdown.Select(kv => $"{kv.Key}: {kv.Value}"));
+    }
+}

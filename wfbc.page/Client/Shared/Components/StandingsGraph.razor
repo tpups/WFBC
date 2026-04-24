@@ -36,6 +36,7 @@
 @code {
     [Parameter] public List<Standings> ProgressionData { get; set; } = new();
     [Parameter] public string Year { get; set; } = "2023";
+    [Parameter] public string? LastUpdatedText { get; set; }
 
     private int teamCount = 0;
     private int dataPointCount = 0;
@@ -183,17 +184,23 @@
 
         // Determine if this is the current season and get last updated date
         var isCurrentSeason = int.TryParse(Year, out var yearInt) && yearInt == DateTime.Now.Year;
-        var lastUpdatedUtc = isCurrentSeason && ProgressionData.Any(s => s.LastUpdatedAt.HasValue)
-            ? ProgressionData.Where(s => s.LastUpdatedAt.HasValue).Max(s => s.LastUpdatedAt!.Value)
-            : (DateTime?)null;
-
-        string? lastUpdatedFormatted = null;
-        if (lastUpdatedUtc.HasValue)
+        
+        // Use the LastUpdatedText parameter if provided (box score download timestamp)
+        // Otherwise fall back to computing from progression data
+        string? lastUpdatedFormatted = LastUpdatedText;
+        if (string.IsNullOrEmpty(lastUpdatedFormatted) && isCurrentSeason)
         {
-            var pstZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
-            var lastUpdatedPst = TimeZoneInfo.ConvertTimeFromUtc(
-                DateTime.SpecifyKind(lastUpdatedUtc.Value, DateTimeKind.Utc), pstZone);
-            lastUpdatedFormatted = lastUpdatedPst.ToString("MM/dd/yyyy h:mm tt") + " PST";
+            var lastUpdatedUtc = ProgressionData.Any(s => s.LastUpdatedAt.HasValue)
+                ? ProgressionData.Where(s => s.LastUpdatedAt.HasValue).Max(s => s.LastUpdatedAt!.Value)
+                : (DateTime?)null;
+
+            if (lastUpdatedUtc.HasValue)
+            {
+                var pstZone = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+                var lastUpdatedPst = TimeZoneInfo.ConvertTimeFromUtc(
+                    DateTime.SpecifyKind(lastUpdatedUtc.Value, DateTimeKind.Utc), pstZone);
+                lastUpdatedFormatted = lastUpdatedPst.ToString("MM/dd/yyyy h:mm tt") + " PST";
+            }
         }
 
         return new

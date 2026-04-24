@@ -40,6 +40,13 @@ namespace WFBC.Shared.Models
         public DateTime? SourceLastUpdated { get; set; }
 
         /// <summary>
+        /// When the box scores were last downloaded/imported (max download_date across all box scores)
+        /// </summary>
+        [BsonElement("last_box_score_update")]
+        [BsonIgnoreIfNull]
+        public DateTime? LastBoxScoreUpdate { get; set; }
+
+        /// <summary>
         /// Final standings for each team (latest date)
         /// </summary>
         [BsonElement("final_standings")]
@@ -85,6 +92,13 @@ namespace WFBC.Shared.Models
         /// </summary>
         [BsonElement("source_last_updated")]
         public DateTime? SourceLastUpdated { get; set; }
+
+        /// <summary>
+        /// When the box scores were last downloaded/imported (max download_date across all box scores)
+        /// </summary>
+        [BsonElement("last_box_score_update")]
+        [BsonIgnoreIfNull]
+        public DateTime? LastBoxScoreUpdate { get; set; }
 
         /// <summary>
         /// All standings data ordered by date for progression display

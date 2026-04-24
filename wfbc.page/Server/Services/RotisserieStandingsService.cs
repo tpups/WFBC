@@ -18,13 +18,15 @@ namespace WFBC.Server.Services
         private readonly IHubContext<ProgressHub> _hubContext;
         private readonly ISeasonSettings _seasonSettings;
         private readonly ServerSideStandingsCache _standingsCache;
+        private readonly WagerService _wagerService;
 
-        public RotisserieStandingsService(WfbcDBContext db, IHubContext<ProgressHub> hubContext, ISeasonSettings seasonSettings, ServerSideStandingsCache standingsCache)
+        public RotisserieStandingsService(WfbcDBContext db, IHubContext<ProgressHub> hubContext, ISeasonSettings seasonSettings, ServerSideStandingsCache standingsCache, WagerService wagerService)
         {
             _db = db;
             _hubContext = hubContext;
             _seasonSettings = seasonSettings;
             _standingsCache = standingsCache;
+            _wagerService = wagerService;
         }
 
         public async Task<List<Standings>> CalculateStandingsForDate(string year, DateTime date, List<SeasonTeam> teams)
@@ -119,7 +121,43 @@ namespace WFBC.Server.Services
             }
             progress?.Report(compilationMessage);
             
-            await GenerateCompiledDocumentsAsync(year, allStandings, cancellationToken);
+            // Find max download_date across all box scores for "last updated" display
+            DateTime? maxBoxScoreDownload = null;
+            try
+            {
+                var allDownloadDates = seasonBoxScores.HittingBoxScores
+                    .Where(b => !string.IsNullOrEmpty(b.DownloadDate))
+                    .Select(b => b.DownloadDate!)
+                    .Concat(seasonBoxScores.PitchingBoxScores
+                        .Where(b => !string.IsNullOrEmpty(b.DownloadDate))
+                        .Select(b => b.DownloadDate!))
+                    .ToList();
+                
+                if (allDownloadDates.Any())
+                {
+                    maxBoxScoreDownload = allDownloadDates
+                        .Select(d => DateTime.TryParse(d, out var dt) ? dt : (DateTime?)null)
+                        .Where(d => d.HasValue)
+                        .Max();
+                    Console.WriteLine($"[Standings] Max box score download_date for {year}: {maxBoxScoreDownload}");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[Standings] Error computing max download_date: {ex.Message}");
+            }
+
+            await GenerateCompiledDocumentsAsync(year, allStandings, maxBoxScoreDownload, cancellationToken);
+            
+            // Compile wager data alongside standings
+            var wagerMessage = "Compiling wager data...";
+            if (!string.IsNullOrEmpty(progressGroupId))
+            {
+                await _hubContext.Clients.Group($"progress-{progressGroupId}").SendAsync("ProgressUpdate", wagerMessage);
+            }
+            progress?.Report(wagerMessage);
+            
+            await _wagerService.CompileWagerDataAsync(year, cancellationToken);
             
             return allStandings;
         }
@@ -994,7 +1032,7 @@ namespace WFBC.Server.Services
         /// Generate compiled documents for optimized performance
         /// Replaces thousands of individual documents with 2 optimized documents
         /// </summary>
-        private async Task GenerateCompiledDocumentsAsync(string year, List<Standings> allStandings, CancellationToken cancellationToken)
+        private async Task GenerateCompiledDocumentsAsync(string year, List<Standings> allStandings, DateTime? lastBoxScoreUpdate, CancellationToken cancellationToken)
         {
             var compilationStart = DateTime.UtcNow;
             
@@ -1018,6 +1056,7 @@ namespace WFBC.Server.Services
                     Type = "final_standings",
                     CompiledAt = DateTime.UtcNow,
                     SourceLastUpdated = allStandings.Max(s => s.LastUpdatedAt),
+                    LastBoxScoreUpdate = lastBoxScoreUpdate,
                     FinalStandings = finalStandings,
                     Metadata = new CompilationMetadata
                     {
@@ -1042,6 +1081,7 @@ namespace WFBC.Server.Services
                     Type = "progression_data",
                     CompiledAt = DateTime.UtcNow,
                     SourceLastUpdated = allStandings.Max(s => s.LastUpdatedAt),
+                    LastBoxScoreUpdate = lastBoxScoreUpdate,
                     ProgressionData = progressionData,
                     Metadata = new CompilationMetadata
                     {

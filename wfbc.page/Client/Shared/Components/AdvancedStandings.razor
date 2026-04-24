@@ -5,6 +5,10 @@
     <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center p-2 sm:p-3 bg-wfbc-grey-1 border-b border-wfbc-grey-2 gap-2 sm:gap-0">
         <div>
             <h2 class="text-base sm:text-lg font-semibold text-wfbc-blue-2">Advanced Stats</h2>
+            @if (!string.IsNullOrEmpty(LastUpdatedText))
+            {
+                <p class="text-[10px] sm:text-xs text-gray-500">Updated: @LastUpdatedText</p>
+            }
         </div>
     </div>
 
@@ -69,6 +73,7 @@
 
 @code {
     [Parameter] public List<Standings> Standings { get; set; } = new();
+    [Parameter] public string? LastUpdatedText { get; set; }
 
     // Mobile carousel state
     private int currentCardIndex = 0;
