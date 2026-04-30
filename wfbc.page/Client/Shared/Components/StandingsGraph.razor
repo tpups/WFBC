@@ -2,7 +2,7 @@
 @inject IJSRuntime JSRuntime
 @inject AppState AppState
 
-<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-white dark:bg-gray-800 pt-6 pb-2 sm:pb-6 sm:p-6 overflow-hidden">
+<div class="chart-component-container border-2 border-wfbc-blue-2 rounded-xl bg-wfbc-white-1 overflow-hidden w-full">
     @if (ProgressionData?.Count > 0)
     {
         <!-- Chart Canvas - Desktop Contained -->
@@ -69,8 +69,9 @@
 
     private async void OnDrawerStateChanged()
     {
-        // Re-render chart when drawer state changes to adjust sizing
-        if (ProgressionData?.Count > 0)
+        // Only re-render chart on desktop where drawer pushes content
+        // On mobile/tablet, drawer overlays without affecting layout
+        if (ProgressionData?.Count > 0 && AppState.IsLarge)
         {
             await Task.Delay(300); // Wait for drawer animation to complete
             await RenderChart();
@@ -306,24 +307,21 @@
 
         // Mobile, desktop, and orientation-specific adjustments
         const isMobile = window.innerWidth < 640;
+        const isMobileViewport = window.innerWidth < 900; // Match MobileDrawer breakpoint - drawer overlays, doesn't push
         const isLandscape = window.innerWidth > window.innerHeight;
         const borderWidth = isMobile ? 1.5 : 2; // Thinner lines on mobile
         const pointRadius = isMobile ? 1 : 1.5; // Smaller points on mobile
         
-        // Mobile-first container width adjustments (restore original perfect mobile logic)
+        // Container width adjustments
+        // Note: drawerState.isDesktop is unreliable (AppState.IsLarge is always true)
+        // so use actual viewport width to determine mobile vs desktop behavior
         if (container) {
-            if (isMobile) {
-                // Mobile mode: restore original perfect logic (drawer doesn't affect mobile)
-                if (window.innerWidth <= 400) {
-                    // For narrow devices up to 400px, provide margin for border visibility
-                    const chartWidth = Math.max(window.innerWidth - 32, 300); // Minimum 300px, with 32px total margin
-                    container.style.minWidth = chartWidth + 'px';
-                    container.style.width = 'calc(100vw - 2rem)';
-                } else {
-                    // Set a minimum width that gives us the extra ~22px needed
-                    container.style.minWidth = '400px';
-                    container.style.width = 'calc(100vw - 0.25rem)';
-                }
+            if (isMobileViewport) {
+                // Mobile/tablet mode (below 900px): use viewport units that ignore drawer state
+                // The drawer overlays on these devices, so chart width shouldn't change
+                container.style.minWidth = 'auto';
+                container.style.width = 'calc(100vw - 0.5rem)';
+                container.style.maxWidth = 'calc(100vw - 0.5rem)';
             } else if (drawerState && drawerState.isDesktop) {
                 // Desktop: Use documentElement.clientWidth (excludes browser scrollbar) with drawer margins + scrollbar buffer
                 const viewportWidth = document.documentElement.clientWidth;
@@ -389,7 +387,7 @@
                 
                 const text = `Updated: ${chartData.lastUpdated}`;
                 const xPos = chartArea.right;
-                const yPos = 4; // Near top of canvas
+                const yPos = isMobile ? chartArea.top - fontSize - 2 : 4; // Below title on mobile, near top on desktop
                 
                 ctx.fillText(text, xPos, yPos);
                 ctx.restore();
