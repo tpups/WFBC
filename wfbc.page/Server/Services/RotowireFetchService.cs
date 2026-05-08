@@ -45,9 +45,11 @@ namespace WFBC.Server.Services
             if (teams == null || teams.Count == 0) { await Progress(connectionId, "Error: No teams for " + year, 0, 0, 0, 0); return; }
             if (string.IsNullOrEmpty(settings.LeagueId)) { await Progress(connectionId, "Error: No league ID for " + year, 0, 0, 0, 0); return; }
 
-            var start = todayOnly ? DateTime.UtcNow.Date : settings.SeasonStartDate.Date;
-            var end = todayOnly ? DateTime.UtcNow.Date : settings.SeasonEndDate.Date;
-            if (!todayOnly && DateTime.UtcNow.Date < end) end = DateTime.UtcNow.Date;
+            var pacificTz = TimeZoneInfo.FindSystemTimeZoneById("America/Los_Angeles");
+            var today = TimeZoneInfo.ConvertTimeFromUtc(DateTime.UtcNow, pacificTz).Date;
+            var start = todayOnly ? today : settings.SeasonStartDate.Date;
+            var end = todayOnly ? today : settings.SeasonEndDate.Date;
+            if (!todayOnly && today < end) end = today;
             int totalDays = (int)(end - start).TotalDays + 1;
             var shortYear = year.Substring(2);
             var baseUrl = $"https://www.rotowire.com/mlbcommish{shortYear}/tables/box.php";
