@@ -6,7 +6,7 @@
     @if (ProgressionData?.Count > 0)
     {
         <!-- Chart Canvas - Desktop Contained -->
-        <div class="w-full max-w-full h-[60dvh] sm:h-[70vh] landscape:h-[85vh] chart-container-responsive relative" id="chartContainer-@Year">
+        <div class="w-full max-w-full h-[60dvh] sm:h-[70vh] landscape:h-[85vh] landscape:lg:h-[75vh] chart-container-responsive relative" id="chartContainer-@Year">
             <canvas id="standingsChart-@Year" class="w-full h-full"></canvas>
         </div>
 
@@ -269,9 +269,10 @@
         }
     }
 
-    /* Desktop landscape mode - override universal landscape for larger margins */
+    /* Desktop landscape mode - override universal landscape for larger margins and reduced height */
     @@media screen and (orientation: landscape) and (min-width: 992px) {
         div[id^="chartContainer-"] {
+            height: 75vh !important;
             max-width: 100% !important;
             width: 100% !important;
         }

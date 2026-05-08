@@ -2146,14 +2146,6 @@ select {
     width: calc(100% - 3rem);
   }
 
-  .lg\:max-w-none {
-    max-width: none;
-  }
-
-  .lg\:max-w-\[calc\(100vw-3\.5rem\)\] {
-    max-width: calc(100vw - 3.5rem);
-  }
-
   .lg\:flex-row {
     flex-direction: row;
   }
@@ -2229,5 +2221,11 @@ select {
   .landscape\:bg-wfbc-blue-2 {
     --tw-bg-opacity: 1;
     background-color: rgb(19 41 61 / var(--tw-bg-opacity));
+  }
+
+  @media (min-width: 992px) {
+    .landscape\:lg\:h-\[75vh\] {
+      height: 75vh;
+    }
   }
 }
