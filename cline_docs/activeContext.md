@@ -10,6 +10,7 @@ Improved auth performance and fixed token expiry bug causing "SignalR not connec
 35. **Auth performance improvements** (`Startup.cs`) — Replaced `new HttpClient()` with `IHttpClientFactory` (named "zitadel" client) for userinfo endpoint calls to reuse connections. Increased role cache duration from 5 to 30 minutes.
 36. **Fixed token expiry / SignalR bug** (`UpdateBoxScores.razor`, `BuildUpdateStandings.razor.cs`) — Added `EnsureHubConnected()` method that checks token freshness and rebuilds SignalR connection if expired. Added `.WithAutomaticReconnect()` to `BuildUpdateStandings`. Both pages now detect 401 responses and show "Your session has expired" instead of generic errors.
 37. **Faster logout** (`MenuBar.razor`) — Added `post_logout_redirect_uri` (Navigation.BaseUri) to logout call so user is redirected back to home after Zitadel logout instead of lingering on Zitadel's page.
+38. **Funds chart time-scale x-axis** (`TheFunds.razor`, `index.html`) — Switched from category x-axis to Chart.js time scale so data points are spaced proportionally to actual dates. Added `chartjs-adapter-date-fns` CDN. C# now passes ISO date strings; JS uses `type: 'time'` with `min`/`max` bounds from season start/end dates.
 
 ## Build Status
 ✅ Build succeeded (verified locally)

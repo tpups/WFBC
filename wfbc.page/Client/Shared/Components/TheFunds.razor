@@ -50,10 +50,7 @@
 
             var chartData = new
             {
-                labels = FundsData.DataPoints.Select(d => d.Date.ToString("MM/dd")).ToArray(),
-                amounts = FundsData.DataPoints.Select(d => (double)d.Amount).ToArray(),
-                seasonStartLabel = FundsData.SeasonStartDate.ToString("MM/dd"),
-                endDateLabel = endDate.ToString("MM/dd"),
+                dataPoints = FundsData.DataPoints.Select(d => new { x = d.Date.ToString("yyyy-MM-dd"), y = (double)d.Amount }).ToArray(),
                 seasonStartDate = FundsData.SeasonStartDate.ToString("yyyy-MM-dd"),
                 endDate = endDate.ToString("yyyy-MM-dd")
             };
@@ -87,19 +84,12 @@
         const ctx = canvas.getContext('2d');
         const isMobile = window.innerWidth < 640;
 
-        // Build data points as {x, y} for time scale
-        const dataPoints = chartData.labels.map((label, i) => ({
-            x: label,
-            y: chartData.amounts[i]
-        }));
-
         window.fundsChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: chartData.labels,
                 datasets: [{
                     label: 'The Funds',
-                    data: chartData.amounts,
+                    data: chartData.dataPoints,
                     borderColor: '#1e40af',
                     backgroundColor: 'rgba(30, 64, 175, 0.1)',
                     fill: true,
@@ -137,6 +127,17 @@
                 },
                 scales: {
                     x: {
+                        type: 'time',
+                        min: chartData.seasonStartDate,
+                        max: chartData.endDate,
+                        time: {
+                            unit: 'week',
+                            displayFormats: {
+                                week: 'M/d',
+                                day: 'M/d'
+                            },
+                            tooltipFormat: 'M/d'
+                        },
                         display: true,
                         title: {
                             display: !isMobile,
@@ -148,7 +149,8 @@
                         ticks: {
                             font: {
                                 size: isMobile ? 9 : 11
-                            }
+                            },
+                            maxTicksLimit: isMobile ? 6 : 12
                         }
                     },
                     y: {
