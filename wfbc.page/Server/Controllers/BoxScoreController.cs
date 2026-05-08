@@ -23,12 +23,12 @@ namespace WFBC.Server.Controllers
 
         [HttpPost("fetch/{year}")]
         [Authorize(Policy = Policies.IsCommish)]
-        public async Task<IActionResult> FetchBoxScores(string year, [FromQuery] string connectionId)
+        public async Task<IActionResult> FetchBoxScores(string year, [FromQuery] string connectionId, [FromQuery] bool todayOnly = false)
         {
             var settings = _commishSettings.GetCommishSettings();
             if (settings == null || string.IsNullOrEmpty(settings.RotowireCookie))
                 return BadRequest("No Rotowire cookie configured. Please set it in Settings.");
-            _ = Task.Run(() => _fetchService.FetchBoxScores(year, settings.RotowireCookie, connectionId, CancellationToken.None));
+            _ = Task.Run(() => _fetchService.FetchBoxScores(year, settings.RotowireCookie, connectionId, CancellationToken.None, todayOnly));
             return Ok(new { message = "Box score fetch started" });
         }
 

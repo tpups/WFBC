@@ -48,21 +48,21 @@
                 {
                     <div>
                         <div class="flex justify-between text-xs text-gray-600 mb-1">
-                            <span>Team @progress.CurrentTeam of @progress.TotalTeams @("— " + (progress.TeamName ?? ""))</span>
+                            <span>@(progress.CurrentDate ?? "") — Day @progress.CurrentDay of @progress.TotalDays</span>
                             <span>@progress.Status</span>
                         </div>
-                        @{ var tp = progress.TotalTeams > 0 ? (int)((double)progress.CurrentTeam / progress.TotalTeams * 100) : 0; }
+                        @{ var dp = progress.TotalDays > 0 ? (int)((double)progress.CurrentDay / progress.TotalDays * 100) : 0; }
                         <div class="w-full bg-gray-200 rounded-full h-3">
-                            <div class="bg-wfbc-blue-2 h-3 rounded-full transition-all duration-300" style="@($"width:{tp}%")"></div>
+                            <div class="bg-wfbc-blue-2 h-3 rounded-full transition-all duration-300" style="@($"width:{dp}%")"></div>
                         </div>
                     </div>
                     <div>
                         <div class="flex justify-between text-xs text-gray-600 mb-1">
-                            <span>@(progress.CurrentDate ?? "") — Day @progress.CurrentDay of @progress.TotalDays</span>
+                            <span>Team @progress.CurrentTeam of @progress.TotalTeams @("— " + (progress.TeamName ?? ""))</span>
                         </div>
-                        @{ var dp = progress.TotalDays > 0 ? (int)((double)progress.CurrentDay / progress.TotalDays * 100) : 0; }
+                        @{ var tp = progress.TotalTeams > 0 ? (int)((double)progress.CurrentTeam / progress.TotalTeams * 100) : 0; }
                         <div class="w-full bg-gray-200 rounded-full h-2">
-                            <div class="bg-wfbc-blue-1 h-2 rounded-full transition-all duration-300" style="@($"width:{dp}%")"></div>
+                            <div class="bg-wfbc-blue-1 h-2 rounded-full transition-all duration-300" style="@($"width:{tp}%")"></div>
                         </div>
                     </div>
                     <div class="flex gap-6 text-sm text-gray-700">
@@ -81,9 +81,13 @@
         }
 
         <div>
+            <label class="text-xs text-gray-500 font-medium mb-1 block">Time range</label>
             @if (!isFetching)
             {
-                <Button ButtonText="Update Box Scores" OnClickFunction="StartFetch" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+                <div class="flex gap-2">
+                    <Button ButtonText="Today" OnClickFunction="() => StartFetch(true)" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+                    <Button ButtonText="Year" OnClickFunction="() => StartFetch(false)" MaxWidth="max-w-full" MarginPadding="px-4 py-2" />
+                </div>
             }
             else
             {
@@ -205,7 +209,7 @@
         }
     }
 
-    private async Task StartFetch()
+    private async Task StartFetch(bool todayOnly = false)
     {
         try
         {
@@ -227,7 +231,7 @@
         try
         {
             var cid = hubConnection.ConnectionId;
-            var resp = await AuthorizedClient.Client.PostAsync($"/api/boxscore/fetch/{selectedYear}?connectionId={cid}", null);
+            var resp = await AuthorizedClient.Client.PostAsync($"/api/boxscore/fetch/{selectedYear}?connectionId={cid}&todayOnly={todayOnly}", null);
             if (!resp.IsSuccessStatusCode)
             {
                 var body = await resp.Content.ReadAsStringAsync();

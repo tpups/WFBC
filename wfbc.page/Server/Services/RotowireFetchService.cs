@@ -37,7 +37,7 @@ namespace WFBC.Server.Services
             _hub = hub; _boxScore = boxScore; _seasonSettings = seasonSettings; _seasonTeam = seasonTeam; _http = http;
         }
 
-        public async Task FetchBoxScores(string year, string cookie, string connectionId, CancellationToken ct = default)
+        public async Task FetchBoxScores(string year, string cookie, string connectionId, CancellationToken ct = default, bool todayOnly = false)
         {
             var settings = _seasonSettings.GetSeasonSettings(int.Parse(year));
             if (settings == null) { await Progress(connectionId, "Error: No season settings for " + year, 0, 0, 0, 0); return; }
@@ -45,23 +45,23 @@ namespace WFBC.Server.Services
             if (teams == null || teams.Count == 0) { await Progress(connectionId, "Error: No teams for " + year, 0, 0, 0, 0); return; }
             if (string.IsNullOrEmpty(settings.LeagueId)) { await Progress(connectionId, "Error: No league ID for " + year, 0, 0, 0, 0); return; }
 
-            var start = settings.SeasonStartDate.Date;
-            var end = settings.SeasonEndDate.Date;
-            if (DateTime.UtcNow.Date < end) end = DateTime.UtcNow.Date;
+            var start = todayOnly ? DateTime.UtcNow.Date : settings.SeasonStartDate.Date;
+            var end = todayOnly ? DateTime.UtcNow.Date : settings.SeasonEndDate.Date;
+            if (!todayOnly && DateTime.UtcNow.Date < end) end = DateTime.UtcNow.Date;
             int totalDays = (int)(end - start).TotalDays + 1;
             var shortYear = year.Substring(2);
             var baseUrl = $"https://www.rotowire.com/mlbcommish{shortYear}/tables/box.php";
             var client = _http.CreateClient("rotowire");
             int totalNew = 0, totalUpd = 0;
 
-            for (int ti = 0; ti < teams.Count && !ct.IsCancellationRequested; ti++)
+            var cur = start;
+            int di = 0;
+            while (cur <= end && !ct.IsCancellationRequested)
             {
-                var team = teams[ti];
-                var cur = start;
-                int di = 0;
-                while (cur <= end && !ct.IsCancellationRequested)
+                var ds = cur.ToString("yyyy-MM-dd");
+                for (int ti = 0; ti < teams.Count && !ct.IsCancellationRequested; ti++)
                 {
-                    var ds = cur.ToString("yyyy-MM-dd");
+                    var team = teams[ti];
                     await _hub.Clients.Client(connectionId).SendAsync("ReceiveProgress", new RotowireFetchProgress
                     { TotalTeams = teams.Count, CurrentTeam = ti + 1, TeamName = team.TeamName ?? team.Manager, TotalDays = totalDays, CurrentDay = di + 1, CurrentDate = ds, Status = "Fetching", NewEntries = totalNew, UpdatedEntries = totalUpd }, ct);
 
@@ -72,9 +72,8 @@ namespace WFBC.Server.Services
                     var pitchData = await Fetch(client, baseUrl, settings.LeagueId, team.TeamId!, ds, "P", cookie);
                     if (pitchData != null) { foreach (var e in pitchData) { e["teamID"] = team.TeamId; e["stats_date"] = ds; e["download_date"] = DateTime.UtcNow.ToString("o"); } var r = await _boxScore.ImportBoxScores(year, ToEntries(pitchData), "pitching"); totalNew += r.NewEntries; totalUpd += r.UpdatedEntries; }
                     await Task.Delay(100, ct);
-
-                    cur = cur.AddDays(1); di++;
                 }
+                cur = cur.AddDays(1); di++;
             }
             await _hub.Clients.Client(connectionId).SendAsync("ReceiveProgress", new RotowireFetchProgress
             { TotalTeams = teams.Count, CurrentTeam = teams.Count, TotalDays = totalDays, CurrentDay = totalDays, Status = "Complete", NewEntries = totalNew, UpdatedEntries = totalUpd }, ct);
