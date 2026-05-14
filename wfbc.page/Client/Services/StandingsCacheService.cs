@@ -35,8 +35,18 @@ namespace WFBC.Client.Services
                 // Simple 5-minute expiration - no complex validation that can fail
                 if (cacheAge < TimeSpan.FromMinutes(5) && cached.FinalStandings?.Any() == true)
                 {
-                    Console.WriteLine($"[StandingsCache] Serving {cached.FinalStandings.Count} final standings for {year} from cache ({cacheAge.TotalMinutes:F1}min old)");
-                    return cached.FinalStandings;
+                    // Check if server has newer data than what we cached
+                    var serverLastModified = await GetServerLastModifiedAsync(year);
+                    if (serverLastModified.HasValue && serverLastModified.Value > cached.DataLastUpdated)
+                    {
+                        Console.WriteLine($"[StandingsCache] Server has newer final standings for {year} (server: {serverLastModified.Value}, cached: {cached.DataLastUpdated}) - invalidating cache");
+                        _cache.Remove(cacheKey);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StandingsCache] Serving {cached.FinalStandings.Count} final standings for {year} from cache ({cacheAge.TotalMinutes:F1}min old)");
+                        return cached.FinalStandings;
+                    }
                 }
                 else
                 {
@@ -96,8 +106,18 @@ namespace WFBC.Client.Services
                 // Simple 5-minute expiration - no complex validation that can fail
                 if (cacheAge < TimeSpan.FromMinutes(5) && cached.ProgressionData?.Any() == true)
                 {
-                    Console.WriteLine($"[StandingsCache] Serving {cached.ProgressionData.Count} progression data records for {year} from cache ({cacheAge.TotalMinutes:F1}min old)");
-                    return cached.ProgressionData;
+                    // Check if server has newer data than what we cached
+                    var serverLastModified = await GetServerLastModifiedAsync(year);
+                    if (serverLastModified.HasValue && serverLastModified.Value > cached.DataLastUpdated)
+                    {
+                        Console.WriteLine($"[StandingsCache] Server has newer progression data for {year} (server: {serverLastModified.Value}, cached: {cached.DataLastUpdated}) - invalidating cache");
+                        _cache.Remove(cacheKey);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[StandingsCache] Serving {cached.ProgressionData.Count} progression data records for {year} from cache ({cacheAge.TotalMinutes:F1}min old)");
+                        return cached.ProgressionData;
+                    }
                 }
                 else
                 {

@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Components.WebAssembly.Authentication;
 using Microsoft.AspNetCore.SignalR.Client;
 using System.Net.Http;
 using System.Net.Http.Json;
+using WFBC.Client.Services;
 
 namespace WFBC.Client.Pages.Commish
 {
@@ -21,6 +22,7 @@ namespace WFBC.Client.Pages.Commish
         [Inject] protected AuthenticationStateProvider AuthenticationStateProvider { get; set; } = default!;
         [Inject] protected IAccessTokenProvider AccessTokenProvider { get; set; } = default!;
         [Inject] protected AuthorizedClient AuthorizedClient { get; set; } = default!;
+        [Inject] protected StandingsCacheService StandingsCacheService { get; set; } = default!;
         
         protected string Title = "Build Season Standings";
         protected List<string> availableYears = new List<string>();
@@ -166,6 +168,8 @@ namespace WFBC.Client.Pages.Commish
                 {
                     calculationMessage = $"Successfully calculated daily standings for {selectedYear}!";
                     isCalculating = false;
+                    // Invalidate client-side cache so fresh standings are loaded immediately
+                    StandingsCacheService.InvalidateCache(selectedYear);
                     InvokeAsync(StateHasChanged);
                 });
 

@@ -137,8 +137,9 @@ namespace WFBC.Server.Controllers
         {
             try
             {
-                // RE-ENABLED: Server-side cache for 90%+ MongoDB query reduction
-                var lastUpdated = await _standingsCache.GetLastUpdatedAsync(year);
+                // Use box score update timestamp (same as data endpoints) for consistent cache validation
+                var lastBoxScoreUpdate = await _standingsCache.GetLastBoxScoreUpdateAsync(year);
+                var lastUpdated = lastBoxScoreUpdate ?? await _standingsCache.GetLastUpdatedAsync(year);
                 return Ok(lastUpdated);
             }
             catch (Exception ex)
