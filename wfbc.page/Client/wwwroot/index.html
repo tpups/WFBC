@@ -6,6 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>WFBC</title>
     <base href="/" />
+    <!-- Warm TLS handshake to Zitadel so the silent-renewal iframe & userinfo
+         call don't pay the full round-trip cost during auth bootstrapping. -->
+    <link rel="preconnect" href="https://wfbc-edq5hx.us1.zitadel.cloud" crossorigin>
+    <link rel="dns-prefetch" href="https://wfbc-edq5hx.us1.zitadel.cloud">
     <!--<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />-->
     <link href="css/styles.css?ver2.22" rel="stylesheet" />
     <link href="css/app.css?ver1.20" rel="stylesheet" />

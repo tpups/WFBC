@@ -138,10 +138,11 @@ namespace WFBC.Server
                                                 {
                                                     var rolesJson = prop.Value.GetRawText();
                                                     rolesClaim = new System.Security.Claims.Claim(prop.Name, rolesJson);
-                                                    // Cache roles for 30 minutes to avoid repeated userinfo calls
+                                                    // Cache roles for 24 hours to avoid repeated userinfo calls.
+                                                    // Roles rarely change; if they do, a logout/login refreshes them.
                                                     if (sub != null)
                                                     {
-                                                        cache.Set(cacheKey, rolesJson, System.TimeSpan.FromMinutes(30));
+                                                        cache.Set(cacheKey, rolesJson, System.TimeSpan.FromHours(24));
                                                     }
                                                     break;
                                                 }
